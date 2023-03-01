@@ -1,0 +1,39 @@
+# task
+task_type: MrcTaggingTask
+task_name: bert_mrc_ner
+comment: 'bert mrc for NER, git-branch=main'
+
+# data preprocessing
+max_seq_len: 80
+debug_mode: false
+
+# filepaths
+plm_dir: /data/tzhu/PLM/bert-base-chinese
+data_dir: data/formatted
+output_dir: outputs
+task_dir: ${output_dir}/${task_name}
+train_filepath: ${data_dir}/train.jsonl
+dev_filepath: ${data_dir}/validation.jsonl
+test_filepath: ${data_dir}/test.jsonl
+ent_type2query_filepath: ${data_dir}/role2query.json
+dump_cache_dir: ${data_dir}/cache
+regenerate_cache: false
+
+# training
+random_seed: 1227
+eval_on_data: [dev]
+select_best_on_data: dev
+select_best_by_key: metric
+best_metric_field: micro.f1
+final_eval_on_test: true
+
+warmup_proportion: 0.1
+num_epochs: 3
+epoch_patience: -1
+train_batch_size: 16
+eval_batch_size: 32
+learning_rate: !!float 2e-5
+other_learning_rate: !!float 1e-3
+
+# model
+dropout: 0.3
