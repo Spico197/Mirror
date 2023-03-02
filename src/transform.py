@@ -1,34 +1,41 @@
+import random
 from collections import defaultdict
-from typing import Any, Iterable, List, MutableSet, Optional, Tuple, TypeVar
+from typing import Iterable, Iterator, List, MutableSet, Optional, Tuple, TypeVar, Union
 
 import torch
+import torch.nn.functional as F
 from rex.data.collate_fn import GeneralCollateFn
-from rex.data.transforms.base import TransformBase
+from rex.data.transforms.base import CachedTransformBase
+from rex.metrics import calc_p_r_f1_from_tp_fp_fn
 from rex.utils.io import load_json
 from rex.utils.logging import logger
-from rex.utils.progress_bar import pbar
-from rex.utils.tagging import get_entities_from_tag_seq
 from transformers.models.bert.tokenization_bert_fast import BertTokenizerFast
+
+from src.utils import decode_nnw_thw_mat, encode_nnw_thw_matrix
 
 Filled = TypeVar("Filled")
 
 
-class CachedPointerTaggingTransform(TransformBase):
+class CachedPointerTaggingTransform(CachedTransformBase):
     def __init__(
-        self, max_seq_len: int, plm_dir: str, ent_type2query_filepath: str
+        self,
+        max_seq_len: int,
+        plm_dir: str,
+        ent_type2query_filepath: str,
+        negative_sample_prob: float = 1.0,
     ) -> None:
         super().__init__()
 
         self.max_seq_len: int = max_seq_len
         self.tokenizer: BertTokenizerFast = BertTokenizerFast.from_pretrained(plm_dir)
         self.ent_type2query: dict = load_json(ent_type2query_filepath)
+        self.negative_sample_prob = negative_sample_prob
 
         self.collate_fn: GeneralCollateFn = GeneralCollateFn(
             {
                 "input_ids": torch.long,
-                "mask": torch.long,
-                "start_labels": torch.long,
-                "end_labels": torch.long,
+                "mask": torch.int8,
+                "labels": torch.int8,
             },
             guessing=False,
             missing_key_as_null=True,
@@ -37,119 +44,133 @@ class CachedPointerTaggingTransform(TransformBase):
 
     def transform(
         self,
-        dataset: List[Any],
-        desc: Optional[str] = "Transform",
-        debug: Optional[bool] = False,
-        disable_pbar: Optional[bool] = False,
+        transform_loader: Iterator,
+        inference_mode: Optional[bool] = False,
         **kwargs,
     ) -> Iterable:
         final_data = []
-        if debug:
-            dataset = dataset[:50]
-        transform_loader = pbar(dataset, desc=desc, disable=disable_pbar)
-
-        num_tot_ins = 0
+        tp = fp = fn = 0
         for data in transform_loader:
-            ents = get_entities_from_tag_seq(data["tokens"], data["ner_tags"])
             ent_type2ents = defaultdict(set)
-            for ent in ents:
-                ent_type2ents[ent[1]].add(ent)
+            for ent in data["ents"]:
+                ent_type2ents[ent["type"]].add(tuple(ent["index"]))
             for ent_type in self.ent_type2query:
                 _ents = ent_type2ents[ent_type]
+                if (
+                    len(_ents) < 1
+                    and not inference_mode
+                    and random.random() > self.negative_sample_prob
+                ):
+                    # skip negative samples
+                    continue
                 res = self.build_ins(ent_type, data["tokens"], _ents)
-                cat_tokens, input_ids, mask, start_labels, end_labels, ent_offset = res
+                input_tokens, input_ids, mask, labels, offset, available_ents = res
                 ins = {
                     "id": data["id"],
                     "ent_type": ent_type,
-                    "ent_offset": ent_offset,
                     "gold_ents": _ents,
                     "raw_tokens": data["tokens"],
-                    "raw_ner_tags": data["ner_tags"],
-                    "tokens": cat_tokens,
+                    "input_tokens": input_tokens,
                     "input_ids": input_ids,
                     "mask": mask,
-                    "start_labels": start_labels,
-                    "end_labels": end_labels,
+                    "offset": offset,
+                    "available_ents": available_ents,
+                    # labels are dynamically padded in collate fn
+                    "labels": labels,
                 }
-                num_tot_ins += 1
                 final_data.append(ins)
 
-        logger.debug(f"Sample: {final_data[:3]}")
-        logger.info(f"#ins: {len(final_data)}")
+                # upper bound analysis
+                pred_spans = set(decode_nnw_thw_mat(labels.unsqueeze(0))[0])
+                g_ents = set(available_ents)
+                tp += len(g_ents & pred_spans)
+                fp += len(pred_spans - g_ents)
+                fn += len(g_ents - pred_spans)
+
+        # upper bound results
+        measures = calc_p_r_f1_from_tp_fp_fn(tp, fp, fn)
+        logger.info(f"Upper Bound: {measures}")
+
         return final_data
 
     def build_ins(
-        self, ent_type: str, tokens: List[str], ents: MutableSet[Tuple]
+        self, ent_type: str, tokens: List[str], ents: MutableSet[Tuple[int]]
     ) -> Tuple:
         query = self.ent_type2query[ent_type]
         query_tokens = self.tokenizer.tokenize(query)
 
         # -2: cls and sep
-        reserved_seq_len = self.max_seq_len - 2 - len(query_tokens)
+        reserved_seq_len = self.max_seq_len - 3 - len(query_tokens)
         # reserve at least 20 tokens
-        assert reserved_seq_len >= 20
+        if reserved_seq_len < 20:
+            raise ValueError(
+                f"Query {query} too long: {len(query_tokens)} "
+                f"while max seq len is {self.max_seq_len}"
+            )
 
-        cat_tokens = [self.tokenizer.cls_token]
-        cat_tokens += query_tokens
-        cat_tokens += tokens[:reserved_seq_len]
-        cat_tokens += [self.tokenizer.sep_token]
-        input_ids = self.tokenizer.convert_tokens_to_ids(cat_tokens)
+        input_tokens = [self.tokenizer.cls_token]
+        input_tokens += query_tokens
+        input_tokens += [self.tokenizer.sep_token]
+        offset = len(input_tokens)
+        input_tokens += tokens[:reserved_seq_len]
+        available_token_range = range(offset, offset + len(tokens[:reserved_seq_len]))
+        input_tokens += [self.tokenizer.sep_token]
+        input_ids = self.tokenizer.convert_tokens_to_ids(input_tokens)
         mask = [1]
         mask += [2] * len(query_tokens)
-        mask += [3] * len(tokens[:reserved_seq_len])
-        mask += [4]
+        mask += [3]
+        mask += [4] * len(tokens[:reserved_seq_len])
+        mask += [5]
         assert len(mask) == len(input_ids) <= self.max_seq_len
 
-        # construct labels, +1 means cls
-        start_labels = [0] * len(input_ids)
-        end_labels = [0] * len(input_ids)
-        ent_offset = 1 + len(query_tokens)
-        for ent in ents:
-            assert ent[1] == ent_type
-            start_pos, end_pos_plus_one = ent[2]
-            _sp = ent_offset + start_pos
-            _ep_p1 = ent_offset + end_pos_plus_one
-            if 0 <= _sp < _ep_p1 <= len(input_ids):
-                # available ent
-                start_labels[_sp] = 1
-                # -1 to remove `end + 1` offset
-                end_labels[_ep_p1 - 1] = 1
-
-        start_labels[0] = start_labels[-1] = -100
-        end_labels[0] = end_labels[-1] = -100
-        start_labels[1 : 1 + len(query_tokens)] = [-100] * len(  # noqa: E203
-            query_tokens
+        available_ents = [tuple(i + offset for i in index) for index in ents]
+        available_ents = list(
+            filter(
+                lambda index: all(i in available_token_range for i in index),
+                available_ents,
+            )
         )
-        end_labels[1 : 1 + len(query_tokens)] = [-100] * len(query_tokens)  # noqa: E203
+        labels = encode_nnw_thw_matrix(available_ents, len(input_ids))
 
-        return cat_tokens, input_ids, mask, start_labels, end_labels, ent_offset
+        return input_tokens, input_ids, mask, labels, offset, available_ents
 
     def dynamic_padding(self, data: dict) -> dict:
-        data["input_ids"] = self.padding(data["input_ids"], self.tokenizer.pad_token_id)
-        data["mask"] = self.padding(data["mask"], 0)
-        data["start_labels"] = self.padding(data["start_labels"], -100)
-        data["end_labels"] = self.padding(data["end_labels"], -100)
+        data["input_ids"] = self.pad_seq(data["input_ids"], self.tokenizer.pad_token_id)
+        data["mask"] = self.pad_seq(data["mask"], 0)
+        data["labels"] = self.pad_mat(data["labels"], -100)
+        data["labels"] = [mat.tolist() for mat in data["labels"]]
         return data
 
-    def padding(self, batch_seqs: Iterable[Filled], fill: Filled) -> Iterable[Filled]:
+    def pad_seq(self, batch_seqs: Iterable[Filled], fill: Filled) -> Iterable[Filled]:
         max_len = max(len(seq) for seq in batch_seqs)
         assert max_len <= self.max_seq_len
         for i in range(len(batch_seqs)):
             batch_seqs[i] = batch_seqs[i] + [fill] * (max_len - len(batch_seqs[i]))
         return batch_seqs
 
+    def pad_mat(
+        self, mats: List[torch.Tensor], fill: Union[int, float]
+    ) -> List[torch.Tensor]:
+        max_len = max(mat.shape[0] for mat in mats)
+        assert max_len <= self.max_seq_len
+        for i in range(len(mats)):
+            num_add = max_len - mats[i].shape[0]
+            mats[i] = F.pad(
+                mats[i], (0, 0, 0, num_add, 0, num_add), mode="constant", value=fill
+            )
+        return mats
+
     def predict_transform(self, texts: List[str]):
         dataset = []
         for text_id, text in enumerate(texts):
             data_id = f"Prediction#{text_id}"
             tokens = self.tokenizer.tokenize(text)
-            ner_tags = ["O"] * len(tokens)
             dataset.append(
                 {
                     "id": data_id,
                     "tokens": tokens,
-                    "ner_tags": ner_tags,
+                    "ents": [],
                 }
             )
-        final_data = self.transform(dataset, disable_pbar=True)
+        final_data = self(dataset, disable_pbar=True, inference_mode=True)
         return final_data

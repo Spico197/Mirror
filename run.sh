@@ -4,11 +4,11 @@ export CUDA_VISIBLE_DEVICES=3
 
 
 single() {
-    rex train -m src -dc custom.yaml
+    rex train -m src.task -dc conf/custom.yaml
 }
 
 ddp() {
-    torchrun --nnodes=1 --nproc_per_node=4 -m rex.cmds.train -m src -dc custom.yaml
+    torchrun --nnodes=1 --nproc_per_node=4 -m rex.cmds.train -m src.task -dc conf/custom.yaml
 }
 
 

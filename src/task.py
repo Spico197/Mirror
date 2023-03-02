@@ -12,7 +12,7 @@ from rex.utils.registry import register
 from transformers.optimization import get_linear_schedule_with_warmup
 
 from .metric import MrcNERMetric
-from .model import PlmMRCModel
+from .model import MrcPointerMatrixModel
 from .transform import CachedPointerTaggingTransform
 
 
@@ -46,9 +46,9 @@ class MrcTaggingTask(SimpleMetricTask):
         )
 
     def init_model(self):
-        m = PlmMRCModel(
+        m = MrcPointerMatrixModel(
             self.config.plm_dir,
-            self.config.dropout,
+            dropout=self.config.dropout,
         )
         return m
 

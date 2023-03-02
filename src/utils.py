@@ -52,8 +52,11 @@ def encode_nnw_thw_matrix(
 ) -> torch.Tensor:
     mat = torch.zeros(seq_len, seq_len, 2)
     for span in spans:
-        for s, e in windowed_queue_iter(span, 2, 1, drop_last=True):
-            mat[s, e, nnw_id] = 1
+        if len(span) == 1:
+            mat[span[0], span[0]] = 1
+        else:
+            for s, e in windowed_queue_iter(span, 2, 1, drop_last=True):
+                mat[s, e, nnw_id] = 1
         mat[span[-1], span[0], thw_id] = 1
     return mat
 

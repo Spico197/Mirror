@@ -1,8 +1,5 @@
-from typing import Optional
-
 import torch
 import torch.nn as nn
-from rex.utils.position import extract_positions_from_start_end_label
 from transformers import BertModel
 
 from src.utils import decode_nnw_thw_mat
@@ -12,18 +9,18 @@ class Biaffine(nn.Module):
     """Biaffine transformation
 
     References:
-        - https://github.com/yzhangcs/parser/blob/main/supar/modules/mlp.py
+        - https://github.com/yzhangcs/parser/blob/main/supar/modules/affine.py
         - https://github.com/ljynlp/W2NER
     """
 
-    def __init__(self, n_in, n_out=1, bias_x=True, bias_y=True):
+    def __init__(self, n_in, n_out=2, bias_x=True, bias_y=True):
         super().__init__()
 
         self.n_in = n_in
         self.n_out = n_out
         self.bias_x = bias_x
         self.bias_y = bias_y
-        weight = torch.zeros((n_out, n_in + int(bias_x), n_in + int(bias_y)))
+        weight = torch.zeros(n_out, n_in + int(bias_x), n_in + int(bias_y))
         nn.init.xavier_normal_(weight)
         self.weight = nn.Parameter(weight, requires_grad=True)
 
@@ -71,7 +68,7 @@ class PointerMatrix(nn.Module):
         - https://github.com/ljynlp/W2NER
     """
 
-    def __init__(self, cls_num, hidden_size, biaffine_size, dropout=0):
+    def __init__(self, hidden_size, biaffine_size, cls_num=2, dropout=0):
         super().__init__()
         self.linear_h = LinearWithAct(
             n_in=hidden_size, n_out=biaffine_size, dropout=dropout
@@ -92,10 +89,11 @@ class MrcPointerMatrixModel(nn.Module):
     def __init__(
         self,
         plm_dir: str,
-        cls_num: int = 3,
+        cls_num: int = 2,
         none_type_id: int = 0,
         text_mask_id: int = 4,
-        dropout: Optional[float] = 0.3,
+        dropout: float = 0.3,
+        pred_threshold: float = 0.5,
     ):
         super().__init__()
 
@@ -109,9 +107,13 @@ class MrcPointerMatrixModel(nn.Module):
 
         self.plm = BertModel.from_pretrained(plm_dir)
         hidden_size = self.plm.config.hidden_size
-        self.pointer_matrix = PointerMatrix(cls_num, hidden_size, dropout=dropout)
+        self.pointer_matrix = PointerMatrix(
+            hidden_size, hidden_size, cls_num=cls_num, dropout=dropout
+        )
 
-        self.criterion = nn.CrossEntropyLoss(reduction="sum")
+        self.pred_threshold = pred_threshold
+        # self.criterion = nn.BCEWithLogitsLoss(reduction="sum")
+        self.criterion = nn.BCEWithLogitsLoss(reduction="none")
 
     def input_encoding(self, input_ids, mask):
         attention_mask = mask.gt(0).float()
@@ -122,27 +124,34 @@ class MrcPointerMatrixModel(nn.Module):
         )
         return plm_outputs.last_hidden_state
 
-    def forward(self, input_ids, mask, labels=None, decode=True, **kwargs):
+    def forward(self, input_ids, mask, labels=None, is_eval=True, **kwargs):
         hidden = self.input_encoding(input_ids, mask)
         hidden = self.pointer_matrix(hidden)
 
         results = {"logits": hidden}
         if labels is not None:
-            loss = self.criterion(hidden.reshape(-1, self.cls_num), labels.reshape(-1))
-            results["loss"] = loss
+            loss = self.criterion(hidden.reshape(-1), labels.float().reshape(-1))
+            masked_loss = (loss * labels.reshape(-1).ne(-100).float()).sum()
+            # mean
+            masked_loss = masked_loss / labels.ne(-100).float().sum()
+            results["loss"] = masked_loss
 
-        if decode:
+        if is_eval:
             batch_positions = self.decode(hidden, mask, **kwargs)
             results["pred"] = batch_positions
         return results
 
     def decode(self, logits: torch.Tensor, mask: torch.Tensor, **kwargs):
-        dtype = logits.dtype
         logits = logits.detach()
-        logits[..., self.none_type_id].masked_fill_(
-            mask.ne(self.text_mask_id), torch.finfo(dtype).max
-        )
-        pred = logits.max(dim=-1)[1]
+        # mask: (batch_size, seq_len)
+        batch_size, seq_len = mask.shape
+        mask_vector = mask.eq(4).unsqueeze(-1).expand((batch_size, seq_len, seq_len))
+        # bit_mask: (batch_size, seq_len, seq_len, 1)
+        bit_mask = torch.logical_and(
+            mask_vector, mask_vector.transpose(1, 2)
+        ).unsqueeze(-1)
+        logits *= bit_mask.float()
+        pred = logits.sigmoid().gt(self.pred_threshold)
         batch_preds = decode_nnw_thw_mat(pred)
 
         return batch_preds

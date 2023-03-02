@@ -15,8 +15,18 @@ class MrcNERMetric(MetricBase):
         assert len(batch_gold) == len(out_batch["pred"])
 
         for i, gold in enumerate(batch_gold):
-            gold_instances.append({"id": gold["id"], "ents": gold["gold_ents"]})
-            pred_instances.append({"id": gold["id"], "ents": out_batch["pred"][i]})
+            gold_instances.append(
+                {
+                    "id": gold["id"],
+                    "ents": {(gold["ent_type"], gent) for gent in gold["gold_ents"]},
+                }
+            )
+            pred_instances.append(
+                {
+                    "id": gold["id"],
+                    "ents": {(gold["ent_type"], pent) for pent in out_batch["pred"][i]},
+                }
+            )
 
         return gold_instances, pred_instances
 
@@ -36,4 +46,4 @@ class MrcNERMetric(MetricBase):
             gold_ents.append(id2gold[_id])
             pred_ents.append(id2pred[_id])
 
-        return tagging_prf1(gold_ents, pred_ents)
+        return tagging_prf1(gold_ents, pred_ents, type_idx=0)
