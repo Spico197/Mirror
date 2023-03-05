@@ -5,6 +5,16 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "src.task",
+            "type": "python",
+            "request": "launch",
+            "module": "src.task",
+            "env": {
+                "CUDA_VISIBLE_DEVICES": "3"
+            },
+            "justMyCode": false
+        },
+        {
             "name": "REx",
             "type": "python",
             "request": "launch",
@@ -12,7 +22,12 @@
             "env": {
                 "CUDA_VISIBLE_DEVICES": "3"
             },
-            "args": ["-m", "src.task", "-dc", "conf/custom.yaml"],
+            "args": [
+                "-m",
+                "src.task",
+                "-dc",
+                "conf/custom.yaml"
+            ],
             "justMyCode": false
         }
     ]

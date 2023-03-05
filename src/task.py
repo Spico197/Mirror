@@ -26,6 +26,7 @@ class MrcTaggingTask(SimpleMetricTask):
             self.config.max_seq_len,
             self.config.plm_dir,
             self.config.ent_type2query_filepath,
+            self.config.negative_sample_prob,
         )
 
     def init_data_manager(self):
@@ -96,3 +97,18 @@ class MrcTaggingTask(SimpleMetricTask):
         results = [id2ents[_id] for _id in text_ids]
 
         return results
+
+
+if __name__ == "__main__":
+    from rex.utils.config import ConfigParser
+
+    config = ConfigParser.parse_cmd(cmd_args=["-dc", "conf/custom.yaml"])
+
+    task = MrcTaggingTask(
+        config,
+        initialize=True,
+        makedirs=True,
+        dump_configfile=True,
+    )
+    task.train()
+    # task.eval("dev", verbose=True, dump=True, dump_middle=True, postfix="re_eval")

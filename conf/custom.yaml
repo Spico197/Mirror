@@ -1,11 +1,12 @@
 # task
 task_type: MrcTaggingTask
-task_name: bert_mrc_w2ner
+task_name: bert_mrc_w2ner_4
 comment: 'bert mrc w/ w2ner for NER'
 
 # data preprocessing
-max_seq_len: 512
-debug_mode: true
+max_seq_len: 150
+negative_sample_prob: 0.0
+debug_mode: false
 
 # filepaths
 plm_dir: /data/tzhu/PLM/hfl--rbt3
@@ -33,8 +34,8 @@ epoch_patience: 5
 train_batch_size: 16
 eval_batch_size: 32
 learning_rate: !!float 2e-5
-other_learning_rate: !!float 1e-3
+# other_learning_rate: !!float 2e-5
 
 # model
-dropout: 0.3
+dropout: 0.0
 biaffine_size: 512

@@ -8,6 +8,7 @@ from rex.data.collate_fn import GeneralCollateFn
 from rex.data.transforms.base import CachedTransformBase
 from rex.metrics import calc_p_r_f1_from_tp_fp_fn
 from rex.utils.io import load_json
+from rex.utils.iteration import windowed_queue_iter
 from rex.utils.logging import logger
 from transformers.models.bert.tokenization_bert_fast import BertTokenizerFast
 
@@ -34,8 +35,8 @@ class CachedPointerTaggingTransform(CachedTransformBase):
         self.collate_fn: GeneralCollateFn = GeneralCollateFn(
             {
                 "input_ids": torch.long,
-                "mask": torch.int8,
-                "labels": torch.int8,
+                "mask": torch.long,
+                "labels": torch.float,
             },
             guessing=False,
             missing_key_as_null=True,
@@ -49,26 +50,26 @@ class CachedPointerTaggingTransform(CachedTransformBase):
         **kwargs,
     ) -> Iterable:
         final_data = []
-        tp = fp = fn = 0
+        # tp = fp = fn = 0
         for data in transform_loader:
             ent_type2ents = defaultdict(set)
             for ent in data["ents"]:
                 ent_type2ents[ent["type"]].add(tuple(ent["index"]))
             for ent_type in self.ent_type2query:
-                _ents = ent_type2ents[ent_type]
+                gold_ents = ent_type2ents[ent_type]
                 if (
-                    len(_ents) < 1
+                    len(gold_ents) < 1
                     and not inference_mode
                     and random.random() > self.negative_sample_prob
                 ):
                     # skip negative samples
                     continue
-                res = self.build_ins(ent_type, data["tokens"], _ents)
-                input_tokens, input_ids, mask, labels, offset, available_ents = res
+                res = self.build_ins(ent_type, data["tokens"], gold_ents)
+                input_tokens, input_ids, mask, offset, available_ents = res
                 ins = {
                     "id": data["id"],
                     "ent_type": ent_type,
-                    "gold_ents": _ents,
+                    "gold_ents": gold_ents,
                     "raw_tokens": data["tokens"],
                     "input_tokens": input_tokens,
                     "input_ids": input_ids,
@@ -76,20 +77,21 @@ class CachedPointerTaggingTransform(CachedTransformBase):
                     "offset": offset,
                     "available_ents": available_ents,
                     # labels are dynamically padded in collate fn
-                    "labels": labels,
+                    "labels": None,
+                    # "labels": labels.tolist(),
                 }
                 final_data.append(ins)
 
-                # upper bound analysis
-                pred_spans = set(decode_nnw_thw_mat(labels.unsqueeze(0))[0])
-                g_ents = set(available_ents)
-                tp += len(g_ents & pred_spans)
-                fp += len(pred_spans - g_ents)
-                fn += len(g_ents - pred_spans)
+        #         # upper bound analysis
+        #         pred_spans = set(decode_nnw_thw_mat(labels.unsqueeze(0))[0])
+        #         g_ents = set(available_ents)
+        #         tp += len(g_ents & pred_spans)
+        #         fp += len(pred_spans - g_ents)
+        #         fn += len(g_ents - pred_spans)
 
-        # upper bound results
-        measures = calc_p_r_f1_from_tp_fp_fn(tp, fp, fn)
-        logger.info(f"Upper Bound: {measures}")
+        # # upper bound results
+        # measures = calc_p_r_f1_from_tp_fp_fn(tp, fp, fn)
+        # logger.info(f"Upper Bound: {measures}")
 
         return final_data
 
@@ -130,15 +132,29 @@ class CachedPointerTaggingTransform(CachedTransformBase):
                 available_ents,
             )
         )
-        labels = encode_nnw_thw_matrix(available_ents, len(input_ids))
 
-        return input_tokens, input_ids, mask, labels, offset, available_ents
+        token_len = len(input_ids)
+        pad_len = self.max_seq_len - token_len
+        input_ids += pad_len * [self.tokenizer.pad_token_id]
+        mask += pad_len * [0]
+
+        return input_tokens, input_ids, mask, offset, available_ents
 
     def dynamic_padding(self, data: dict) -> dict:
         data["input_ids"] = self.pad_seq(data["input_ids"], self.tokenizer.pad_token_id)
         data["mask"] = self.pad_seq(data["mask"], 0)
-        data["labels"] = self.pad_mat(data["labels"], -100)
-        data["labels"] = [mat.tolist() for mat in data["labels"]]
+        bs = len(data["mask"])
+        seq_len = len(data["mask"][0])
+        labels = torch.zeros((bs, 2, seq_len, seq_len))
+        for i, batch_spans in enumerate(data["available_ents"]):
+            for span in batch_spans:
+                if len(span) == 1:
+                    labels[i, :, span[0], span[0]] = 1
+                else:
+                    for s, e in windowed_queue_iter(span, 2, 1, drop_last=True):
+                        labels[i, 0, s, e] = 1
+                    labels[i, 1, span[-1], span[0]] = 1
+        data["labels"] = labels
         return data
 
     def pad_seq(self, batch_seqs: Iterable[Filled], fill: Filled) -> Iterable[Filled]:
