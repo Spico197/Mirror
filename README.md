@@ -36,3 +36,11 @@ Download the dataset via `python data/download.py`.
 
 If you found any problems or you have ideas to improve this project,
 feel free to contact me via [GitHub](https://github.com/Spico197/REx) issues.
+
+
+## 🗜️ TODO
+
+- [ ] masked `multilabel_categorical_crossentropy`
+- [ ] retain negative samples when transforming evaluation sets so that evaluations are accurate no matter what negative probs are
+- [ ] hyper-param tuning, lr, dropout
+- [ ] full negative samples

@@ -36,12 +36,12 @@ class CachedPointerTaggingTransform(CachedTransformBase):
             {
                 "input_ids": torch.long,
                 "mask": torch.long,
-                "labels": torch.float,
+                "labels": torch.long,
             },
             guessing=False,
             missing_key_as_null=True,
         )
-        self.collate_fn.update_before_tensorify = self.dynamic_padding
+        self.collate_fn.update_before_tensorify = self.update_labels
 
     def transform(
         self,
@@ -135,18 +135,20 @@ class CachedPointerTaggingTransform(CachedTransformBase):
 
         token_len = len(input_ids)
         pad_len = self.max_seq_len - token_len
+        input_tokens += pad_len * [self.tokenizer.pad_token]
         input_ids += pad_len * [self.tokenizer.pad_token_id]
         mask += pad_len * [0]
 
         return input_tokens, input_ids, mask, offset, available_ents
 
-    def dynamic_padding(self, data: dict) -> dict:
-        data["input_ids"] = self.pad_seq(data["input_ids"], self.tokenizer.pad_token_id)
-        data["mask"] = self.pad_seq(data["mask"], 0)
-        bs = len(data["mask"])
-        seq_len = len(data["mask"][0])
+    def update_labels(self, data: dict) -> dict:
+        bs = len(data["input_ids"])
+        seq_len = self.max_seq_len
         labels = torch.zeros((bs, 2, seq_len, seq_len))
         for i, batch_spans in enumerate(data["available_ents"]):
+            offset = data["offset"][i]
+            pad_len = data["mask"].count(0)
+            token_len = seq_len - pad_len
             for span in batch_spans:
                 if len(span) == 1:
                     labels[i, :, span[0], span[0]] = 1
@@ -154,6 +156,10 @@ class CachedPointerTaggingTransform(CachedTransformBase):
                     for s, e in windowed_queue_iter(span, 2, 1, drop_last=True):
                         labels[i, 0, s, e] = 1
                     labels[i, 1, span[-1], span[0]] = 1
+            labels[i, :, 0:offset, :] = -100
+            labels[i, :, :, 0:offset] = -100
+            labels[i, :, :, token_len:] = -100
+            labels[i, :, token_len:, :] = -100
         data["labels"] = labels
         return data
 

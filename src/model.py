@@ -84,7 +84,7 @@ class PointerMatrix(nn.Module):
         return o
 
 
-def multilabel_categorical_crossentropy(y_pred, y_true):
+def multilabel_categorical_crossentropy(y_pred, y_true, bit_mask=None):
     """
     https://kexue.fm/archives/7359
     https://github.com/gaohongkui/GlobalPointer_pytorch/blob/main/common/utils.py
@@ -98,7 +98,10 @@ def multilabel_categorical_crossentropy(y_pred, y_true):
     neg_loss = torch.logsumexp(y_pred_neg, dim=-1)
     pos_loss = torch.logsumexp(y_pred_pos, dim=-1)
 
-    return (neg_loss + pos_loss).mean()
+    if bit_mask is None:
+        return (neg_loss + pos_loss).mean()
+    else:
+        raise NotImplementedError
 
 
 class MrcPointerMatrixModel(nn.Module):
@@ -123,21 +126,21 @@ class MrcPointerMatrixModel(nn.Module):
 
         self.plm = BertModel.from_pretrained(plm_dir)
         hidden_size = self.plm.config.hidden_size
-        # self.nnw_mat = PointerMatrix(
-        #     hidden_size, hidden_size, cls_num=1, dropout=dropout
-        # )
-        # self.thw_mat = PointerMatrix(
-        #     hidden_size, hidden_size, cls_num=1, dropout=dropout
-        # )
-        self.pointer_mat = PointerMatrix(
+        self.nnw_mat = PointerMatrix(
             hidden_size, hidden_size // 2, cls_num=2, dropout=dropout
         )
+        self.thw_mat = PointerMatrix(
+            hidden_size, hidden_size // 2, cls_num=2, dropout=dropout
+        )
+        # self.pointer_mat = PointerMatrix(
+        #     hidden_size, hidden_size // 2, cls_num=2, dropout=dropout
+        # )
 
         self.pred_threshold = pred_threshold
         # self.criterion = nn.BCEWithLogitsLoss(reduction="sum")
-        self.criterion = nn.BCEWithLogitsLoss(reduction="none")
+        # self.criterion = nn.BCEWithLogitsLoss(reduction="none")
         # self.criterion = nn.BCEWithLogitsLoss()
-        # self.criterion = nn.CrossEntropyLoss()
+        self.criterion = nn.CrossEntropyLoss()
 
     def input_encoding(self, input_ids, mask):
         attention_mask = mask.gt(0).float()
@@ -154,25 +157,24 @@ class MrcPointerMatrixModel(nn.Module):
         mask_mat = mask.eq(4).unsqueeze(-1).expand((bs, seq_len, seq_len))
         # bit_mask: (batch_size, seq_len, seq_len, 1)
         bit_mask = (
-            torch.logical_and(mask_mat, mask_mat.transpose(1, 2))
-            .unsqueeze(1)
-            .expand((bs, 2, seq_len, seq_len))
-            .float()
+            torch.logical_and(mask_mat, mask_mat.transpose(1, 2)).unsqueeze(1)
+            # .expand((bs, 2, seq_len, seq_len))
+            .long()
         )
         return bit_mask
 
     def forward(self, input_ids, mask, labels=None, is_eval=False, **kwargs):
         hidden = self.input_encoding(input_ids, mask)
-        logits = self.pointer_mat(hidden)
-        # nnw_hidden = self.nnw_mat(hidden)
-        # thw_hidden = self.thw_mat(hidden)
+        # logits = self.pointer_mat(hidden)
+        nnw_hidden = self.nnw_mat(hidden)
+        thw_hidden = self.thw_mat(hidden)
         # # (bs, 2, seq_len, seq_len)
         # logits = torch.cat([nnw_hidden, thw_hidden], dim=1)
-        bs, _, seq_len, seq_len = logits.shape
+        bs, _, seq_len, seq_len = nnw_hidden.shape
 
         bit_mask = self.build_bit_mask(mask)
 
-        results = {"logits": logits}
+        results = {"logits": {"nnw": nnw_hidden, "thw": thw_hidden}}
         if labels is not None:
             # # multi-label cross entropy
             # y_pred = logits.reshape(bs * 2, -1)
@@ -181,19 +183,43 @@ class MrcPointerMatrixModel(nn.Module):
             # results["loss"] = loss
 
             # mean
-            loss = self.criterion(logits.reshape(bs, -1), labels.reshape(bs, -1))
-            masked_loss = (loss * bit_mask.reshape(bs, -1)).sum()
-            masked_loss = masked_loss / bit_mask.sum()
-            results["loss"] = masked_loss
+            nnw_loss = self.criterion(
+                nnw_hidden.permute(0, 2, 3, 1).reshape(-1, 2),
+                labels[:, 0, :, :].reshape(-1),
+            )
+            thw_loss = self.criterion(
+                thw_hidden.permute(0, 2, 3, 1).reshape(-1, 2),
+                labels[:, 1, :, :].reshape(-1),
+            )
+            loss = nnw_loss + thw_loss
+            results["loss"] = loss
+            # loss = self.criterion(logits.reshape(bs, -1), labels.reshape(bs, -1))
+            # masked_loss = (loss * bit_mask.reshape(bs, -1)).sum()
+            # masked_loss = masked_loss / bit_mask.sum()
+            # results["loss"] = masked_loss
 
         if is_eval:
-            batch_positions = self.decode(logits, bit_mask, **kwargs)
+            batch_positions = self.decode(nnw_hidden, thw_hidden, bit_mask, **kwargs)
             results["pred"] = batch_positions
         return results
 
-    def decode(self, logits: torch.Tensor, bit_mask: torch.Tensor, **kwargs):
-        logits *= bit_mask
-        pred = logits.sigmoid().ge(self.pred_threshold).long()
+    def decode(
+        self,
+        nnw_hidden: torch.Tensor,
+        thw_hidden: torch.Tensor,
+        bit_mask: torch.Tensor,
+        **kwargs,
+    ):
+        # logits *= bit_mask
+        # pred = logits.sigmoid().ge(self.pred_threshold).long()
+
+        # B x L x L
+        nnw_pred = nnw_hidden.argmax(1)
+        thw_pred = thw_hidden.argmax(1)
+        # B x 2 x L x L
+        pred = torch.stack([nnw_pred, thw_pred], dim=1)
+        pred = pred * bit_mask
+
         batch_preds = decode_nnw_thw_mat(pred, offsets=kwargs.get("offset"))
 
         return batch_preds
