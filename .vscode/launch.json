@@ -10,7 +10,7 @@
             "request": "launch",
             "module": "src.task",
             "env": {
-                "CUDA_VISIBLE_DEVICES": "3"
+                "CUDA_VISIBLE_DEVICES": "2"
             },
             "justMyCode": false
         },
@@ -26,7 +26,7 @@
                 "-m",
                 "src.task",
                 "-dc",
-                "conf/custom.yaml"
+                "conf/mrc.yaml"
             ],
             "justMyCode": false
         }

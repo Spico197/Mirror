@@ -47,3 +47,46 @@ class MrcNERMetric(MetricBase):
             pred_ents.append(id2pred[_id])
 
         return tagging_prf1(gold_ents, pred_ents, type_idx=0)
+
+
+class MrcSpanMetric(MetricBase):
+    def get_instances_from_batch(self, raw_batch: dict, out_batch: dict) -> Tuple:
+        gold_instances = []
+        pred_instances = []
+
+        batch_gold = decompose_batch_into_instances(raw_batch)
+        assert len(batch_gold) == len(out_batch["pred"])
+
+        for i, gold in enumerate(batch_gold):
+            gold_instances.append(
+                {
+                    "id": gold["id"],
+                    "spans": set(tuple(span) for span in gold["gold_spans"]),
+                }
+            )
+            pred_instances.append(
+                {
+                    "id": gold["id"],
+                    "spans": set(out_batch["pred"][i]),
+                }
+            )
+
+        return gold_instances, pred_instances
+
+    def calculate_scores(self, golds: list, preds: list) -> dict:
+        id2gold = defaultdict(set)
+        id2pred = defaultdict(set)
+        # aggregate all ents with diff queries before evaluating
+        for gold in golds:
+            id2gold[gold["id"]].update(gold["spans"])
+        for pred in preds:
+            id2pred[pred["id"]].update(pred["spans"])
+        assert len(id2gold) == len(id2pred)
+
+        gold_spans = []
+        pred_spans = []
+        for _id in id2gold:
+            gold_spans.append(id2gold[_id])
+            pred_spans.append(id2pred[_id])
+
+        return tagging_prf1(gold_spans, pred_spans, type_idx=None)

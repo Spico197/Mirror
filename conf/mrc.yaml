@@ -1,0 +1,40 @@
+# task
+task_type: MrcQaTask
+task_name: bert_w2mrc_cmrc2018_train_woAct
+comment: 'without activation function in linear transform before biaffine'
+
+# data preprocessing
+max_seq_len: 200
+debug_mode: false
+
+# filepaths
+plm_dir: /data/tzhu/PLM/hfl--rbt3
+data_dir: resources/MRC/cmrc2018/formatted
+# data_dir: resources/NER/msra/mrc
+output_dir: outputs
+task_dir: ${output_dir}/${task_name}
+train_filepath: ${data_dir}/train.jsonl
+dev_filepath: ${data_dir}/train.jsonl
+test_filepath: ${data_dir}/train.jsonl
+dump_cache_dir: ${task_dir}/cache
+regenerate_cache: true
+
+# training
+random_seed: 1227
+eval_on_data: [dev]
+select_best_on_data: dev
+select_best_by_key: metric
+best_metric_field: micro.f1
+final_eval_on_test: true
+
+warmup_proportion: 0.1
+num_epochs: 20
+epoch_patience: 5
+train_batch_size: 16
+eval_batch_size: 32
+learning_rate: !!float 2e-5
+other_learning_rate: !!float 2e-5
+
+# model
+dropout: 0.0
+biaffine_size: 384

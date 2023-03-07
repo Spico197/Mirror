@@ -55,7 +55,7 @@ class LinearWithAct(nn.Module):
 
     def forward(self, x):
         x = self.linear(x)
-        x = self.act_fn(x)
+        # x = self.act_fn(x)
         x = self.dropout(x)
         return x
 
@@ -109,10 +109,10 @@ class MrcPointerMatrixModel(nn.Module):
         self,
         plm_dir: str,
         cls_num: int = 2,
+        biaffine_size: int = 384,
         none_type_id: int = 0,
         text_mask_id: int = 4,
         dropout: float = 0.3,
-        pred_threshold: float = 0.5,
     ):
         super().__init__()
 
@@ -127,19 +127,11 @@ class MrcPointerMatrixModel(nn.Module):
         self.plm = BertModel.from_pretrained(plm_dir)
         hidden_size = self.plm.config.hidden_size
         self.nnw_mat = PointerMatrix(
-            hidden_size, hidden_size // 2, cls_num=2, dropout=dropout
+            hidden_size, biaffine_size, cls_num=2, dropout=dropout
         )
         self.thw_mat = PointerMatrix(
-            hidden_size, hidden_size // 2, cls_num=2, dropout=dropout
+            hidden_size, biaffine_size, cls_num=2, dropout=dropout
         )
-        # self.pointer_mat = PointerMatrix(
-        #     hidden_size, hidden_size // 2, cls_num=2, dropout=dropout
-        # )
-
-        self.pred_threshold = pred_threshold
-        # self.criterion = nn.BCEWithLogitsLoss(reduction="sum")
-        # self.criterion = nn.BCEWithLogitsLoss(reduction="none")
-        # self.criterion = nn.BCEWithLogitsLoss()
         self.criterion = nn.CrossEntropyLoss()
 
     def input_encoding(self, input_ids, mask):
@@ -154,34 +146,26 @@ class MrcPointerMatrixModel(nn.Module):
     def build_bit_mask(self, mask: torch.Tensor) -> torch.Tensor:
         # mask: (batch_size, seq_len)
         bs, seq_len = mask.shape
-        mask_mat = mask.eq(4).unsqueeze(-1).expand((bs, seq_len, seq_len))
+        mask_mat = (
+            mask.eq(self.text_mask_id).unsqueeze(-1).expand((bs, seq_len, seq_len))
+        )
         # bit_mask: (batch_size, seq_len, seq_len, 1)
         bit_mask = (
-            torch.logical_and(mask_mat, mask_mat.transpose(1, 2)).unsqueeze(1)
-            # .expand((bs, 2, seq_len, seq_len))
-            .long()
+            torch.logical_and(mask_mat, mask_mat.transpose(1, 2)).unsqueeze(1).long()
         )
         return bit_mask
 
     def forward(self, input_ids, mask, labels=None, is_eval=False, **kwargs):
         hidden = self.input_encoding(input_ids, mask)
-        # logits = self.pointer_mat(hidden)
         nnw_hidden = self.nnw_mat(hidden)
         thw_hidden = self.thw_mat(hidden)
         # # (bs, 2, seq_len, seq_len)
-        # logits = torch.cat([nnw_hidden, thw_hidden], dim=1)
         bs, _, seq_len, seq_len = nnw_hidden.shape
 
         bit_mask = self.build_bit_mask(mask)
 
         results = {"logits": {"nnw": nnw_hidden, "thw": thw_hidden}}
         if labels is not None:
-            # # multi-label cross entropy
-            # y_pred = logits.reshape(bs * 2, -1)
-            # y_true = labels.reshape(bs * 2, -1)
-            # loss = multilabel_categorical_crossentropy(y_pred, y_true)
-            # results["loss"] = loss
-
             # mean
             nnw_loss = self.criterion(
                 nnw_hidden.permute(0, 2, 3, 1).reshape(-1, 2),
@@ -193,10 +177,6 @@ class MrcPointerMatrixModel(nn.Module):
             )
             loss = nnw_loss + thw_loss
             results["loss"] = loss
-            # loss = self.criterion(logits.reshape(bs, -1), labels.reshape(bs, -1))
-            # masked_loss = (loss * bit_mask.reshape(bs, -1)).sum()
-            # masked_loss = masked_loss / bit_mask.sum()
-            # results["loss"] = masked_loss
 
         if is_eval:
             batch_positions = self.decode(nnw_hidden, thw_hidden, bit_mask, **kwargs)
@@ -210,9 +190,6 @@ class MrcPointerMatrixModel(nn.Module):
         bit_mask: torch.Tensor,
         **kwargs,
     ):
-        # logits *= bit_mask
-        # pred = logits.sigmoid().ge(self.pred_threshold).long()
-
         # B x L x L
         nnw_pred = nnw_hidden.argmax(1)
         thw_pred = thw_hidden.argmax(1)

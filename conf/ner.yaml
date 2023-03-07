@@ -1,6 +1,6 @@
 # task
 task_type: MrcTaggingTask
-task_name: bert_mrc_w2ner_fullNeg
+task_name: bertLarge_mrc_w2ner_msra_fullNeg
 comment: 'bert mrc w/ w2ner for NER'
 
 # data preprocessing
@@ -9,7 +9,9 @@ negative_sample_prob: 1.0
 debug_mode: false
 
 # filepaths
-plm_dir: /data/tzhu/PLM/hfl--rbt3
+# plm_dir: /data/tzhu/PLM/hfl--rbt3
+# plm_dir: /data/tzhu/PLM/bert-base-chinese
+plm_dir: /data/tzhu/PLM/hfl--chinese-roberta-wwm-ext-large
 data_dir: resources/NER/msra/formatted
 output_dir: outputs
 task_dir: ${output_dir}/${task_name}
@@ -17,7 +19,7 @@ train_filepath: ${data_dir}/train.jsonl
 dev_filepath: ${data_dir}/test.jsonl
 test_filepath: ${data_dir}/test.jsonl
 ent_type2query_filepath: resources/query.json
-dump_cache_dir: ${data_dir}/cache
+dump_cache_dir: ${task_dir}/cache
 regenerate_cache: true
 
 # training
@@ -31,11 +33,11 @@ final_eval_on_test: true
 warmup_proportion: 0.1
 num_epochs: 20
 epoch_patience: 5
-train_batch_size: 16
-eval_batch_size: 32
-learning_rate: !!float 2e-5
-other_learning_rate: !!float 2e-5
+train_batch_size: 8
+eval_batch_size: 16
+learning_rate: !!float 1e-5
+other_learning_rate: !!float 5e-5
 
 # model
-dropout: 0.0
-biaffine_size: 512
+dropout: 0.3
+biaffine_size: 768

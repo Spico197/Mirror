@@ -11,9 +11,9 @@ from rex.utils.io import load_jsonlines
 from rex.utils.registry import register
 from transformers.optimization import get_linear_schedule_with_warmup
 
-from .metric import MrcNERMetric
+from .metric import MrcNERMetric, MrcSpanMetric
 from .model import MrcPointerMatrixModel
-from .transform import CachedPointerTaggingTransform
+from .transform import CachedPointerMRCTransform, CachedPointerTaggingTransform
 
 
 @register("task")
@@ -49,6 +49,7 @@ class MrcTaggingTask(SimpleMetricTask):
     def init_model(self):
         m = MrcPointerMatrixModel(
             self.config.plm_dir,
+            biaffine_size=self.config.biaffine_size,
             dropout=self.config.dropout,
         )
         return m
@@ -99,12 +100,30 @@ class MrcTaggingTask(SimpleMetricTask):
         return results
 
 
+@register("task")
+class MrcQaTask(MrcTaggingTask):
+    def init_transform(self):
+        return CachedPointerMRCTransform(
+            self.config.max_seq_len,
+            self.config.plm_dir,
+        )
+
+    def init_metric(self):
+        return MrcSpanMetric()
+
+
 if __name__ == "__main__":
     from rex.utils.config import ConfigParser
 
-    config = ConfigParser.parse_cmd(cmd_args=["-dc", "conf/custom.yaml"])
+    config = ConfigParser.parse_cmd(cmd_args=["-dc", "conf/mrc.yaml"])
 
-    task = MrcTaggingTask(
+    # task = MrcTaggingTask(
+    #     config,
+    #     initialize=True,
+    #     makedirs=True,
+    #     dump_configfile=True,
+    # )
+    task = MrcQaTask(
         config,
         initialize=True,
         makedirs=True,
