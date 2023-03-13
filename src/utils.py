@@ -65,14 +65,14 @@ def find_paths_from_adj_mat(adj_mat: torch.Tensor) -> list[tuple[int]]:
 def encode_nnw_thw_matrix(
     spans: list[tuple[int]], seq_len: int, nnw_id: int = 0, thw_id: int = 1
 ) -> torch.Tensor:
-    mat = torch.zeros(seq_len, seq_len, 2)
+    mat = torch.zeros(2, seq_len, seq_len)
     for span in spans:
         if len(span) == 1:
-            mat[span[0], span[0]] = 1
+            mat[:, span[0], span[0]] = 1
         else:
             for s, e in windowed_queue_iter(span, 2, 1, drop_last=True):
-                mat[s, e, nnw_id] = 1
-        mat[span[-1], span[0], thw_id] = 1
+                mat[nnw_id, s, e] = 1
+        mat[thw_id, span[-1], span[0]] = 1
     return mat
 
 

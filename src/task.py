@@ -12,7 +12,7 @@ from rex.utils.registry import register
 from transformers.optimization import get_linear_schedule_with_warmup
 
 from .metric import MrcNERMetric, MrcSpanMetric
-from .model import MrcPointerMatrixModel
+from .model import MrcGlobalPointerModel, MrcPointerMatrixModel
 from .transform import CachedPointerMRCTransform, CachedPointerTaggingTransform
 
 
@@ -47,7 +47,8 @@ class MrcTaggingTask(SimpleMetricTask):
         )
 
     def init_model(self):
-        m = MrcPointerMatrixModel(
+        # m = MrcPointerMatrixModel(
+        m = MrcGlobalPointerModel(
             self.config.plm_dir,
             biaffine_size=self.config.biaffine_size,
             dropout=self.config.dropout,
@@ -108,6 +109,15 @@ class MrcQaTask(MrcTaggingTask):
             self.config.plm_dir,
         )
 
+    def init_model(self):
+        # m = MrcPointerMatrixModel(
+        m = MrcGlobalPointerModel(
+            self.config.plm_dir,
+            biaffine_size=self.config.biaffine_size,
+            dropout=self.config.dropout,
+        )
+        return m
+
     def init_metric(self):
         return MrcSpanMetric()
 
@@ -122,6 +132,13 @@ if __name__ == "__main__":
     #     initialize=True,
     #     makedirs=True,
     #     dump_configfile=True,
+    # )
+    # task.load(
+    #     config.base_model_path,
+    #     load_config=False,
+    #     load_model=True,
+    #     load_optimizer=False,
+    #     load_history=False,
     # )
     task = MrcQaTask(
         config,

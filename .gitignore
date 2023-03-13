@@ -159,6 +159,8 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
+.DS_Store
+._.DS_Store
 debug.py
 outputs/
 resources/NER/msra/cache/
@@ -167,3 +169,10 @@ resources/NER/msra/formatted/
 resources/MRC/cmrc2018/cache/
 resources/MRC/cmrc2018/formatted/
 cache/*.cache
+resources/MRC/DuReader-*/
+!resources/MRC/convert.py
+resources/**/*.json
+resources/**/*.jsonl
+resources/**/*.zip
+resources/**/*.tsv
+resources/**/*.xml

@@ -1,4 +1,5 @@
 import random
+import re
 from collections import defaultdict
 from typing import Iterable, Iterator, List, MutableSet, Optional, Tuple, TypeVar, Union
 
@@ -20,6 +21,7 @@ Filled = TypeVar("Filled")
 class PointerTransformMixin:
     tokenizer: BertTokenizerFast
     max_seq_len: int
+    space_token: str = "[unused1]"
 
     def build_ins(
         self,
@@ -31,7 +33,7 @@ class PointerTransformMixin:
         # -2: cls and sep
         reserved_seq_len = self.max_seq_len - 3 - len(query_tokens)
         # reserve at least 20 tokens
-        if reserved_seq_len < 20:
+        if reserved_seq_len < 300:
             raise ValueError(
                 f"Query {query_tokens} too long: {len(query_tokens)} "
                 f"while max seq len is {self.max_seq_len}"
@@ -47,12 +49,21 @@ class PointerTransformMixin:
         )
         input_tokens += [self.tokenizer.sep_token]
 
-        add_context_len = self.max_seq_len - len(input_tokens) - 1
+        add_context_len = 0
+        max_add_context_len = self.max_seq_len - len(input_tokens) - 1
         add_context_flag = False
         if add_context_tokens and len(add_context_tokens) > 0:
             add_context_flag = True
-            input_tokens += add_context_tokens[:add_context_len]
+            add_context_len = len(add_context_tokens[:max_add_context_len])
+            input_tokens += add_context_tokens[:max_add_context_len]
             input_tokens += [self.tokenizer.sep_token]
+        new_tokens = []
+        for t in input_tokens:
+            if len(t.strip()) > 0:
+                new_tokens.append(t)
+            else:
+                new_tokens.append(self.space_token)
+        input_tokens = new_tokens
         input_ids = self.tokenizer.convert_tokens_to_ids(input_tokens)
 
         mask = [1]
@@ -86,9 +97,9 @@ class PointerTransformMixin:
         seq_len = self.max_seq_len
         labels = torch.zeros((bs, 2, seq_len, seq_len))
         for i, batch_spans in enumerate(data["available_spans"]):
-            offset = data["offset"][i]
-            pad_len = data["mask"].count(0)
-            token_len = seq_len - pad_len
+            # offset = data["offset"][i]
+            # pad_len = data["mask"].count(0)
+            # token_len = seq_len - pad_len
             for span in batch_spans:
                 if len(span) == 1:
                     labels[i, :, span[0], span[0]] = 1
@@ -96,10 +107,10 @@ class PointerTransformMixin:
                     for s, e in windowed_queue_iter(span, 2, 1, drop_last=True):
                         labels[i, 0, s, e] = 1
                     labels[i, 1, span[-1], span[0]] = 1
-            labels[i, :, 0:offset, :] = -100
-            labels[i, :, :, 0:offset] = -100
-            labels[i, :, :, token_len:] = -100
-            labels[i, :, token_len:, :] = -100
+            # labels[i, :, 0:offset, :] = -100
+            # labels[i, :, :, 0:offset] = -100
+            # labels[i, :, :, token_len:] = -100
+            # labels[i, :, token_len:, :] = -100
         data["labels"] = labels
         return data
 
@@ -173,10 +184,13 @@ class CachedPointerTaggingTransform(CachedTransformBase, PointerTransformMixin):
                 # res = self.build_ins(ent_type, data["tokens"], gold_ents)
                 query = self.ent_type2query[ent_type]
                 query_tokens = self.tokenizer.tokenize(query)
-                res = self.build_ins(query_tokens, data["tokens"], gold_ents)
+                try:
+                    res = self.build_ins(query_tokens, data["tokens"], gold_ents)
+                except (ValueError, AssertionError):
+                    continue
                 input_tokens, input_ids, mask, offset, available_spans = res
                 ins = {
-                    "id": data["id"],
+                    "id": data.get("id", str(len(final_data))),
                     "ent_type": ent_type,
                     "gold_ents": gold_ents,
                     "raw_tokens": data["tokens"],
@@ -250,12 +264,18 @@ class CachedPointerMRCTransform(CachedTransformBase, PointerTransformMixin):
     ) -> Iterable:
         final_data = []
         for data in transform_loader:
-            res = self.build_ins(
-                data["query_tokens"], data["context_tokens"], data["answer_index"]
-            )
+            try:
+                res = self.build_ins(
+                    data["query_tokens"],
+                    data["context_tokens"],
+                    data["answer_index"],
+                    data.get("background_tokens"),
+                )
+            except (ValueError, AssertionError):
+                continue
             input_tokens, input_ids, mask, offset, available_spans = res
             ins = {
-                "id": data["id"],
+                "id": data.get("id", str(len(final_data))),
                 "gold_spans": sorted(set(tuple(x) for x in data["answer_index"])),
                 "raw_tokens": data["context_tokens"],
                 "input_tokens": input_tokens,

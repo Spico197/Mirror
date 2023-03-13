@@ -55,7 +55,7 @@ class LinearWithAct(nn.Module):
 
     def forward(self, x):
         x = self.linear(x)
-        # x = self.act_fn(x)
+        x = self.act_fn(x)
         x = self.dropout(x)
         return x
 
@@ -67,7 +67,15 @@ class PointerMatrix(nn.Module):
         - https://github.com/ljynlp/W2NER
     """
 
-    def __init__(self, hidden_size, biaffine_size, cls_num=2, dropout=0):
+    def __init__(
+        self,
+        hidden_size,
+        biaffine_size,
+        cls_num=2,
+        dropout=0,
+        biaffine_bias=False,
+        use_rope=False,
+    ):
         super().__init__()
         self.linear_h = LinearWithAct(
             n_in=hidden_size, n_out=biaffine_size, dropout=dropout
@@ -75,11 +83,41 @@ class PointerMatrix(nn.Module):
         self.linear_t = LinearWithAct(
             n_in=hidden_size, n_out=biaffine_size, dropout=dropout
         )
-        self.biaffine = Biaffine(n_in=biaffine_size, n_out=cls_num)
+        self.biaffine = Biaffine(
+            n_in=biaffine_size,
+            n_out=cls_num,
+            bias_x=biaffine_bias,
+            bias_y=biaffine_bias,
+        )
+        self.use_rope = use_rope
+
+    def sinusoidal_position_embedding(self, qw, kw):
+        batch_size, seq_len, output_dim = qw.shape
+        position_ids = torch.arange(0, seq_len, dtype=torch.float).unsqueeze(-1)
+
+        indices = torch.arange(0, output_dim // 2, dtype=torch.float)
+        indices = torch.pow(10000, -2 * indices / output_dim)
+        pos_emb = position_ids * indices
+        pos_emb = torch.stack([torch.sin(pos_emb), torch.cos(pos_emb)], dim=-1)
+        pos_emb = pos_emb.repeat((batch_size, *([1] * len(pos_emb.shape))))
+        pos_emb = torch.reshape(pos_emb, (batch_size, seq_len, output_dim))
+        pos_emb = pos_emb.to(qw)
+
+        # (bs, seq_len, 1, hz) -> (bs, seq_len, hz)
+        cos_pos = pos_emb[..., 1::2].repeat_interleave(2, dim=-1)
+        # (bs, seq_len, 1, hz) -> (bs, seq_len, hz)
+        sin_pos = pos_emb[..., ::2].repeat_interleave(2, dim=-1)
+        qw2 = torch.cat([-qw[..., 1::2], qw[..., ::2]], -1)
+        qw = qw * cos_pos + qw2 * sin_pos
+        kw2 = torch.cat([-kw[..., 1::2], kw[..., ::2]], -1)
+        kw = kw * cos_pos + kw2 * sin_pos
+        return qw, kw
 
     def forward(self, x):
         h = self.linear_h(x)
         t = self.linear_t(x)
+        if self.use_rope:
+            h, t = self.sinusoidal_position_embedding(h, t)
         o = self.biaffine(h, t)
         return o
 
@@ -99,7 +137,7 @@ def multilabel_categorical_crossentropy(y_pred, y_true, bit_mask=None):
     pos_loss = torch.logsumexp(y_pred_pos, dim=-1)
 
     if bit_mask is None:
-        return (neg_loss + pos_loss).mean()
+        return neg_loss + pos_loss
     else:
         raise NotImplementedError
 
@@ -126,6 +164,7 @@ class MrcPointerMatrixModel(nn.Module):
 
         self.plm = BertModel.from_pretrained(plm_dir)
         hidden_size = self.plm.config.hidden_size
+        # self.biaffine_size = biaffine_size
         self.nnw_mat = PointerMatrix(
             hidden_size, biaffine_size, cls_num=2, dropout=dropout
         )
@@ -159,6 +198,8 @@ class MrcPointerMatrixModel(nn.Module):
         hidden = self.input_encoding(input_ids, mask)
         nnw_hidden = self.nnw_mat(hidden)
         thw_hidden = self.thw_mat(hidden)
+        # nnw_hidden = nnw_hidden / self.biaffine_size ** 0.5
+        # thw_hidden = thw_hidden / self.biaffine_size ** 0.5
         # # (bs, 2, seq_len, seq_len)
         bs, _, seq_len, seq_len = nnw_hidden.shape
 
@@ -197,6 +238,98 @@ class MrcPointerMatrixModel(nn.Module):
         pred = torch.stack([nnw_pred, thw_pred], dim=1)
         pred = pred * bit_mask
 
+        batch_preds = decode_nnw_thw_mat(pred, offsets=kwargs.get("offset"))
+
+        return batch_preds
+
+
+class MrcGlobalPointerModel(nn.Module):
+    def __init__(
+        self,
+        plm_dir: str,
+        use_rope: bool = True,
+        cls_num: int = 2,
+        biaffine_size: int = 384,
+        none_type_id: int = 0,
+        text_mask_id: int = 4,
+        dropout: float = 0.3,
+    ):
+        super().__init__()
+
+        # num of predicted classes, default is 3: None, NNW and THW
+        self.cls_num = cls_num
+        # None type id: 0, Next Neighboring Word (NNW): 1, Tail Head Word (THW): 2
+        self.none_type_id = none_type_id
+        # input: cls instruction sep text sep pad
+        # mask:   1       2       3   4    5   0
+        self.text_mask_id = text_mask_id
+        self.use_rope = use_rope
+
+        self.plm = BertModel.from_pretrained(plm_dir)
+        self.hidden_size = self.plm.config.hidden_size
+        self.biaffine_size = biaffine_size
+        self.pointer = PointerMatrix(
+            self.hidden_size,
+            biaffine_size,
+            cls_num=2,
+            dropout=dropout,
+            biaffine_bias=True,
+            use_rope=use_rope,
+        )
+
+    def input_encoding(self, input_ids, mask):
+        attention_mask = mask.gt(0).float()
+        plm_outputs = self.plm(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            return_dict=True,
+        )
+        return plm_outputs.last_hidden_state
+
+    def build_bit_mask(self, mask: torch.Tensor) -> torch.Tensor:
+        # mask: (batch_size, seq_len)
+        bs, seq_len = mask.shape
+        mask_mat = (
+            mask.eq(self.text_mask_id).unsqueeze(-1).expand((bs, seq_len, seq_len))
+        )
+        # bit_mask: (batch_size, 1, seq_len, seq_len)
+        bit_mask = (
+            torch.logical_and(mask_mat, mask_mat.transpose(1, 2)).unsqueeze(1).float()
+        )
+        return bit_mask
+
+    def forward(self, input_ids, mask, labels=None, is_eval=False, **kwargs):
+        bit_mask = self.build_bit_mask(mask)
+        hidden = self.input_encoding(input_ids, mask)
+        # (bs, 2, seq_len, seq_len)
+        logits = self.pointer(hidden)
+        logits = logits * bit_mask - (1.0 - bit_mask) * 1e12
+        logits = logits / (self.biaffine_size**0.5)
+        # # (bs, 2, seq_len, seq_len)
+        bs, cls_num, seq_len, seq_len = logits.shape
+        assert labels.shape == (bs, cls_num, seq_len, seq_len)
+
+        results = {"logits": logits}
+        if labels is not None:
+            loss = multilabel_categorical_crossentropy(
+                logits.reshape(bs * cls_num, -1), labels.reshape(bs * cls_num, -1)
+            )
+            loss = loss.mean()
+            results["loss"] = loss
+
+        if is_eval:
+            batch_positions = self.decode(logits, bit_mask, **kwargs)
+            results["pred"] = batch_positions
+        return results
+
+    def decode(
+        self,
+        logits: torch.Tensor,
+        bit_mask: torch.Tensor,
+        **kwargs,
+    ):
+        # B x 2 x L x L
+        pred = (logits > 0).long()
         batch_preds = decode_nnw_thw_mat(pred, offsets=kwargs.get("offset"))
 
         return batch_preds
