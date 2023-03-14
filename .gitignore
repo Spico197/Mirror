@@ -176,3 +176,4 @@ resources/**/*.jsonl
 resources/**/*.zip
 resources/**/*.tsv
 resources/**/*.xml
+resources/**/raw/

@@ -1,6 +1,6 @@
 # task
 task_type: MrcQaTask
-task_name: RobertaBase_data20230313v1
+task_name: RobertaBase_data20230314v2
 comment: 'GlobalPointer with RoPE'
 
 # data preprocessing
@@ -12,7 +12,7 @@ debug_mode: false
 plm_dir: /data/tzhu/PLM/hfl--chinese-roberta-wwm-ext
 # data_dir: resources/MRC/cmrc2018/formatted
 # data_dir: resources/NER/msra/mrc
-data_dir: resources/Merged/20230313-v1
+data_dir: resources/Merged/20230314-v2
 output_dir: outputs
 task_dir: ${output_dir}/${task_name}
 train_filepath: ${data_dir}/train.jsonl
@@ -30,6 +30,7 @@ best_metric_field: micro.f1
 final_eval_on_test: true
 
 warmup_proportion: 0.1
+step_eval_interval: 20000
 num_epochs: 20
 epoch_patience: 10
 train_batch_size: 16
