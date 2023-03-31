@@ -114,6 +114,20 @@ class PointerTransformMixin:
         data["labels"] = labels
         return data
 
+    def update_consecutive_span_labels(self, data: dict) -> dict:
+        bs = len(data["input_ids"])
+        seq_len = self.max_seq_len
+        labels = torch.zeros((bs, 1, seq_len, seq_len))
+        for i, batch_spans in enumerate(data["available_spans"]):
+            for span in batch_spans:
+                assert span == tuple(sorted(set(span)))
+                if len(span) == 1:
+                    labels[i, 0, span[0], span[0]] = 1
+                else:
+                    labels[i, 0, span[0], span[-1]] = 1
+        data["labels"] = labels
+        return data
+
     def pad_seq(self, batch_seqs: Iterable[Filled], fill: Filled) -> Iterable[Filled]:
         max_len = max(len(seq) for seq in batch_seqs)
         assert max_len <= self.max_seq_len
@@ -239,6 +253,7 @@ class CachedPointerMRCTransform(CachedTransformBase, PointerTransformMixin):
         self,
         max_seq_len: int,
         plm_dir: str,
+        mode: str = "w2",
     ) -> None:
         super().__init__()
 
@@ -254,7 +269,15 @@ class CachedPointerMRCTransform(CachedTransformBase, PointerTransformMixin):
             guessing=False,
             missing_key_as_null=True,
         )
-        self.collate_fn.update_before_tensorify = self.update_labels
+
+        if mode == "w2":
+            self.collate_fn.update_before_tensorify = self.update_labels
+        elif mode == "cons":
+            self.collate_fn.update_before_tensorify = (
+                self.update_consecutive_span_labels
+            )
+        else:
+            raise ValueError(f"Mode: {mode} not recognizable")
 
     def transform(
         self,
@@ -287,4 +310,26 @@ class CachedPointerMRCTransform(CachedTransformBase, PointerTransformMixin):
             }
             final_data.append(ins)
 
+        return final_data
+
+    def predict_transform(self, data: list[dict]):
+        """
+        Args:
+            data: a list of dict with query, context, and background strings
+        """
+        dataset = []
+        for idx, ins in enumerate(data):
+            idx = f"Prediction#{idx}"
+            dataset.append(
+                {
+                    "id": idx,
+                    "query_tokens": list(ins["query"]),
+                    "context_tokens": list(ins["context"]),
+                    "background_tokens": list(ins.get("background")),
+                    "answer_index": [],
+                }
+            )
+        final_data = self(
+            dataset, disable_pbar=True, inference_mode=True, num_samples=0
+        )
         return final_data

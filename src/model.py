@@ -1,8 +1,9 @@
 import torch
 import torch.nn as nn
+from rex.utils.iteration import windowed_queue_iter
 from transformers import BertModel
 
-from src.utils import decode_nnw_thw_mat
+from src.utils import decode_nnw_thw_mat, decode_pointer_mat
 
 
 class Biaffine(nn.Module):
@@ -253,6 +254,7 @@ class MrcGlobalPointerModel(nn.Module):
         none_type_id: int = 0,
         text_mask_id: int = 4,
         dropout: float = 0.3,
+        mode: str = "w2",
     ):
         super().__init__()
 
@@ -264,6 +266,10 @@ class MrcGlobalPointerModel(nn.Module):
         # mask:   1       2       3   4    5   0
         self.text_mask_id = text_mask_id
         self.use_rope = use_rope
+
+        # mode: w2: w2ner, cons: consecutive spans
+        self.mode = mode
+        assert self.mode in ["w2", "cons"]
 
         self.plm = BertModel.from_pretrained(plm_dir)
         self.hidden_size = self.plm.config.hidden_size
@@ -296,9 +302,14 @@ class MrcGlobalPointerModel(nn.Module):
         bit_mask = (
             torch.logical_and(mask_mat, mask_mat.transpose(1, 2)).unsqueeze(1).float()
         )
+        if self.mode == "cons":
+            bit_mask = bit_mask.triu()
+
         return bit_mask
 
-    def forward(self, input_ids, mask, labels=None, is_eval=False, **kwargs):
+    def forward(
+        self, input_ids, mask, labels=None, is_eval=False, top_p=0.5, top_k=-1, **kwargs
+    ):
         bit_mask = self.build_bit_mask(mask)
         hidden = self.input_encoding(input_ids, mask)
         # (bs, 2, seq_len, seq_len)
@@ -318,18 +329,57 @@ class MrcGlobalPointerModel(nn.Module):
             results["loss"] = loss
 
         if is_eval:
-            batch_positions = self.decode(logits, bit_mask, **kwargs)
+            batch_positions = self.decode(logits, top_p=top_p, top_k=top_k, **kwargs)
             results["pred"] = batch_positions
         return results
+
+    def calc_path_prob(self, probs, paths):
+        """
+        Args:
+            probs: (2, seq_len, seq_len) | (1, seq_len, seq_len)
+            paths: a list of paths in tuple
+
+        Returns:
+            [(path: tuple, prob: float), ...]
+        """
+        assert self.mode in ["w2", "cons"]
+        paths_with_prob = []
+        for path in paths:
+            path_prob = 1.0
+            if self.mode == "w2":
+                for se in windowed_queue_iter(path, 2, 1, drop_last=True):
+                    path_prob *= probs[0, se[0], se[-1]]
+                path_prob *= probs[1, path[-1], path[0]]
+            elif self.mode == "cons":
+                path_prob = probs[0, path[0], path[-1]]
+            paths_with_prob.append((path, path_prob))
+        return paths_with_prob
 
     def decode(
         self,
         logits: torch.Tensor,
-        bit_mask: torch.Tensor,
+        top_p: float = 0.5,
+        top_k: int = -1,
         **kwargs,
     ):
+        # mode: w2: w2ner with nnw and thw labels, cons: consecutive spans with one type of labels
+        assert self.mode in ["w2", "cons"]
         # B x 2 x L x L
-        pred = (logits > 0).long()
-        batch_preds = decode_nnw_thw_mat(pred, offsets=kwargs.get("offset"))
+        probs = logits.sigmoid()
+        pred = (probs > top_p).long()
+        if self.mode == "w2":
+            preds = decode_nnw_thw_mat(pred, offsets=kwargs.get("offset"))
+        elif self.mode == "cons":
+            pred = pred.triu()
+            preds = decode_pointer_mat(pred, offsets=kwargs.get("offset"))
+
+        if top_k == -1:
+            batch_preds = preds
+        else:
+            batch_preds = []
+            for i, paths in enumerate(preds):
+                paths_with_prob = self.calc_path_prob(probs[i], paths)
+                paths_with_prob.sort(key=lambda pp: pp[1], reverse=True)
+                batch_preds.append([pp[0] for pp in paths_with_prob[:top_k]])
 
         return batch_preds

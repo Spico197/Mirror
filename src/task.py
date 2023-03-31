@@ -7,6 +7,7 @@ from rex import accelerator
 from rex.data.data_manager import DataManager
 from rex.data.dataset import CachedDataset
 from rex.tasks.simple_metric_task import SimpleMetricTask
+from rex.utils.batch import decompose_batch_into_instances
 from rex.utils.io import load_jsonlines
 from rex.utils.registry import register
 from transformers.optimization import get_linear_schedule_with_warmup
@@ -93,7 +94,7 @@ class MrcTaggingTask(SimpleMetricTask):
         loader = accelerator.prepare_data_loader(loader)
         id2ents = defaultdict(set)
         for batch in loader:
-            batch_out = self.model(**batch, decode=True)
+            batch_out = self.model(**batch, is_eval=True)
             for _id, _pred in zip(batch["id"], batch_out["pred"]):
                 id2ents[_id].update(_pred)
         results = [id2ents[_id] for _id in text_ids]
@@ -107,6 +108,7 @@ class MrcQaTask(MrcTaggingTask):
         return CachedPointerMRCTransform(
             self.config.max_seq_len,
             self.config.plm_dir,
+            mode=self.config.mode,
         )
 
     def init_model(self):
@@ -115,11 +117,51 @@ class MrcQaTask(MrcTaggingTask):
             self.config.plm_dir,
             biaffine_size=self.config.biaffine_size,
             dropout=self.config.dropout,
+            mode=self.config.mode,
         )
         return m
 
+    def init_lr_scheduler(self):
+        num_training_steps = (
+            len(self.data_manager.train_loader) * self.config.num_epochs
+        )
+        num_warmup_steps = math.floor(
+            num_training_steps * self.config.warmup_proportion
+        )
+        return get_linear_schedule_with_warmup(
+            self.optimizer,
+            num_warmup_steps=num_warmup_steps,
+            num_training_steps=num_training_steps,
+        )
+
     def init_metric(self):
         return MrcSpanMetric()
+
+    def predict_api(self, data: list[dict], **kwargs):
+        """
+        Args:
+            data: a list of dict with query, context, and background strings
+        """
+        raw_dataset = self.transform.predict_transform(data)
+        loader = self.data_manager.prepare_loader(raw_dataset)
+        # to prepare input device
+        loader = accelerator.prepare_data_loader(loader)
+        results = []
+        for batch in loader:
+            batch_out = self.model(**batch, is_eval=True)
+            batch["pred"] = batch_out["pred"]
+            instances = decompose_batch_into_instances(batch)
+            for ins in instances:
+                preds = ins["pred"]
+                ins_results = []
+                for index_list in preds:
+                    ins_result = []
+                    for i in index_list:
+                        ins_result.append(ins["raw_tokens"][i])
+                    ins_results.append(("".join(ins_result), tuple(index_list)))
+                results.append(ins_results)
+
+        return results
 
 
 if __name__ == "__main__":

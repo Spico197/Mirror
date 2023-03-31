@@ -109,3 +109,18 @@ def decode_nnw_thw_mat(
         result_batch.append(ins_span_paths)
 
     return result_batch
+
+
+def decode_pointer_mat(
+    batch_mat: torch.LongTensor, offsets: list[int] = None
+) -> list[list[tuple[int]]]:
+    batch_paths = []
+    for i in range(len(batch_mat)):
+        offset = offsets[i] if offsets else 0
+        coordinates = (batch_mat[i, 0] == 1).nonzero().tolist()
+        paths = []
+        for s, e in coordinates:
+            path = tuple(range(s - offset, e + 1 - offset))
+            paths.append(path)
+        batch_paths.append(paths)
+    return batch_paths
