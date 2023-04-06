@@ -202,13 +202,15 @@ if __name__ == "__main__":
     )
     task.load(
         # "outputs/Mirror_RobertaBaseWwm_Cons_MsraMrc/ckpt/MrcGlobalPointerModel.best.pth",
-        "outputs/Mirror_RobertaBaseWwm_W2_MsraMrc_HyperParamExp1/ckpt/MrcGlobalPointerModel.best.pth",
+        # "outputs/Mirror_RobertaBaseWwm_W2_MsraMrc_HyperParamExp1/ckpt/MrcGlobalPointerModel.best.pth",
+        config.base_model_path,
         load_config=False,
         load_model=True,
         load_optimizer=False,
         load_history=False,
     )
-    task.eval("test", verbose=True, dump=True, dump_middle=True, postfix="re_eval")
+    task.train()
+    # task.eval("test", verbose=True, dump=True, dump_middle=True, postfix="re_eval")
 
     # task = MrcQaTask(
     #     config,

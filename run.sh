@@ -4,8 +4,8 @@ export CUDA_VISIBLE_DEVICES=3
 
 
 single() {
-    # rex train -m src.task -dc conf/ner.yaml
-    rex train -m src.task -dc conf/mrc.yaml
+    rex train -m src.task -dc conf/ner.yaml
+    # rex train -m src.task -dc conf/mrc.yaml
 }
 
 ddp() {
