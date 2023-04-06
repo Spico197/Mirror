@@ -277,7 +277,7 @@ class MrcGlobalPointerModel(nn.Module):
         self.pointer = PointerMatrix(
             self.hidden_size,
             biaffine_size,
-            cls_num=2,
+            cls_num=2 if self.mode == "w2" else 1,
             dropout=dropout,
             biaffine_bias=True,
             use_rope=use_rope,

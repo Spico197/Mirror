@@ -1,13 +1,13 @@
 # task
 task_type: MrcTaggingTask
-task_name: GPwRoPE_Cons_MSRA
+task_name: GPwRoPE_W2_MSRA
 comment: 'bert mrc w/ w2ner for NER'
 
 # data preprocessing
 max_seq_len: 512
 negative_sample_prob: 1.0
 debug_mode: false
-mode: cons
+mode: w2
 
 # filepaths
 # plm_dir: /data/tzhu/PLM/hfl--rbt3

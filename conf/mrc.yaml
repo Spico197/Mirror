@@ -1,22 +1,24 @@
 # task
 task_type: MrcQaTask
-task_name: RobertaBase_CMRC2018
+task_name: Mirror_RobertaBaseWwm_Cons_MsraMrc
 comment: 'GlobalPointer with RoPE'
 
 # data preprocessing
 max_seq_len: 512
 debug_mode: false
+mode: cons
 
 # filepaths
 # plm_dir: /data/tzhu/PLM/hfl--rbt3
 plm_dir: /data/tzhu/PLM/hfl--chinese-roberta-wwm-ext
-data_dir: resources/MRC/cmrc2018/formatted
-# data_dir: resources/NER/msra/mrc
+# data_dir: resources/MRC/cmrc2018/formatted
+data_dir: resources/NER/msra/mrc
 # data_dir: resources/Merged/20230314-v2
 output_dir: outputs
 task_dir: ${output_dir}/${task_name}
 train_filepath: ${data_dir}/train.jsonl
-dev_filepath: ${data_dir}/validation.jsonl
+# dev_filepath: ${data_dir}/validation.jsonl
+dev_filepath: ${data_dir}/test.jsonl
 test_filepath: ${data_dir}/test.jsonl
 dump_cache_dir: ${task_dir}/cache
 regenerate_cache: true
@@ -32,12 +34,13 @@ final_eval_on_test: true
 warmup_proportion: 0.1
 step_eval_interval: 20000
 step_patience: -1
-num_epochs: 20
+num_epochs: 5
 epoch_patience: 5
-train_batch_size: 16
-eval_batch_size: 32
-learning_rate: !!float 2e-5
-other_learning_rate: !!float 2e-5
+train_batch_size: 32
+eval_batch_size: 64
+learning_rate: !!float 5e-5
+other_learning_rate: !!float 1e-4
+max_grad_norm: 1.0
 
 # model
 dropout: 0.3

@@ -154,6 +154,7 @@ class CachedPointerTaggingTransform(CachedTransformBase, PointerTransformMixin):
         max_seq_len: int,
         plm_dir: str,
         ent_type2query_filepath: str,
+        mode: str = "w2",
         negative_sample_prob: float = 1.0,
     ) -> None:
         super().__init__()
@@ -172,7 +173,14 @@ class CachedPointerTaggingTransform(CachedTransformBase, PointerTransformMixin):
             guessing=False,
             missing_key_as_null=True,
         )
-        self.collate_fn.update_before_tensorify = self.update_labels
+        if mode == "w2":
+            self.collate_fn.update_before_tensorify = self.update_labels
+        elif mode == "cons":
+            self.collate_fn.update_before_tensorify = (
+                self.update_consecutive_span_labels
+            )
+        else:
+            raise ValueError(f"Mode: {mode} not recognizable")
 
     def transform(
         self,

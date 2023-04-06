@@ -1,5 +1,6 @@
 import math
 from collections import defaultdict
+from datetime import datetime
 from typing import List
 
 import torch.optim as optim
@@ -8,9 +9,14 @@ from rex.data.data_manager import DataManager
 from rex.data.dataset import CachedDataset
 from rex.tasks.simple_metric_task import SimpleMetricTask
 from rex.utils.batch import decompose_batch_into_instances
+from rex.utils.dict import flatten_dict
 from rex.utils.io import load_jsonlines
 from rex.utils.registry import register
-from transformers.optimization import get_linear_schedule_with_warmup
+from torch.utils.tensorboard import SummaryWriter
+from transformers.optimization import (
+    get_cosine_schedule_with_warmup,
+    get_linear_schedule_with_warmup,
+)
 
 from .metric import MrcNERMetric, MrcSpanMetric
 from .model import MrcGlobalPointerModel, MrcPointerMatrixModel
@@ -22,12 +28,38 @@ class MrcTaggingTask(SimpleMetricTask):
     def __init__(self, config, **kwargs) -> None:
         super().__init__(config, **kwargs)
 
+    def after_initialization(self):
+        now_string = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+        self.tb_logger: SummaryWriter = SummaryWriter(
+            log_dir=self.task_path / "tb_summary" / now_string,
+            comment=self.config.comment,
+        )
+
+    def after_whole_train(self):
+        self.tb_logger.close()
+
+    def log_loss(
+        self, idx: int, loss_item: float, step_or_epoch: str, dataset_name: str
+    ):
+        self.tb_logger.add_scalar(
+            f"loss/{dataset_name}/{step_or_epoch}", loss_item, idx
+        )
+        self.tb_logger.add_scalar("lr/plm", self.optimizer.param_groups[0]["lr"], idx)
+        self.tb_logger.add_scalar("lr/other", self.optimizer.param_groups[1]["lr"], idx)
+
+    def log_metrics(
+        self, idx: int, metrics: dict, step_or_epoch: str, dataset_name: str
+    ):
+        metrics = flatten_dict(metrics)
+        self.tb_logger.add_scalars(f"{dataset_name}/{step_or_epoch}", metrics, idx)
+
     def init_transform(self):
         return CachedPointerTaggingTransform(
             self.config.max_seq_len,
             self.config.plm_dir,
             self.config.ent_type2query_filepath,
-            self.config.negative_sample_prob,
+            mode=self.config.mode,
+            negative_sample_prob=self.config.negative_sample_prob,
         )
 
     def init_data_manager(self):
@@ -53,6 +85,7 @@ class MrcTaggingTask(SimpleMetricTask):
             self.config.plm_dir,
             biaffine_size=self.config.biaffine_size,
             dropout=self.config.dropout,
+            mode=self.config.mode,
         )
         return m
 
@@ -71,7 +104,11 @@ class MrcTaggingTask(SimpleMetricTask):
             {"params": self.model.plm.parameters()},
             {"params": rest_params, "lr": self.config.other_learning_rate},
         ]
-        return optim.AdamW(optimizer_grouped_parameters, lr=self.config.learning_rate)
+        return optim.AdamW(
+            optimizer_grouped_parameters,
+            lr=self.config.learning_rate,
+            betas=(0.9, 0.99),
+        )
 
     def init_lr_scheduler(self):
         num_training_steps = (
@@ -80,7 +117,8 @@ class MrcTaggingTask(SimpleMetricTask):
         num_warmup_steps = math.floor(
             num_training_steps * self.config.warmup_proportion
         )
-        return get_linear_schedule_with_warmup(
+        # return get_linear_schedule_with_warmup(
+        return get_cosine_schedule_with_warmup(
             self.optimizer,
             num_warmup_steps=num_warmup_steps,
             num_training_steps=num_training_steps,
@@ -121,19 +159,6 @@ class MrcQaTask(MrcTaggingTask):
         )
         return m
 
-    def init_lr_scheduler(self):
-        num_training_steps = (
-            len(self.data_manager.train_loader) * self.config.num_epochs
-        )
-        num_warmup_steps = math.floor(
-            num_training_steps * self.config.warmup_proportion
-        )
-        return get_linear_schedule_with_warmup(
-            self.optimizer,
-            num_warmup_steps=num_warmup_steps,
-            num_training_steps=num_training_steps,
-        )
-
     def init_metric(self):
         return MrcSpanMetric()
 
@@ -167,26 +192,29 @@ class MrcQaTask(MrcTaggingTask):
 if __name__ == "__main__":
     from rex.utils.config import ConfigParser
 
-    config = ConfigParser.parse_cmd(cmd_args=["-dc", "conf/mrc.yaml"])
+    config = ConfigParser.parse_cmd(cmd_args=["-dc", "conf/ner.yaml"])
 
-    # task = MrcTaggingTask(
-    #     config,
-    #     initialize=True,
-    #     makedirs=True,
-    #     dump_configfile=True,
-    # )
-    # task.load(
-    #     config.base_model_path,
-    #     load_config=False,
-    #     load_model=True,
-    #     load_optimizer=False,
-    #     load_history=False,
-    # )
-    task = MrcQaTask(
+    task = MrcTaggingTask(
         config,
         initialize=True,
         makedirs=True,
         dump_configfile=True,
     )
-    task.train()
+    task.load(
+        # "outputs/Mirror_RobertaBaseWwm_Cons_MsraMrc/ckpt/MrcGlobalPointerModel.best.pth",
+        "outputs/Mirror_RobertaBaseWwm_W2_MsraMrc_HyperParamExp1/ckpt/MrcGlobalPointerModel.best.pth",
+        load_config=False,
+        load_model=True,
+        load_optimizer=False,
+        load_history=False,
+    )
+    task.eval("test", verbose=True, dump=True, dump_middle=True, postfix="re_eval")
+
+    # task = MrcQaTask(
+    #     config,
+    #     initialize=True,
+    #     makedirs=True,
+    #     dump_configfile=True,
+    # )
+    # task.train()
     # task.eval("dev", verbose=True, dump=True, dump_middle=True, postfix="re_eval")
