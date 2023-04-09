@@ -177,3 +177,4 @@ resources/**/*.zip
 resources/**/*.tsv
 resources/**/*.xml
 resources/**/raw/
+resources.tar.gz

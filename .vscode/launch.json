@@ -26,7 +26,7 @@
                 "-m",
                 "src.task",
                 "-dc",
-                "conf/mrc.yaml"
+                "conf/ner.yaml"
             ],
             "justMyCode": false
         }

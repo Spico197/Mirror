@@ -1,11 +1,11 @@
 # task
 task_type: MrcTaggingTask
-task_name: Mirror_W2_MSRA_NER_Pretrain
+task_name: Mirror_W2_MSRAv2_NER_Neg0
 comment: 'bert mrc w/ w2ner for NER'
 
 # data preprocessing
-max_seq_len: 512
-negative_sample_prob: 1.0
+max_seq_len: 300
+negative_sample_prob: 0.0
 debug_mode: false
 mode: w2
 
@@ -15,24 +15,24 @@ base_model_path: outputs/RobertaBase_data20230314v2/ckpt/MrcGlobalPointerModel.b
 # plm_dir: /data/tzhu/PLM/bert-base-chinese
 plm_dir: /data/tzhu/PLM/hfl--chinese-roberta-wwm-ext
 # plm_dir: /data/tzhu/PLM/hfl--chinese-roberta-wwm-ext-large
-# data_dir: resources/NER/MSRA_v2/formatted
-data_dir: resources/NER/msra/formatted
+data_dir: resources/NER/MSRA_v2/formatted
+# data_dir: resources/NER/msra/formatted
 output_dir: outputs
 task_dir: ${output_dir}/${task_name}
-# train_filepath: ${data_dir}/train.char.bmes.jsonl
-# dev_filepath: ${data_dir}/dev.char.bmes.jsonl
-# test_filepath: ${data_dir}/test.char.bmes.jsonl
-# ent_type2query_filepath: ${data_dir}/query.json
-train_filepath: ${data_dir}/train.jsonl
-dev_filepath: ${data_dir}/test.jsonl
-test_filepath: ${data_dir}/test.jsonl
-ent_type2query_filepath: resources/query.json
+train_filepath: ${data_dir}/train.char.bmes.jsonl
+dev_filepath: ${data_dir}/dev.char.bmes.jsonl
+test_filepath: ${data_dir}/test.char.bmes.jsonl
+ent_type2query_filepath: ${data_dir}/query.json
+# train_filepath: ${data_dir}/train.jsonl
+# dev_filepath: ${data_dir}/test.jsonl
+# test_filepath: ${data_dir}/test.jsonl
+# ent_type2query_filepath: resources/query.json
 dump_cache_dir: ${task_dir}/cache
 regenerate_cache: true
 
 # training
 random_seed: 1227
-eval_on_data: [dev]
+eval_on_data: [dev, test]
 select_best_on_data: dev
 select_best_by_key: metric
 best_metric_field: micro.f1
@@ -43,7 +43,7 @@ num_epochs: 5
 epoch_patience: 5
 train_batch_size: 32
 eval_batch_size: 64
-learning_rate: !!float 5e-5
+learning_rate: !!float 2e-5
 other_learning_rate: !!float 1e-4
 max_grad_norm: 1.0
 

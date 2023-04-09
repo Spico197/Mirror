@@ -33,7 +33,7 @@ class PointerTransformMixin:
         # -2: cls and sep
         reserved_seq_len = self.max_seq_len - 3 - len(query_tokens)
         # reserve at least 20 tokens
-        if reserved_seq_len < 300:
+        if reserved_seq_len < 20:
             raise ValueError(
                 f"Query {query_tokens} too long: {len(query_tokens)} "
                 f"while max seq len is {self.max_seq_len}"
@@ -185,7 +185,7 @@ class CachedPointerTaggingTransform(CachedTransformBase, PointerTransformMixin):
     def transform(
         self,
         transform_loader: Iterator,
-        inference_mode: Optional[bool] = False,
+        dataset_name: str = None,
         **kwargs,
     ) -> Iterable:
         final_data = []
@@ -198,7 +198,7 @@ class CachedPointerTaggingTransform(CachedTransformBase, PointerTransformMixin):
                 gold_ents = ent_type2ents[ent_type]
                 if (
                     len(gold_ents) < 1
-                    and not inference_mode
+                    and dataset_name == "train"
                     and random.random() > self.negative_sample_prob
                 ):
                     # skip negative samples
@@ -252,7 +252,7 @@ class CachedPointerTaggingTransform(CachedTransformBase, PointerTransformMixin):
                     "ents": [],
                 }
             )
-        final_data = self(dataset, disable_pbar=True, inference_mode=True)
+        final_data = self(dataset, disable_pbar=True)
         return final_data
 
 
@@ -290,7 +290,7 @@ class CachedPointerMRCTransform(CachedTransformBase, PointerTransformMixin):
     def transform(
         self,
         transform_loader: Iterator,
-        inference_mode: Optional[bool] = False,
+        dataset_name: str = None,
         **kwargs,
     ) -> Iterable:
         final_data = []
@@ -337,7 +337,5 @@ class CachedPointerMRCTransform(CachedTransformBase, PointerTransformMixin):
                     "answer_index": [],
                 }
             )
-        final_data = self(
-            dataset, disable_pbar=True, inference_mode=True, num_samples=0
-        )
+        final_data = self(dataset, disable_pbar=True, num_samples=0)
         return final_data
