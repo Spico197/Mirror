@@ -1,4 +1,5 @@
 import math
+import re
 from collections import defaultdict
 from datetime import datetime
 from typing import List
@@ -93,21 +94,28 @@ class MrcTaggingTask(SimpleMetricTask):
         return MrcNERMetric()
 
     def init_optimizer(self):
-        rest_params = [
-            x[1]
-            for x in filter(
-                lambda name_params: "plm" not in name_params[0],
-                self.model.named_parameters(),
+        no_decay = r"(embedding|LayerNorm|\.bias$)"
+        plm_lr = r"^plm\."
+        non_trainable = r"^plm\.(emb|encoder\.layer\.[0-3])"
+
+        param_groups = []
+        for name, param in self.model.named_parameters():
+            lr = self.config.learning_rate
+            weight_decay = self.config.weight_decay
+            if re.search(non_trainable, name):
+                param.requires_grad = False
+            if not re.search(plm_lr, name):
+                lr = self.config.other_learning_rate
+            if re.search(no_decay, name):
+                weight_decay = 0.0
+            param_groups.append(
+                {"params": param, "lr": lr, "weight_decay": weight_decay}
             )
-        ]
-        optimizer_grouped_parameters = [
-            {"params": self.model.plm.parameters()},
-            {"params": rest_params, "lr": self.config.other_learning_rate},
-        ]
         return optim.AdamW(
-            optimizer_grouped_parameters,
+            param_groups,
             lr=self.config.learning_rate,
-            betas=(0.9, 0.99),
+            betas=(0.9, 0.98),
+            eps=1e-6,
         )
 
     def init_lr_scheduler(self):
@@ -200,17 +208,25 @@ if __name__ == "__main__":
         makedirs=True,
         dump_configfile=True,
     )
-    task.load(
-        # "outputs/Mirror_RobertaBaseWwm_Cons_MsraMrc/ckpt/MrcGlobalPointerModel.best.pth",
-        # "outputs/Mirror_RobertaBaseWwm_W2_MsraMrc_HyperParamExp1/ckpt/MrcGlobalPointerModel.best.pth",
-        config.base_model_path,
-        load_config=False,
-        load_model=True,
-        load_optimizer=False,
-        load_history=False,
-    )
+    # task.load(
+    #     # "outputs/Mirror_RobertaBaseWwm_Cons_MsraMrc/ckpt/MrcGlobalPointerModel.best.pth",
+    #     # "outputs/Mirror_RobertaBaseWwm_W2_MsraMrc_HyperParamExp1/ckpt/MrcGlobalPointerModel.best.pth",
+    #     config.base_model_path,
+    #     load_config=False,
+    #     load_model=True,
+    #     load_optimizer=False,
+    #     load_history=False,
+    # )
     task.train()
-    # task.eval("test", verbose=True, dump=True, dump_middle=True, postfix="re_eval")
+    # task = MrcTaggingTask.from_taskdir(
+    #     "outputs/Mirror_W2_MSRAv2_NER",
+    #     initialize=True,
+    #     dump_configfile=False,
+    #     load_config=True,
+    # )
+    # for name, _ in task.model.named_parameters():
+    #     print(name)
+    # task.eval("test", verbose=True, dump=True, dump_middle=True, postfix="re_eval.0.1")
 
     # task = MrcQaTask(
     #     config,

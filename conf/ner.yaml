@@ -1,11 +1,11 @@
 # task
 task_type: MrcTaggingTask
-task_name: Mirror_W2_MSRAv2_NER_Neg0
+task_name: debug-Mirror_W2_MSRAv2_NER_FreezeBertEmbAnd0-3
 comment: 'bert mrc w/ w2ner for NER'
 
 # data preprocessing
 max_seq_len: 300
-negative_sample_prob: 0.0
+negative_sample_prob: 1.0
 debug_mode: false
 mode: w2
 
@@ -46,6 +46,7 @@ eval_batch_size: 64
 learning_rate: !!float 2e-5
 other_learning_rate: !!float 1e-4
 max_grad_norm: 1.0
+weight_decay: 0.1
 
 # model
 dropout: 0.3
