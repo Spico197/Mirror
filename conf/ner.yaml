@@ -1,6 +1,6 @@
 # task
 task_type: MrcTaggingTask
-task_name: debug-Mirror_W2_MSRAv2_NER_FreezeBertEmbAnd0-3
+task_name: Mirror_W2_MSRAv2_NER_FreezeBertEmbAnd0-3_bs64
 comment: 'bert mrc w/ w2ner for NER'
 
 # data preprocessing
@@ -41,9 +41,9 @@ final_eval_on_test: true
 warmup_proportion: 0.1
 num_epochs: 5
 epoch_patience: 5
-train_batch_size: 32
-eval_batch_size: 64
-learning_rate: !!float 2e-5
+train_batch_size: 64
+eval_batch_size: 128
+learning_rate: !!float 5e-5
 other_learning_rate: !!float 1e-4
 max_grad_norm: 1.0
 weight_decay: 0.1
