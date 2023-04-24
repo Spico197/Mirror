@@ -6,16 +6,43 @@ from typing import Iterable, Iterator, List, MutableSet, Optional, Tuple, TypeVa
 import torch
 import torch.nn.functional as F
 from rex.data.collate_fn import GeneralCollateFn
-from rex.data.transforms.base import CachedTransformBase
+from rex.data.transforms.base import CachedTransformBase, CachedTransformOneBase
 from rex.metrics import calc_p_r_f1_from_tp_fp_fn
 from rex.utils.io import load_json
 from rex.utils.iteration import windowed_queue_iter
 from rex.utils.logging import logger
+from transformers import AutoTokenizer
 from transformers.models.bert.tokenization_bert_fast import BertTokenizerFast
+from transformers.models.deberta_v2.tokenization_deberta_v2_fast import (
+    DebertaV2TokenizerFast,
+)
 
-from src.utils import decode_nnw_thw_mat, encode_nnw_thw_matrix
+from src.utils import decode_nnw_thw_mat, encode_nnw_thw_mat
 
 Filled = TypeVar("Filled")
+
+
+class PaddingMixin:
+    max_seq_len: int
+
+    def pad_seq(self, batch_seqs: Iterable[Filled], fill: Filled) -> Iterable[Filled]:
+        max_len = max(len(seq) for seq in batch_seqs)
+        assert max_len <= self.max_seq_len
+        for i in range(len(batch_seqs)):
+            batch_seqs[i] = batch_seqs[i] + [fill] * (max_len - len(batch_seqs[i]))
+        return batch_seqs
+
+    def pad_mat(
+        self, mats: List[torch.Tensor], fill: Union[int, float]
+    ) -> List[torch.Tensor]:
+        max_len = max(mat.shape[0] for mat in mats)
+        assert max_len <= self.max_seq_len
+        for i in range(len(mats)):
+            num_add = max_len - mats[i].shape[0]
+            mats[i] = F.pad(
+                mats[i], (0, 0, 0, num_add, 0, num_add), mode="constant", value=fill
+            )
+        return mats
 
 
 class PointerTransformMixin:
@@ -127,25 +154,6 @@ class PointerTransformMixin:
                     labels[i, 0, span[0], span[-1]] = 1
         data["labels"] = labels
         return data
-
-    def pad_seq(self, batch_seqs: Iterable[Filled], fill: Filled) -> Iterable[Filled]:
-        max_len = max(len(seq) for seq in batch_seqs)
-        assert max_len <= self.max_seq_len
-        for i in range(len(batch_seqs)):
-            batch_seqs[i] = batch_seqs[i] + [fill] * (max_len - len(batch_seqs[i]))
-        return batch_seqs
-
-    def pad_mat(
-        self, mats: List[torch.Tensor], fill: Union[int, float]
-    ) -> List[torch.Tensor]:
-        max_len = max(mat.shape[0] for mat in mats)
-        assert max_len <= self.max_seq_len
-        for i in range(len(mats)):
-            num_add = max_len - mats[i].shape[0]
-            mats[i] = F.pad(
-                mats[i], (0, 0, 0, num_add, 0, num_add), mode="constant", value=fill
-            )
-        return mats
 
 
 class CachedPointerTaggingTransform(CachedTransformBase, PointerTransformMixin):
@@ -339,3 +347,154 @@ class CachedPointerMRCTransform(CachedTransformBase, PointerTransformMixin):
             )
         final_data = self(dataset, disable_pbar=True, num_samples=0)
         return final_data
+
+
+class CachedLabelPointerTransform(CachedTransformOneBase):
+    """Transform for label-token linking for skip consecutive spans"""
+
+    def __init__(
+        self, max_seq_len: int, plm_dir: str, mode: str = "w2", **kwargs
+    ) -> None:
+        super().__init__()
+
+        self.max_seq_len: int = max_seq_len
+        self.tokenizer: DebertaV2TokenizerFast = DebertaV2TokenizerFast.from_pretrained(
+            plm_dir
+        )
+
+        self.collate_fn: GeneralCollateFn = GeneralCollateFn(
+            {
+                "input_ids": torch.long,
+                "mask": torch.long,
+                "labels": torch.long,
+            },
+            guessing=False,
+            missing_key_as_null=True,
+        )
+
+        self.collate_fn.update_before_tensorify = self.skip_consecutive_span_labels
+
+    def transform(
+        self,
+        transform_loader: Iterator,
+        dataset_name: str = None,
+        **kwargs,
+    ) -> Iterable:
+        final_data = []
+        for data in transform_loader:
+            try:
+                res = self.build_ins(
+                    data["query_tokens"],
+                    data["context_tokens"],
+                    data["answer_index"],
+                    data.get("background_tokens"),
+                )
+            except (ValueError, AssertionError):
+                continue
+            input_tokens, input_ids, mask, offset, available_spans = res
+            ins = {
+                "id": data.get("id", str(len(final_data))),
+                "gold_spans": sorted(set(tuple(x) for x in data["answer_index"])),
+                "raw_tokens": data["context_tokens"],
+                "input_tokens": input_tokens,
+                "input_ids": input_ids,
+                "mask": mask,
+                "offset": offset,
+                "available_spans": available_spans,
+                "labels": None,
+            }
+            final_data.append(ins)
+
+        return final_data
+
+    def predict_transform(self, data: list[dict]):
+        """
+        Args:
+            data: a list of dict with query, context, and background strings
+        """
+        dataset = []
+        for idx, ins in enumerate(data):
+            idx = f"Prediction#{idx}"
+            dataset.append(
+                {
+                    "id": idx,
+                    "query_tokens": list(ins["query"]),
+                    "context_tokens": list(ins["context"]),
+                    "background_tokens": list(ins.get("background")),
+                    "answer_index": [],
+                }
+            )
+        final_data = self(dataset, disable_pbar=True, num_samples=0)
+        return final_data
+
+    def build_ins(
+        self,
+        query_tokens: list[str],
+        context_tokens: list[str],
+        answer_indexes: list[list[int]],
+        add_context_tokens: list[str] = None,
+    ) -> Tuple:
+        # -2: cls and sep
+        reserved_seq_len = self.max_seq_len - 3 - len(query_tokens)
+        # reserve at least 20 tokens
+        if reserved_seq_len < 20:
+            raise ValueError(
+                f"Query {query_tokens} too long: {len(query_tokens)} "
+                f"while max seq len is {self.max_seq_len}"
+            )
+
+        input_tokens = [self.tokenizer.cls_token]
+        input_tokens += query_tokens
+        input_tokens += [self.tokenizer.sep_token]
+        offset = len(input_tokens)
+        input_tokens += context_tokens[:reserved_seq_len]
+        available_token_range = range(
+            offset, offset + len(context_tokens[:reserved_seq_len])
+        )
+        input_tokens += [self.tokenizer.sep_token]
+
+        add_context_len = 0
+        max_add_context_len = self.max_seq_len - len(input_tokens) - 1
+        add_context_flag = False
+        if add_context_tokens and len(add_context_tokens) > 0:
+            add_context_flag = True
+            add_context_len = len(add_context_tokens[:max_add_context_len])
+            input_tokens += add_context_tokens[:max_add_context_len]
+            input_tokens += [self.tokenizer.sep_token]
+        new_tokens = []
+        for t in input_tokens:
+            if len(t.strip()) > 0:
+                new_tokens.append(t)
+            else:
+                new_tokens.append(self.space_token)
+        input_tokens = new_tokens
+        input_ids = self.tokenizer.convert_tokens_to_ids(input_tokens)
+
+        mask = [1]
+        mask += [2] * len(query_tokens)
+        mask += [3]
+        mask += [4] * len(context_tokens[:reserved_seq_len])
+        mask += [5]
+        if add_context_flag:
+            mask += [6] * add_context_len
+            mask += [7]
+        assert len(mask) == len(input_ids) <= self.max_seq_len
+
+        available_spans = [tuple(i + offset for i in index) for index in answer_indexes]
+        available_spans = list(
+            filter(
+                lambda index: all(i in available_token_range for i in index),
+                available_spans,
+            )
+        )
+
+        token_len = len(input_ids)
+        pad_len = self.max_seq_len - token_len
+        input_tokens += pad_len * [self.tokenizer.pad_token]
+        input_ids += pad_len * [self.tokenizer.pad_token_id]
+        mask += pad_len * [0]
+
+        return input_tokens, input_ids, mask, offset, available_spans
+
+    def skip_consecutive_span_labels(self, data: dict) -> dict:
+        return data

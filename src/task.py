@@ -45,14 +45,15 @@ class MrcTaggingTask(SimpleMetricTask):
         self.tb_logger.add_scalar(
             f"loss/{dataset_name}/{step_or_epoch}", loss_item, idx
         )
-        self.tb_logger.add_scalars(
-            "lr",
-            {
-                str(i): self.optimizer.param_groups[i]["lr"]
-                for i in range(len(self.optimizer.param_groups))
-            },
-            idx,
-        )
+        # self.tb_logger.add_scalars(
+        #     "lr",
+        #     {
+        #         str(i): self.optimizer.param_groups[i]["lr"]
+        #         for i in range(len(self.optimizer.param_groups))
+        #     },
+        #     idx,
+        # )
+        self.tb_logger.add_scalar("lr", self.optimizer.param_groups[0]["lr"], idx)
 
     def log_metrics(
         self, idx: int, metrics: dict, step_or_epoch: str, dataset_name: str
