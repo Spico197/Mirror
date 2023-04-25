@@ -19,9 +19,17 @@ from transformers.optimization import (
     get_linear_schedule_with_warmup,
 )
 
-from .metric import MrcNERMetric, MrcSpanMetric
-from .model import MrcGlobalPointerModel, MrcPointerMatrixModel
-from .transform import CachedPointerMRCTransform, CachedPointerTaggingTransform
+from .metric import MrcNERMetric, MrcSpanMetric, MultiPartSpanMetric
+from .model import (
+    MrcGlobalPointerModel,
+    MrcPointerMatrixModel,
+    SchemaGuidedInstructBertModel,
+)
+from .transform import (
+    CachedLabelPointerTransform,
+    CachedPointerMRCTransform,
+    CachedPointerTaggingTransform,
+)
 
 
 @register("task")
@@ -202,6 +210,28 @@ class MrcQaTask(MrcTaggingTask):
                 results.append(ins_results)
 
         return results
+
+
+@register("task")
+class SchemaGuidedInstructBertTask(MrcTaggingTask):
+    def init_transform(self):
+        return CachedLabelPointerTransform(
+            self.config.max_seq_len,
+            self.config.plm_dir,
+            mode=self.config.mode,
+        )
+
+    def init_model(self):
+        m = SchemaGuidedInstructBertModel(
+            self.config.plm_dir,
+            use_rope=self.config.use_rope,
+            biaffine_size=self.config.biaffine_size,
+            dropout=self.config.dropout,
+        )
+        return m
+
+    def init_metric(self):
+        return MultiPartSpanMetric()
 
 
 if __name__ == "__main__":

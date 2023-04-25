@@ -1,0 +1,44 @@
+# task
+task_type: SchemaGuidedInstructBertTask
+task_name: InstructBert_Span_DebertaV3Base_ACE05EN_NerReEe
+comment: 'span as label, (start, end + 1) span'
+
+# data preprocessing
+max_seq_len: 512
+debug_mode: true
+mode: w2
+
+# filepaths
+plm_dir: microsoft/deberta-v3-base
+data_dir: resources/Mirror/Tasks/EE/ACE05-EN
+output_dir: outputs
+task_dir: ${output_dir}/${task_name}
+train_filepath: ${data_dir}/ACE2005_plus_train.json
+dev_filepath: ${data_dir}/ACE2005_plus_dev.json
+test_filepath: ${data_dir}/ACE2005_plus_test.json
+ent_type2query_filepath: ${data_dir}/query.json
+dump_cache_dir: ${task_dir}/cache
+regenerate_cache: true
+
+# training
+random_seed: 1227
+eval_on_data: [dev, test]
+select_best_on_data: dev
+select_best_by_key: metric
+best_metric_field: micro.f1
+final_eval_on_test: true
+
+warmup_proportion: 0.1
+num_epochs: 5
+epoch_patience: 5
+train_batch_size: 64
+eval_batch_size: 128
+learning_rate: !!float 5e-5
+other_learning_rate: !!float 1e-4
+max_grad_norm: 1.0
+weight_decay: 0.1
+
+# model
+dropout: 0.3
+use_rope: true
+biaffine_size: 512

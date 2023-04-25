@@ -6,7 +6,10 @@
         "cls": ["class1", "class2"],
         "ent": ["person", "location"],
         "rel": ["birth in", "study in"],
-        "event": [{"event type (attack)": ["roles like instrument", "attacker"]}],
+        "event": {
+            "event type (attack)": ["roles like instrument", "attacker"],
+            "another type": ["role", "role"],
+        },
     },
     "ans": {
         "cls": ["class1"],
