@@ -10,7 +10,7 @@
             "request": "launch",
             "module": "src.task",
             "env": {
-                "CUDA_VISIBLE_DEVICES": "2"
+                "CUDA_VISIBLE_DEVICES": "4"
             },
             "justMyCode": false
         },
@@ -20,13 +20,13 @@
             "request": "launch",
             "module": "rex.cmds.train",
             "env": {
-                "CUDA_VISIBLE_DEVICES": "3"
+                "CUDA_VISIBLE_DEVICES": "4"
             },
             "args": [
                 "-m",
                 "src.task",
                 "-dc",
-                "conf/ner.yaml"
+                "conf/mirror-ace05en.yaml"
             ],
             "justMyCode": false
         }

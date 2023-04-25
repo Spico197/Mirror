@@ -389,6 +389,7 @@ class SchemaGuidedInstructBertModel(nn.Module):
     def __init__(
         self,
         plm_dir: str,
+        vocab_size: int = None,
         use_rope: bool = True,
         biaffine_size: int = 512,
         label_mask_id: int = 4,
@@ -398,12 +399,14 @@ class SchemaGuidedInstructBertModel(nn.Module):
         super().__init__()
 
         # input: [CLS] [I] Instruction [LM] PER [LM] LOC [LM] ORG [TL] Text [B] Background [SEP] [PAD]
-        # mask:  0     1   2           3    4   3    4   3    4   5    6    7   8          9     0
+        # mask:  1     2   3           4    5   4    5   4    5   6    7    8   9          10    0
         self.label_mask_id = label_mask_id
         self.text_mask_id = text_mask_id
         self.use_rope = use_rope
 
         self.plm = AutoModel.from_pretrained(plm_dir)
+        if vocab_size:
+            self.plm.resize_token_embeddings(vocab_size)
         self.hidden_size = self.plm.config.hidden_size
         self.biaffine_size = biaffine_size
         self.pointer = PointerMatrix(
@@ -427,11 +430,14 @@ class SchemaGuidedInstructBertModel(nn.Module):
     def build_bit_mask(self, mask: torch.Tensor) -> torch.Tensor:
         # mask: (batch_size, seq_len)
         bs, seq_len = mask.shape
-        _m = torch.logical_or(mask.eq(self.label_mask_id), mask.eq(self.text_mask_id))
-        mask_mat = _m.unsqueeze(-1).expand((bs, seq_len, seq_len))
-        # bit_mask: (batch_size, 1, seq_len, seq_len)
+        # _m = torch.logical_or(mask.eq(self.label_mask_id), mask.eq(self.text_mask_id))
+        # mask_mat = _m.unsqueeze(-1).expand((bs, seq_len, seq_len))
+        # # bit_mask: (batch_size, 1, seq_len, seq_len)
+        # bit_mask = (
+        #     torch.logical_and(mask_mat, mask_mat.transpose(1, 2)).unsqueeze(1).float()
+        # )
         bit_mask = (
-            torch.logical_and(mask_mat, mask_mat.transpose(1, 2)).unsqueeze(1).float()
+            mask.gt(0).unsqueeze(1).unsqueeze(1).expand(bs, 1, seq_len, seq_len).float()
         )
 
         return bit_mask

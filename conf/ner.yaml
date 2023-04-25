@@ -1,6 +1,6 @@
 # task
 task_type: MrcTaggingTask
-task_name: Mirror_W2_MSRAv2_NER_FreezeBertEmbAnd0-3_bs64
+task_name: debug-Mirror_W2_MSRAv2_NER_FreezeBertEmbAnd0-3_bs64
 comment: 'bert mrc w/ w2ner for NER'
 
 # data preprocessing
@@ -13,7 +13,8 @@ mode: w2
 # plm_dir: /data/tzhu/PLM/hfl--rbt3
 base_model_path: outputs/RobertaBase_data20230314v2/ckpt/MrcGlobalPointerModel.best.pth
 # plm_dir: /data/tzhu/PLM/bert-base-chinese
-plm_dir: /data/tzhu/PLM/hfl--chinese-roberta-wwm-ext
+# plm_dir: /data/tzhu/PLM/hfl--chinese-roberta-wwm-ext
+plm_dir: hfl/chinese-roberta-wwm-ext
 # plm_dir: /data/tzhu/PLM/hfl--chinese-roberta-wwm-ext-large
 data_dir: resources/NER/MSRA_v2/formatted
 # data_dir: resources/NER/msra/formatted

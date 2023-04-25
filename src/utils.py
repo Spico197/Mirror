@@ -191,7 +191,7 @@ def decode_nnw_nsw_thw_mat(
     """
     ins_num, cls_num, seq_len1, seq_len2 = batch_mat.shape
     assert seq_len1 == seq_len2
-    assert cls_num == 2
+    assert cls_num == 3
 
     result_batch = []
     for ins_id in range(ins_num):
@@ -219,7 +219,9 @@ def decode_nnw_nsw_thw_mat(
                         sep = tuple(i - offset for i in sep)
                         positions = find_all_positions(list(path), list(sep))
                         if positions:
-                            positions = {p[0] for p in positions}
+                            # +1: (5, 6, 269) with (6, 269) as sep, found position is 1,
+                            # while we want to split after 6, which needs +1
+                            positions = {p[0] + 1 for p in positions}
                             parts = split_tuple_by_positions(path, positions)
                 if not parts:
                     parts = [path]

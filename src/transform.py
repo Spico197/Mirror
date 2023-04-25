@@ -353,11 +353,19 @@ class CachedLabelPointerTransform(CachedTransformOneBase):
     """Transform for label-token linking for skip consecutive spans"""
 
     def __init__(
-        self, max_seq_len: int, plm_dir: str, mode: str = "w2", **kwargs
+        self,
+        max_seq_len: int,
+        plm_dir: str,
+        mode: str = "w2",
+        label_span: str = "tag",
+        **kwargs,
     ) -> None:
         super().__init__()
 
         self.max_seq_len: int = max_seq_len
+        self.mode = mode
+        self.label_span = label_span
+
         self.tokenizer: DebertaV2TokenizerFast = DebertaV2TokenizerFast.from_pretrained(
             plm_dir
         )
@@ -403,19 +411,34 @@ class CachedLabelPointerTransform(CachedTransformOneBase):
             label: str, label_type: str, label_mask: int = 4, content_mask: int = 5
         ):
             if label not in label_map[label_type]:
-                label_token = {
+                label_token_map = {
                     "lc": self.lc_token,
                     "lm": self.lm_token,
                     "lr": self.lr_token,
                 }
-                tokens.append(label_token)
+                label_tag_start_idx = len(tokens)
+                tokens.append(label_token_map[label_type])
                 mask.append(label_mask)
+                label_tag_end_idx = len(tokens)
                 label_tokens = self.tokenizer(label, add_special_tokens=False).tokens()
-                start_idx = len(tokens)
+                label_content_start_idx = len(tokens)
                 tokens.extend(label_tokens)
                 mask.extend([content_mask] * len(label_tokens))
-                end_idx = len(tokens)
-                label_map[label_type][label] = (start_idx, end_idx)
+                label_content_end_idx = len(tokens) - 1  # exact end position
+
+                if self.label_span == "tag":
+                    start_idx = label_tag_start_idx
+                    end_idx = label_tag_end_idx
+                elif self.label_span == "content":
+                    start_idx = label_content_start_idx
+                    end_idx = label_content_end_idx
+                else:
+                    raise ValueError(f"label_span={self.label_span} is not supported")
+
+                if end_idx == start_idx:
+                    label_map[label_type][label] = (start_idx,)
+                else:
+                    label_map[label_type][label] = (start_idx, end_idx)
             return label_map[label_type][label]
 
         instruction = instance.get("instruction")
@@ -498,26 +521,33 @@ class CachedLabelPointerTransform(CachedTransformOneBase):
                 label_part = label_map["lm"][ent["type"]]
                 ent_token_s = text_tokenized.char_to_token(ent["span"][0])
                 ent_token_e = text_tokenized.char_to_token(ent["span"][1] - 1)
-                spans.append(
-                    [
-                        label_part,
-                        (text_off + ent_token_s, text_off + ent_token_e),
-                    ]
-                )
+                if ent_token_e == ent_token_s:
+                    position_seq = (text_off + ent_token_s,)
+                else:
+                    position_seq = (text_off + ent_token_s, text_off + ent_token_e)
+                spans.append([label_part, position_seq])
         if "rel" in instance["ans"]:
             for rel in instance["ans"]["rel"]:
                 label_part = label_map["lr"][rel["relation"]]
                 head_token_s = text_tokenized.char_to_token(rel["head"]["span"][0])
                 head_token_e = text_tokenized.char_to_token(rel["head"]["span"][1] - 1)
+                if head_token_e == head_token_s:
+                    head_position_seq = (text_off + head_token_s,)
+                else:
+                    head_position_seq = (
+                        text_off + head_token_s,
+                        text_off + head_token_e,
+                    )
                 tail_token_s = text_tokenized.char_to_token(rel["tail"]["span"][0])
                 tail_token_e = text_tokenized.char_to_token(rel["tail"]["span"][1] - 1)
-                spans.append(
-                    [
-                        label_part,
-                        (text_off + head_token_s, text_off + head_token_e),
-                        (text_off + tail_token_s, text_off + tail_token_e),
-                    ]
-                )
+                if tail_token_e == tail_token_s:
+                    tail_position_seq = (text_off + tail_token_s,)
+                else:
+                    tail_position_seq = (
+                        text_off + tail_token_s,
+                        text_off + tail_token_e,
+                    )
+                spans.append([label_part, head_position_seq, tail_position_seq])
         if "event" in instance["ans"]:
             for event in instance["ans"]["event"]:
                 event_type_label_part = label_map["lm"][event["event_type"]]
@@ -527,27 +557,54 @@ class CachedLabelPointerTransform(CachedTransformOneBase):
                 trigger_token_e = text_tokenized.char_to_token(
                     event["trigger"]["span"][1] - 1
                 )
-                trigger_part = [
-                    event_type_label_part,
-                    (text_off + trigger_token_s, text_off + trigger_token_e),
-                ]
+                if trigger_token_e == trigger_token_s:
+                    trigger_position_seq = (text_off + trigger_token_s,)
+                else:
+                    trigger_position_seq = (
+                        text_off + trigger_token_s,
+                        text_off + trigger_token_e,
+                    )
+                trigger_part = [event_type_label_part, trigger_position_seq]
                 spans.append(trigger_part)
                 for arg in event["args"]:
                     role_label_part = label_map["lr"][arg["role"]]
                     arg_token_s = text_tokenized.char_to_token(arg["span"][0])
                     arg_token_e = text_tokenized.char_to_token(arg["span"][1] - 1)
-                    arg_part = [
-                        role_label_part,
-                        (text_off + trigger_token_s, text_off + trigger_token_e),
-                        (text_off + arg_token_s, text_off + arg_token_e),
-                    ]
+                    if arg_token_e == arg_token_s:
+                        arg_position_seq = (text_off + arg_token_s,)
+                    else:
+                        arg_position_seq = (
+                            text_off + arg_token_s,
+                            text_off + arg_token_e,
+                        )
+                    arg_part = [role_label_part, trigger_position_seq, arg_position_seq]
                     spans.append(arg_part)
         if "span" in instance["ans"]:
             # Extractive-QA or Extractive-MRC tasks
             for span in instance["ans"]["span"]:
                 span_token_s = text_tokenized.char_to_token(span["span"][0])
                 span_token_e = text_tokenized.char_to_token(span["span"][1] - 1)
-                spans.append([(text_off + span_token_s, text_off + span_token_e)])
+                if span_token_e == span_token_s:
+                    span_position_seq = (text_off + span_token_s,)
+                else:
+                    span_position_seq = (
+                        text_off + span_token_s,
+                        text_off + span_token_e,
+                    )
+                spans.append([span_position_seq])
+
+        if self.mode == "w2":
+            new_spans = []
+            for parts in spans:
+                new_parts = []
+                for part in parts:
+                    new_parts.append(tuple(range(part[0], part[-1] + 1)))
+                new_spans.append(new_parts)
+            spans = new_spans
+        elif self.mode == "span":
+            spans = spans
+        else:
+            raise ValueError(f"mode={self.mode} is not supported")
 
         ins = {
             "raw": instance,
@@ -563,8 +620,14 @@ class CachedLabelPointerTransform(CachedTransformOneBase):
         bs = len(data["input_ids"])
         max_seq_len = max(len(input_ids) for input_ids in data["input_ids"])
         batch_seq_len = min(self.max_seq_len, max_seq_len)
-        for i in range(len(bs)):
+        for i in range(bs):
             data["input_ids"][i] = data["input_ids"][i][:batch_seq_len]
             data["mask"][i] = data["mask"][i][:batch_seq_len]
+            assert len(data["input_ids"][i]) == len(data["mask"][i])
+            pad_len = batch_seq_len - len(data["mask"][i])
+            data["input_ids"][i] = (
+                data["input_ids"][i] + [self.tokenizer.pad_token_id] * pad_len
+            )
+            data["mask"][i] = data["mask"][i] + [0] * pad_len
             data["labels"][i] = encode_nnw_nsw_thw_mat(data["spans"][i], batch_seq_len)
         return data

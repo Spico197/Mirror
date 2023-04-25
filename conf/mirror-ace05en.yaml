@@ -1,22 +1,24 @@
 # task
 task_type: SchemaGuidedInstructBertTask
-task_name: InstructBert_Span_DebertaV3Base_ACE05EN_NerReEe
-comment: 'span as label, (start, end + 1) span'
+task_name: InstructBert_ContentW2_DebertaV3Base_ACE05EN_NerRelEvent
+comment: '~~content as label, (start, end + 1) span'
 
 # data preprocessing
 max_seq_len: 512
-debug_mode: true
-mode: w2
+debug_mode: false
+label_span: content  # tag `[LM]` or content `person`
+mode: w2  # w2 (1,2,3) or span (1,3)
 
 # filepaths
 plm_dir: microsoft/deberta-v3-base
+# plm_dir: bert-base-cased
 data_dir: resources/Mirror/Tasks/EE/ACE05-EN
 output_dir: outputs
 task_dir: ${output_dir}/${task_name}
-train_filepath: ${data_dir}/ACE2005_plus_train.json
-dev_filepath: ${data_dir}/ACE2005_plus_dev.json
-test_filepath: ${data_dir}/ACE2005_plus_test.json
-ent_type2query_filepath: ${data_dir}/query.json
+train_filepath: ${data_dir}/ACE2005_plus_train.jsonl
+dev_filepath: ${data_dir}/ACE2005_plus_dev.jsonl
+test_filepath: ${data_dir}/ACE2005_plus_test.jsonl
+ent_type2query_filepath: ${data_dir}/query.jsonl
 dump_cache_dir: ${task_dir}/cache
 regenerate_cache: true
 
@@ -29,11 +31,11 @@ best_metric_field: micro.f1
 final_eval_on_test: true
 
 warmup_proportion: 0.1
-num_epochs: 5
+num_epochs: 20
 epoch_patience: 5
-train_batch_size: 64
-eval_batch_size: 128
-learning_rate: !!float 5e-5
+train_batch_size: 16
+eval_batch_size: 16
+learning_rate: !!float 2e-5
 other_learning_rate: !!float 1e-4
 max_grad_norm: 1.0
 weight_decay: 0.1
