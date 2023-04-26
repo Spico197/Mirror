@@ -406,9 +406,15 @@ class CachedLabelPointerTransform(CachedTransformOneBase):
         tokens = [self.tokenizer.cls_token]
         mask = [1]
         label_map = {"lc": {}, "lm": {}, "lr": {}}
+        # (2, 3): {"type": "lc", "task": "cls/ent/rel/event", "string": ""}
+        span_to_label = {}
 
         def _update_seq(
-            label: str, label_type: str, label_mask: int = 4, content_mask: int = 5
+            label: str,
+            label_type: str,
+            task: str = "",
+            label_mask: int = 4,
+            content_mask: int = 5,
         ):
             if label not in label_map[label_type]:
                 label_token_map = {
@@ -439,6 +445,11 @@ class CachedLabelPointerTransform(CachedTransformOneBase):
                     label_map[label_type][label] = (start_idx,)
                 else:
                     label_map[label_type][label] = (start_idx, end_idx)
+                span_to_label[label_map[label_type][label]] = {
+                    "type": label_type,
+                    "task": task,
+                    "string": label,
+                }
             return label_map[label_type][label]
 
         instruction = instance.get("instruction")
@@ -453,21 +464,21 @@ class CachedLabelPointerTransform(CachedTransformOneBase):
         types = instance["schema"].get("cls")
         if types:
             for t in types:
-                _update_seq(t, "lc")
+                _update_seq(t, "lc", task="cls")
         mention_types = instance["schema"].get("ent")
         if mention_types:
             for mt in mention_types:
-                _update_seq(mt, "lm")
+                _update_seq(mt, "lm", task="ent")
         rel_types = instance["schema"].get("rel")
         if rel_types:
             for rt in rel_types:
-                _update_seq(rt, "lr")
+                _update_seq(rt, "lr", task="rel")
         event_schema = instance["schema"].get("event")
         if event_schema:
             for event_type, roles in event_schema.items():
-                _update_seq(event_type, "lm")
+                _update_seq(event_type, "lm", task="event")
                 for role in roles:
-                    _update_seq(role, "lr")
+                    _update_seq(role, "lr", task="event")
 
         text = instance.get("text")
         if text:
@@ -612,6 +623,8 @@ class CachedLabelPointerTransform(CachedTransformOneBase):
             "input_ids": self.tokenizer.convert_tokens_to_ids(tokens),
             "mask": mask,
             "spans": spans,
+            "label_map": label_map,
+            "span_to_label": span_to_label,
             "labels": None,  # labels are calculated dynamically in collate_fn
         }
         return ins

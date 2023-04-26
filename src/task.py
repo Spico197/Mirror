@@ -228,20 +228,20 @@ class MrcQaTask(MrcTaggingTask):
 
 @register("task")
 class SchemaGuidedInstructBertTask(MrcTaggingTask):
-    def __init__(self, config, **kwargs) -> None:
-        super().__init__(config, **kwargs)
+    # def __init__(self, config, **kwargs) -> None:
+    #     super().__init__(config, **kwargs)
 
-        from watchmen import ClientMode, WatchClient
+    #     from watchmen import ClientMode, WatchClient
 
-        client = WatchClient(
-            id=config.task_name,
-            gpus=[4],
-            req_gpu_num=1,
-            mode=ClientMode.SCHEDULE,
-            server_host="127.0.0.1",
-            server_port=62333,
-        )
-        client.wait()
+    #     client = WatchClient(
+    #         id=config.task_name,
+    #         gpus=[4],
+    #         req_gpu_num=1,
+    #         mode=ClientMode.SCHEDULE,
+    #         server_host="127.0.0.1",
+    #         server_port=62333,
+    #     )
+    #     client.wait()
 
     def init_transform(self):
         return CachedLabelPointerTransform(
@@ -304,7 +304,7 @@ if __name__ == "__main__":
     #     dump_configfile=True,
     # )
     task = SchemaGuidedInstructBertTask.from_taskdir(
-        "outputs/InstructBert_Span_DebertaV3Base_ACE05EN_NerRelEvent",
+        "outputs/InstructBert_TagSpan_DebertaV3Base_ACE05ENp_NerRelEvent",
         initialize=True,
         load_config=True,
         dump_configfile=False,

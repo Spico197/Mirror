@@ -213,6 +213,7 @@ def decode_nnw_nsw_thw_mat(
             for path in end_start_to_paths[(e, s)]:
                 path = tuple(i - offset for i in path)
                 parts = []
+                all_sep_positions = set()
                 # cut path into multiple spans if there are skip links
                 if len(path) > 1:
                     for sep in nsw_connections:
@@ -222,7 +223,8 @@ def decode_nnw_nsw_thw_mat(
                             # +1: (5, 6, 269) with (6, 269) as sep, found position is 1,
                             # while we want to split after 6, which needs +1
                             positions = {p[0] + 1 for p in positions}
-                            parts = split_tuple_by_positions(path, positions)
+                            all_sep_positions.update(positions)
+                    parts = split_tuple_by_positions(path, all_sep_positions)
                 if not parts:
                     parts = [path]
                 ins_span_paths.append(parts)
