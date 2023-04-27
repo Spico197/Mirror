@@ -162,62 +162,26 @@ def calc_char_event(golds, preds):
 
 
 def calc_trigger_identification_metrics(golds, preds):
-    metrics = {"position": None, "no_position": None}
-    for name in metrics:
-        tp = fp = fn = 0
-        for _golds, _preds in zip(golds, preds):
-            if name == "position":
-                gold_triggers = {
-                    (gold["trigger"], tuple(gold["trigger_pos"])) for gold in _golds
-                }
-                pred_triggers = {
-                    (pred["trigger"], tuple(pred["trigger_pos"])) for pred in _preds
-                }
-            else:
-                gold_triggers = {gold["trigger"] for gold in _golds}
-                pred_triggers = {pred["trigger"] for pred in _preds}
-            tp += len(gold_triggers & pred_triggers)
-            fp += len(pred_triggers - gold_triggers)
-            fn += len(gold_triggers - pred_triggers)
-        _metrics = calc_p_r_f1_from_tp_fp_fn(tp, fp, fn)
-        metrics[name] = _metrics
+    tp = fp = fn = 0
+    for _golds, _preds in zip(golds, preds):
+        gold_triggers = {gold["trigger"] for gold in _golds}
+        pred_triggers = {pred["trigger"] for pred in _preds}
+        tp += len(gold_triggers & pred_triggers)
+        fp += len(pred_triggers - gold_triggers)
+        fn += len(gold_triggers - pred_triggers)
+    metrics = calc_p_r_f1_from_tp_fp_fn(tp, fp, fn)
     return metrics
 
 
 def calc_trigger_classification_metrics(golds, preds):
-    metrics = {"position": None, "no_position": None}
-    for name in metrics:
-        tp = fp = fn = 0
-        for _golds, _preds in zip(golds, preds):
-            if name == "position":
-                gold_tgg_cls = {
-                    (
-                        gold["trigger"],
-                        gold["event_type"],
-                        tuple(gold["trigger_pos"]),
-                    )
-                    for gold in _golds
-                }
-                pred_tgg_cls = {
-                    (
-                        pred["trigger"],
-                        pred["event_type"],
-                        tuple(pred["trigger_pos"]),
-                    )
-                    for pred in _preds
-                }
-            else:
-                gold_tgg_cls = {
-                    (gold["trigger"], gold["event_type"]) for gold in _golds
-                }
-                pred_tgg_cls = {
-                    (pred["trigger"], pred["event_type"]) for pred in _preds
-                }
-            tp += len(gold_tgg_cls & pred_tgg_cls)
-            fp += len(pred_tgg_cls - gold_tgg_cls)
-            fn += len(gold_tgg_cls - pred_tgg_cls)
-        _metrics = calc_p_r_f1_from_tp_fp_fn(tp, fp, fn)
-        metrics[name] = _metrics
+    tp = fp = fn = 0
+    for _golds, _preds in zip(golds, preds):
+        gold_tgg_cls = {(gold["trigger"], gold["event_type"]) for gold in _golds}
+        pred_tgg_cls = {(pred["trigger"], pred["event_type"]) for pred in _preds}
+        tp += len(gold_tgg_cls & pred_tgg_cls)
+        fp += len(pred_tgg_cls - gold_tgg_cls)
+        fn += len(gold_tgg_cls - pred_tgg_cls)
+    metrics = calc_p_r_f1_from_tp_fp_fn(tp, fp, fn)
     return metrics
 
 
@@ -229,112 +193,58 @@ def calc_arg_identification_metrics(golds, preds):
             so the base number must be calculated by
             (arg, event type, pos, role)
     """
-    metrics = {"position": None, "no_position": None}
-    for name in metrics:
-        tp = fp = fn = 0
-        for _golds, _preds in zip(golds, preds):
-            gold_args = set()
-            pred_args = set()
-            if name == "position":
-                for gold in _golds:
-                    _args = {
-                        (
-                            arg["role"],
-                            arg["argument"],
-                            gold["event_type"],
-                            tuple(arg["argument_pos"]),
-                        )
-                        for arg in gold["arguments"]
-                    }
-                    gold_args.update(_args)
-                for pred in _preds:
-                    _args = {
-                        (
-                            arg["role"],
-                            arg["argument"],
-                            pred["event_type"],
-                            tuple(arg["argument_pos"]),
-                        )
-                        for arg in pred["arguments"]
-                    }
-                    pred_args.update(_args)
-            else:
-                for gold in _golds:
-                    _args = {
-                        (arg["role"], arg["argument"], gold["event_type"])
-                        for arg in gold["arguments"]
-                    }
-                    gold_args.update(_args)
-                for pred in _preds:
-                    _args = {
-                        (arg["role"], arg["argument"], pred["event_type"])
-                        for arg in pred["arguments"]
-                    }
-                    pred_args.update(_args)
-            # logic derived from OneIE
-            _tp = 0
-            _tp_fp = len(pred_args)
-            _tp_fn = len(gold_args)
-            _gold_args_wo_role = {_ga[1:] for _ga in gold_args}
-            for pred_arg in pred_args:
-                if pred_arg[1:] in _gold_args_wo_role:
-                    _tp += 1
-            tp += _tp
-            fp += _tp_fp - _tp
-            fn += _tp_fn - _tp
-        _metrics = calc_p_r_f1_from_tp_fp_fn(tp, fp, fn)
-        metrics[name] = _metrics
+    tp = fp = fn = 0
+    for _golds, _preds in zip(golds, preds):
+        gold_args = set()
+        pred_args = set()
+        for gold in _golds:
+            _args = {
+                (arg["role"], arg["argument"], gold["event_type"])
+                for arg in gold["arguments"]
+            }
+            gold_args.update(_args)
+        for pred in _preds:
+            _args = {
+                (arg["role"], arg["argument"], pred["event_type"])
+                for arg in pred["arguments"]
+            }
+            pred_args.update(_args)
+        # logic derived from OneIE
+        _tp = 0
+        _tp_fp = len(pred_args)
+        _tp_fn = len(gold_args)
+        _gold_args_wo_role = {_ga[1:] for _ga in gold_args}
+        for pred_arg in pred_args:
+            if pred_arg[1:] in _gold_args_wo_role:
+                _tp += 1
+        tp += _tp
+        fp += _tp_fp - _tp
+        fn += _tp_fn - _tp
+    metrics = calc_p_r_f1_from_tp_fp_fn(tp, fp, fn)
     return metrics
 
 
 def calc_arg_classification_metrics(golds, preds):
-    metrics = {"position": None, "no_position": None}
-    for name in metrics:
-        tp = fp = fn = 0
-        for _golds, _preds in zip(golds, preds):
-            gold_arg_cls = set()
-            pred_arg_cls = set()
-            if name == "position":
-                for gold in _golds:
-                    _args = {
-                        (
-                            arg["argument"],
-                            arg["role"],
-                            gold["event_type"],
-                            tuple(arg["argument_pos"]),
-                        )
-                        for arg in gold["arguments"]
-                    }
-                    gold_arg_cls.update(_args)
-                for pred in _preds:
-                    _args = {
-                        (
-                            arg["argument"],
-                            arg["role"],
-                            pred["event_type"],
-                            tuple(arg["argument_pos"]),
-                        )
-                        for arg in pred["arguments"]
-                    }
-                    pred_arg_cls.update(_args)
-            else:
-                for gold in _golds:
-                    _args = {
-                        (arg["argument"], arg["role"], gold["event_type"])
-                        for arg in gold["arguments"]
-                    }
-                    gold_arg_cls.update(_args)
-                for pred in _preds:
-                    _args = {
-                        (arg["argument"], arg["role"], pred["event_type"])
-                        for arg in pred["arguments"]
-                    }
-                    pred_arg_cls.update(_args)
-            tp += len(gold_arg_cls & pred_arg_cls)
-            fp += len(pred_arg_cls - gold_arg_cls)
-            fn += len(gold_arg_cls - pred_arg_cls)
-        _metrics = calc_p_r_f1_from_tp_fp_fn(tp, fp, fn)
-        metrics[name] = _metrics
+    tp = fp = fn = 0
+    for _golds, _preds in zip(golds, preds):
+        gold_arg_cls = set()
+        pred_arg_cls = set()
+        for gold in _golds:
+            _args = {
+                (arg["argument"], arg["role"], gold["event_type"])
+                for arg in gold["arguments"]
+            }
+            gold_arg_cls.update(_args)
+        for pred in _preds:
+            _args = {
+                (arg["argument"], arg["role"], pred["event_type"])
+                for arg in pred["arguments"]
+            }
+            pred_arg_cls.update(_args)
+        tp += len(gold_arg_cls & pred_arg_cls)
+        fp += len(pred_arg_cls - gold_arg_cls)
+        fn += len(gold_arg_cls - pred_arg_cls)
+    metrics = calc_p_r_f1_from_tp_fp_fn(tp, fp, fn)
     return metrics
 
 
@@ -361,6 +271,18 @@ def calc_rel(golds, preds):
 
 
 class MultiPartSpanMetric(MetricBase):
+    def _encode_span_to_label_dict(self, span_to_label: dict) -> list:
+        span_to_label_list = []
+        for key, val in span_to_label.items():
+            span_to_label_list.append({"key": key, "val": val})
+        return span_to_label_list
+
+    def _decode_span_to_label(self, span_to_label_list: list) -> dict:
+        span_to_label = {}
+        for content in span_to_label_list:
+            span_to_label[tuple(content["key"])] = content["val"]
+        return span_to_label
+
     def get_instances_from_batch(self, raw_batch: dict, out_batch: dict) -> Tuple:
         gold_instances = []
         pred_instances = []
@@ -369,11 +291,16 @@ class MultiPartSpanMetric(MetricBase):
         assert len(batch_gold) == len(out_batch["pred"])
 
         for i, gold in enumerate(batch_gold):
-            ins_id = gold.get("id", generate_random_string_with_datetime())
+            ins_id = gold["raw"].get("id", generate_random_string_with_datetime())
+            # encode to list to make the span_to_label dict json-serializable
+            # where the original dict key is a tuple
+            span_to_label_list = self._encode_span_to_label_dict(gold["span_to_label"])
+            gold["span_to_label"] = span_to_label_list
             gold_instances.append(
                 {
                     "id": ins_id,
-                    "raw": gold,
+                    "span_to_label_list": span_to_label_list,
+                    "raw_gold_content": gold,
                     "spans": set(
                         tuple(multi_part_span) for multi_part_span in gold["spans"]
                     ),
@@ -408,7 +335,7 @@ class MultiPartSpanMetric(MetricBase):
         for gold, pred in zip(golds, preds):
             general_gold_spans.append(gold["spans"])
             general_pred_spans.append(pred["spans"])
-            span_to_label = gold["raw"]["span_to_label"]
+            span_to_label = self._decode_span_to_label(gold["span_to_label_list"])
             gold_clses, pred_clses = [], []
             gold_ents, pred_ents = [], []
             gold_rels, pred_rels = [], []
@@ -421,7 +348,7 @@ class MultiPartSpanMetric(MetricBase):
             gold_events, pred_events = [], []
             gold_spans, pred_spans = [], []
 
-            for span in gold_spans:
+            for span in gold["spans"]:
                 if span[0] in span_to_label:
                     label = span_to_label[span[0]]
                     if label["task"] == "cls":
@@ -451,7 +378,7 @@ class MultiPartSpanMetric(MetricBase):
                     }
                 )
 
-            for span in pred_spans:
+            for span in pred["spans"]:
                 if span[0] in span_to_label:
                     label = span_to_label[span[0]]
                     if label["task"] == "cls":

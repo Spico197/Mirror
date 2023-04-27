@@ -34,6 +34,8 @@ select_best_on_data: dev
 select_best_by_key: metric
 best_metric_field: general_spans.micro.f1
 final_eval_on_test: true
+save_every_ckpt: false
+save_best_ckpt: true
 
 warmup_proportion: 0.1
 num_epochs: 10
