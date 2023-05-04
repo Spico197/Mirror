@@ -1,15 +1,26 @@
 from rex.utils.initialization import set_seed_and_log_path
 
-from src.task import MrcQaTask
+from src.task import SchemaGuidedInstructBertTask
 
 set_seed_and_log_path(log_path="eval.log")
 
-task_dir = "outputs/RobertaBase_data20230314v2"
-task = MrcQaTask.from_taskdir(task_dir, load_best_model=True, initialize=False)
+task_dir = "outputs/InstructBert_TagSpan_DebertaV3Base_Rel_Merged202305022358v2"
+task = SchemaGuidedInstructBertTask.from_taskdir(
+    task_dir, load_best_model=True, initialize=False
+)
 
 data_pairs = [
-    ["cmrc_dev", "resources/MRC/cmrc2018/formatted/validation.jsonl"],
-    ["drcd_dev", "resources/MRC/DRCD2018/formatted/dev.jsonl"],
+    [
+        "rel_conll2004",
+        "resources/Mirror/Tasks/RE/CoNLL2004/formatted/CoNLL2004_RE_test.jsonl",
+    ],
+    ["rel_gids", "resources/Mirror/Tasks/RE/GIDS/formatted/GIDS_test.jsonl"],
+    [
+        "rel_nyt11hrl",
+        "resources/Mirror/Tasks/RE/NYT11HRL/formatted/NYT11HRL_test.jsonl",
+    ],
+    ["rel_webnlg", "resources/Mirror/Tasks/RE/WebNLG/formatted/WebNLG_test.jsonl"],
+    ["rel_ace05", "resources/Mirror/Tasks/EE/ACE05-EN/ACE2005_oneie_RE_test.jsonl"],
 ]
 
 for dname, fpath in data_pairs:

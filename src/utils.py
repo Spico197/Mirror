@@ -138,16 +138,19 @@ def encode_nnw_nsw_thw_mat(
     for parts in spans:
         span = ()
         for p_i, part in enumerate(parts):
+            if not all(0 <= el <= seq_len - 1 for el in part):
+                continue
             span += part
-            if p_i < len(parts) - 1:
+            if p_i < len(parts) - 1 and 0 <= parts[p_i + 1][0] <= seq_len - 1:
                 # current part to next part
                 mat[nsw_id, parts[p_i][-1], parts[p_i + 1][0]] = 1
         if len(span) == 1:
             mat[:, span[0], span[0]] = 1
-        else:
+        elif len(span) > 1:
             for s, e in windowed_queue_iter(span, 2, 1, drop_last=True):
                 mat[nnw_id, s, e] = 1
-        mat[thw_id, span[-1], span[0]] = 1
+        if span:
+            mat[thw_id, span[-1], span[0]] = 1
     return mat
 
 

@@ -261,8 +261,15 @@ def calc_rel(golds, preds):
     gold_ents = []
     pred_ents = []
     for gold, pred in zip(golds, preds):
-        gold_ents.append(gold[1:])
-        pred_ents.append(pred[1:])
+        gold_ins_ents = []
+        for t in gold:
+            gold_ins_ents.extend(t[1:])
+        gold_ents.append(gold_ins_ents)
+        pred_ins_ents = []
+        for t in pred:
+            pred_ins_ents.extend(t[1:])
+        pred_ents.append(pred_ins_ents)
+
     metrics = {
         "ent": tagging_prf1(gold_ents, pred_ents, type_idx=None),
         "rel": tagging_prf1(golds, preds, type_idx=None),

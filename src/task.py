@@ -304,21 +304,21 @@ if __name__ == "__main__":
     #     dump_configfile=True,
     # )
     task = SchemaGuidedInstructBertTask.from_taskdir(
-        "outputs/InstructBert_TagSpan_DebertaV3Base_ACE05ENp_NerRelEvent",
+        "outputs/InstructBert_TagSpan_DebertaV3Base_ACE05EN_Rel",
         initialize=True,
         load_config=True,
         dump_configfile=False,
     )
-    task = SchemaGuidedInstructBertTask(
-        config,
-        initialize=True,
-        makedirs=True,
-        dump_configfile=False,
-    )
-    task.load(
-        "outputs/InstructBert_TagSpan_DebertaV3Base_ACE05EN_NerRelEvent/ckpt/SchemaGuidedInstructBertModel.epoch.0.pth",
-        load_config=False,
-    )
+    # task = SchemaGuidedInstructBertTask(
+    #     config,
+    #     initialize=True,
+    #     makedirs=True,
+    #     dump_configfile=False,
+    # )
+    # task.load(
+    #     "outputs/InstructBert_TagSpan_DebertaV3Base_ACE05EN_NerRelEvent/ckpt/SchemaGuidedInstructBertModel.epoch.0.pth",
+    #     load_config=False,
+    # )
     task.eval("test", verbose=True, dump=True, dump_middle=True, postfix="re_eval")
     # task.load(
     #     # "outputs/Mirror_RobertaBaseWwm_Cons_MsraMrc/ckpt/MrcGlobalPointerModel.best.pth",
