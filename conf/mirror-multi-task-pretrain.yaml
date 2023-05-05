@@ -1,6 +1,6 @@
 # task
 task_type: SchemaGuidedInstructBertTask
-task_name: InstructBert_TagSpan_DebertaV3Base_ACE05EN_labelmap_Rel_updateTag_bs32
+task_name: InstructBert_TagSpan_DebertaV3Base
 comment: '~~content as label, (start, end + 1) span'
 
 # data preprocessing
@@ -14,9 +14,8 @@ plm_dir: microsoft/deberta-v3-base
 # plm_dir: bert-base-cased
 # data_dir: resources/Mirror/Tasks/EE/ACE05-EN
 # data_dir: resources/Mirror/Tasks/RE/merged-20230502-2340-v1
-# data_dir: resources/Mirror/Tasks/RE/merged-20230502-2358-v2-woADE
-data_dir: resources/Mirror/Tasks/EE/ACE05-EN-labelmap
-output_dir: outputs
+data_dir: resources/Mirror/Tasks/RE/merged-20230502-2358-v2-woADE
+output_dir: mirror_outputs
 task_dir: ${output_dir}/${task_name}
 # train_filepath: ${data_dir}/ACE2005_plus_train.jsonl
 # dev_filepath: ${data_dir}/ACE2005_plus_dev.jsonl
@@ -33,13 +32,9 @@ task_dir: ${output_dir}/${task_name}
 # train_filepath: ${data_dir}/ACE2005_oneie_train.jsonl
 # dev_filepath: ${data_dir}/ACE2005_oneie_dev.jsonl
 # test_filepath: ${data_dir}/ACE2005_oneie_test.jsonl
-# train_filepath: ${data_dir}/train.jsonl
-# dev_filepath: ${data_dir}/dev.jsonl
-# test_filepath: ${data_dir}/test.jsonl
-train_filepath: ${data_dir}/ACE2005_oneie_RE_labelmap_train.jsonl
-dev_filepath: ${data_dir}/ACE2005_oneie_RE_labelmap_dev.jsonl
-test_filepath: ${data_dir}/ACE2005_oneie_RE_labelmap_test.jsonl
-
+train_filepath: ${data_dir}/train.jsonl
+dev_filepath: ${data_dir}/dev.jsonl
+test_filepath: ${data_dir}/test.jsonl
 dump_cache_dir: ${task_dir}/cache
 regenerate_cache: true
 
@@ -54,10 +49,10 @@ save_every_ckpt: false
 save_best_ckpt: true
 
 warmup_proportion: 0.1
-num_epochs: 20
+num_epochs: 10
 epoch_patience: 5
-train_batch_size: 32
-eval_batch_size: 32
+train_batch_size: 16
+eval_batch_size: 16
 learning_rate: !!float 2e-5
 other_learning_rate: !!float 1e-4
 max_grad_norm: 1.0

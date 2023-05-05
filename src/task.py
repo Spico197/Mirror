@@ -206,8 +206,6 @@ class MrcQaTask(MrcTaggingTask):
         """
         raw_dataset = self.transform.predict_transform(data)
         loader = self.data_manager.prepare_loader(raw_dataset)
-        # to prepare input device
-        loader = accelerator.prepare_data_loader(loader)
         results = []
         for batch in loader:
             batch_out = self.model(**batch, is_eval=True)
@@ -289,6 +287,30 @@ class SchemaGuidedInstructBertTask(MrcTaggingTask):
 
     def init_metric(self):
         return MultiPartSpanMetric()
+
+    def predict_api(self, data: list[dict], **kwargs):
+        """
+        Args:
+            data: a list of dict with query, context, and background strings
+        """
+        raw_dataset = self.transform.predict_transform(data)
+        loader = self.data_manager.prepare_loader(raw_dataset)
+        results = []
+        for batch in loader:
+            batch_out = self.model(**batch, is_eval=True)
+            batch["pred"] = batch_out["pred"]
+            instances = decompose_batch_into_instances(batch)
+            for ins in instances:
+                preds = ins["pred"]
+                ins_results = []
+                for index_list in preds:
+                    ins_result = []
+                    for i in index_list:
+                        ins_result.append(ins["raw_tokens"][i])
+                    ins_results.append(("".join(ins_result), tuple(index_list)))
+                results.append(ins_results)
+
+        return results
 
 
 if __name__ == "__main__":

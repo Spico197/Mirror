@@ -425,7 +425,7 @@ class CachedLabelPointerTransform(CachedTransformOneBase):
                 label_tag_start_idx = len(tokens)
                 tokens.append(label_token_map[label_type])
                 mask.append(label_mask)
-                label_tag_end_idx = len(tokens)
+                label_tag_end_idx = len(tokens) - 1  # exact end position
                 label_tokens = self.tokenizer(label, add_special_tokens=False).tokens()
                 label_content_start_idx = len(tokens)
                 tokens.extend(label_tokens)
