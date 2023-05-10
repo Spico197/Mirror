@@ -1,6 +1,7 @@
 # task
 task_type: SchemaGuidedInstructBertTask
-task_name: InstructBert_TagSpan_DebertaV3Base
+# task_name: InstructBert_TagSpan_DebertaV3Base_MergedPretrainedData
+task_name: InstructBert_TagSpan_DebertaV3Base_ClsTest
 comment: '~~content as label, (start, end + 1) span'
 
 # data preprocessing
@@ -10,11 +11,17 @@ label_span: tag  # tag `[LM]` or content `person`
 mode: span  # w2 (1,2,3) or span (1,3)
 
 # filepaths
-plm_dir: microsoft/deberta-v3-base
+# plm_dir: microsoft/deberta-v3-base
+plm_dir: /data/tzhu/PLM/microsoft--deberta-v3-base
 # plm_dir: bert-base-cased
 # data_dir: resources/Mirror/Tasks/EE/ACE05-EN
 # data_dir: resources/Mirror/Tasks/RE/merged-20230502-2340-v1
-data_dir: resources/Mirror/Tasks/RE/merged-20230502-2358-v2-woADE
+# data_dir: resources/Mirror/Tasks/RE/merged-20230502-2358-v2-woADE
+# data_dir: resources/Mirror/Tasks/RE/WebNLG/instructed
+# data_dir: resources/Mirror/v1.3/merged_pretrained_data
+data_dir: resources/Mirror/v1.3/cls/en/ag_news/instructed
+# data_dir: resources/Mirror/Tasks/RE/FewRel
+# data_dir: resources/Mirror/Tasks/RE/New-York-Times-RE
 output_dir: mirror_outputs
 task_dir: ${output_dir}/${task_name}
 # train_filepath: ${data_dir}/ACE2005_plus_train.jsonl
@@ -33,24 +40,29 @@ task_dir: ${output_dir}/${task_name}
 # dev_filepath: ${data_dir}/ACE2005_oneie_dev.jsonl
 # test_filepath: ${data_dir}/ACE2005_oneie_test.jsonl
 train_filepath: ${data_dir}/train.jsonl
-dev_filepath: ${data_dir}/dev.jsonl
+dev_filepath: ${data_dir}/test.jsonl
 test_filepath: ${data_dir}/test.jsonl
+# dev_filepath: resources/Mirror/v1.3/uie_data/dev.jsonl
+# test_filepath: resources/Mirror/v1.3/uie_data/test.jsonl
 dump_cache_dir: ${task_dir}/cache
-regenerate_cache: true
+regenerate_cache: false
 
 # training
 random_seed: 1227
-eval_on_data: [dev, test]
+eval_on_data: [dev]
 select_best_on_data: dev
 select_best_by_key: metric
 best_metric_field: general_spans.micro.f1
 final_eval_on_test: true
-save_every_ckpt: false
+save_every_ckpt: true
 save_best_ckpt: true
 
 warmup_proportion: 0.1
-num_epochs: 10
+num_epochs: 1
 epoch_patience: 5
+num_steps: -1
+step_patience: -1
+step_eval_interval: 3000
 train_batch_size: 16
 eval_batch_size: 16
 learning_rate: !!float 2e-5

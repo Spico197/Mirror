@@ -1,0 +1,51 @@
+cd resources/Mirror/v1.3
+out_dir="uie_data"
+mkdir $out_dir
+
+cat \
+    ./ent/en/ACE05-EN-plus/instructed/train.jsonl \
+    ./ent/en/ACE_2004/instructed/train.jsonl \
+    ./ent/en/CoNLL2003/instructed/train.jsonl \
+    ./event/en/ACE05-EN-plus/fixed_instructed/train.jsonl \
+    ./event/en/CASIE/instructed/train.jsonl \
+    ./rel/en/14lap/instructed/train.jsonl \
+    ./rel/en/14res/instructed/train.jsonl \
+    ./rel/en/15res/instructed/train.jsonl \
+    ./rel/en/16res/instructed/train.jsonl \
+    ./rel/en/ACE05-EN-plus/instructed/ACE2005_plus_RE_labelmap_train.jsonl \
+    ./rel/en/CoNLL2004/instructed/CoNLL2004_RE_labelmap_train.jsonl \
+    ./rel/en/NYT_multi/instructed/NYT_multi_train.jsonl \
+    ./rel/en/sciERC/instructed/sciERC_train.jsonl \
+        > $out_dir/train.jsonl
+
+cat \
+    ./ent/en/ACE05-EN-plus/instructed/dev.jsonl \
+    ./ent/en/ACE_2004/instructed/dev.jsonl \
+    ./ent/en/CoNLL2003/instructed/dev.jsonl \
+    ./event/en/ACE05-EN-plus/fixed_instructed/dev.jsonl \
+    ./event/en/CASIE/instructed/dev.jsonl \
+    ./rel/en/14lap/instructed/dev.jsonl \
+    ./rel/en/14res/instructed/dev.jsonl \
+    ./rel/en/15res/instructed/dev.jsonl \
+    ./rel/en/16res/instructed/dev.jsonl \
+    ./rel/en/ACE05-EN-plus/instructed/ACE2005_plus_RE_labelmap_dev.jsonl \
+    ./rel/en/CoNLL2004/instructed/CoNLL2004_RE_labelmap_dev.jsonl \
+    ./rel/en/NYT_multi/instructed/NYT_multi_dev.jsonl \
+    ./rel/en/sciERC/instructed/sciERC_dev.jsonl \
+        > $out_dir/dev.jsonl
+
+cat \
+    ./ent/en/ACE05-EN-plus/instructed/test.jsonl \
+    ./ent/en/ACE_2004/instructed/test.jsonl \
+    ./ent/en/CoNLL2003/instructed/test.jsonl \
+    ./event/en/ACE05-EN-plus/fixed_instructed/test.jsonl \
+    ./event/en/CASIE/instructed/test.jsonl \
+    ./rel/en/14lap/instructed/test.jsonl \
+    ./rel/en/14res/instructed/test.jsonl \
+    ./rel/en/15res/instructed/test.jsonl \
+    ./rel/en/16res/instructed/test.jsonl \
+    ./rel/en/ACE05-EN-plus/instructed/ACE2005_plus_RE_labelmap_test.jsonl \
+    ./rel/en/CoNLL2004/instructed/CoNLL2004_RE_labelmap_test.jsonl \
+    ./rel/en/NYT_multi/instructed/NYT_multi_test.jsonl \
+    ./rel/en/sciERC/instructed/sciERC_test.jsonl \
+        > $out_dir/test.jsonl

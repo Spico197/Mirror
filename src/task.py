@@ -148,8 +148,10 @@ class MrcTaggingTask(SimpleMetricTask):
         )
 
     def init_lr_scheduler(self):
-        num_training_steps = (
-            len(self.data_manager.train_loader) * self.config.num_epochs
+        num_training_steps = int(
+            len(self.data_manager.train_loader)
+            * self.config.num_epochs
+            / accelerator.num_processes
         )
         num_warmup_steps = math.floor(
             num_training_steps * self.config.warmup_proportion

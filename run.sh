@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export CUDA_VISIBLE_DEVICES=2
+export CUDA_VISIBLE_DEVICES="5,7"
 
 
 single() {
@@ -12,7 +12,8 @@ single() {
 
     rex train \
         -m src.task \
-        -dc conf/mirror-ace05en.yaml #  \
+        -dc conf/mirror-multi-task-pretrain.yaml #  \
+        # -dc conf/mirror-ace05en.yaml #  \
         # -a task_name=InstructBert_TagW2_DebertaV3Base_ACE05EN_NerRelEvent \
         #     label_span=tag mode=w2
 
@@ -21,7 +22,7 @@ single() {
 }
 
 ddp() {
-    torchrun --nnodes=1 --nproc_per_node=4 -m rex.cmds.train -m src.task -dc conf/custom.yaml
+    torchrun --nnodes=1 --nproc_per_node=2 -m rex.cmds.train -m src.task -dc conf/mirror-multi-task-pretrain.yaml
 }
 
 
