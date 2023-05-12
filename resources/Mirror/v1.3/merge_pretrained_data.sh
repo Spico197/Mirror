@@ -20,16 +20,16 @@ cat \
     ./cls/en/MedQA/new/train.jsonl \
     ./cls/en/MNLI/formated/MNLI_train.jsonl \
     ./cls/en/MRPC/formated/train.jsonl \
-    ./cls/en/MultiRC/new/train.jsonl \
+    ./cls/en/MultiRC/instructed/train.jsonl \
     ./cls/en/OpenBookQA/new/train.jsonl \
     ./cls/en/QASC/new/train.jsonl \
     ./cls/en/QNLI/processed/QNLI_train.jsonl \
     ./cls/en/QQP/new/train.jsonl \
-    ./cls/en/RACE/new/train.jsonl \
+    ./cls/en/RACE/instructed/train.jsonl \
     ./cls/en/RACE-C/new/train.jsonl \
     ./cls/en/ReClor/new/train.jsonl \
     ./cls/en/RTE/formated/RTE_train.jsonl \
-    ./cls/en/SciQ/new/train.jsonl \
+    ./cls/en/SciQ/instructed/train.jsonl \
     ./cls/en/SNLI/instructed/train.jsonl \
     ./cls/en/SST-2/instructed/SST-2_train.jsonl \
     ./cls/en/Winogrande/new/train.jsonl \
@@ -111,16 +111,16 @@ cat \
     ./cls/en/MedQA/new/dev.jsonl \
     ./cls/en/MNLI/formated/MNLI_dev.jsonl \
     ./cls/en/MRPC/formated/dev.jsonl \
-    ./cls/en/MultiRC/new/dev.jsonl \
+    ./cls/en/MultiRC/instructed/dev.jsonl \
     ./cls/en/OpenBookQA/new/dev.jsonl \
     ./cls/en/QASC/new/dev.jsonl \
     ./cls/en/QNLI/processed/QNLI_dev.jsonl \
     ./cls/en/QQP/new/dev.jsonl \
-    ./cls/en/RACE/new/dev.jsonl \
+    ./cls/en/RACE/instructed/dev.jsonl \
     ./cls/en/RACE-C/new/dev.jsonl \
     ./cls/en/ReClor/new/dev.jsonl \
     ./cls/en/RTE/formated/RTE_dev.jsonl \
-    ./cls/en/SciQ/new/dev.jsonl \
+    ./cls/en/SciQ/instructed/dev.jsonl \
     ./cls/en/SNLI/instructed/dev.jsonl \
     ./cls/en/SST-2/instructed/SST-2_dev.jsonl \
     ./cls/en/Winogrande/new/dev.jsonl \
@@ -195,9 +195,9 @@ cat \
     ./cls/en/MedQA/new/test.jsonl \
     ./cls/en/MRPC/formated/test.jsonl \
     ./cls/en/OpenBookQA/new/test.jsonl \
-    ./cls/en/RACE/new/test.jsonl \
+    ./cls/en/RACE/instructed/test.jsonl \
     ./cls/en/RACE-C/new/test.jsonl \
-    ./cls/en/SciQ/new/test.jsonl \
+    ./cls/en/SciQ/instructed/test.jsonl \
     ./cls/en/SNLI/instructed/test.jsonl \
     ./ent/en/ACE05-EN/instructed/test.jsonl \
     ./ent/en/ACE05-EN-plus/instructed/test.jsonl \
@@ -251,7 +251,6 @@ cat \
     ./rel/en/Wiki-ZSL/instructed/Wiki_ZSL_3_test.jsonl \
     ./rel/en/Wiki-ZSL/instructed/Wiki_ZSL_4_test.jsonl \
     ./span/en/BiPaR/test.jsonl \
-    ./span/en/ms_marco_v2.1/test.jsonl \
     ./span/en/SubjQA/books/test.jsonl \
     ./span/en/SubjQA/electronics/test.jsonl \
     ./span/en/SubjQA/grocery/test.jsonl \

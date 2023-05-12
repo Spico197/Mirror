@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export CUDA_VISIBLE_DEVICES="5,7"
+export CUDA_VISIBLE_DEVICES="2,3"
 
 
 single() {

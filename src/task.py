@@ -151,7 +151,7 @@ class MrcTaggingTask(SimpleMetricTask):
         num_training_steps = int(
             len(self.data_manager.train_loader)
             * self.config.num_epochs
-            / accelerator.num_processes
+            * accelerator.num_processes
         )
         num_warmup_steps = math.floor(
             num_training_steps * self.config.warmup_proportion
