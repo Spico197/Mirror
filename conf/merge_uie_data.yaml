@@ -1,0 +1,6 @@
+task_name: InstructBert_MergedUIEData
+data_dir: resources/Mirror/v1.3/uie_data
+train_filepath: ${data_dir}/train.jsonl
+dev_filepath: ${data_dir}/dev.jsonl
+test_filepath: ${data_dir}/test.jsonl
+num_epochs: 10

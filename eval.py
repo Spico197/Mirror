@@ -1,13 +1,24 @@
+import pandas as pd
 from rex.utils.initialization import set_seed_and_log_path
+from rich.console import Console
+from rich.table import Table
 
 from src.task import SchemaGuidedInstructBertTask
 
 set_seed_and_log_path(log_path="eval.log")
 
-task_dir = "mirror_outputs/InstructBert_TagSpan_DebertaV3Base_MergedUIEData"
-task = SchemaGuidedInstructBertTask.from_taskdir(
-    task_dir, load_best_model=True, initialize=False
+
+# task_dir = "mirror_outputs/InstructBert_TagSpan_DebertaV3Base_MergedUIEData"
+task_dir = "mirror_outputs/InstructBert_TagSpan_DebertaV3Base_MergedUIEData2"
+# task_dir = "outputs/InstructBert_TagSpan_DebertaV3Base_ACE05ENPlus"
+task: SchemaGuidedInstructBertTask = SchemaGuidedInstructBertTask.from_taskdir(
+    task_dir,
+    load_best_model=True,
+    initialize=False,
+    dump_configfile=False,
+    update_config={"regenerate_data": True},
 )
+table = Table(title=task_dir, width=len(task_dir))
 
 data_pairs = [
     # fmt: off
@@ -25,22 +36,152 @@ data_pairs = [
     # ["rel_ace05", "resources/Mirror/Tasks/EE/ACE05-EN/ACE2005_oneie_RE_test.jsonl"],
 
     # UIE eval data
-    ["ent_ace04_test", "resources/Mirror/v1.3/ent/en/ACE_2004/instructed/test.jsonl"],
-    ["ent_conll03_test", "resources/Mirror/v1.3/ent/en/CoNLL2003/instructed/test.jsonl"],
-    ["ent_ace05_test", "resources/Mirror/v1.3/ent/en/ACE05-EN-plus/instructed/test.jsonl"],
-    ["rel_conll04_test", "resources/Mirror/v1.3/rel/en/CoNLL2004/instructed/CoNLL2004_RE_labelmap_test.jsonl"],
-    ["rel_ace05_test", "resources/Mirror/v1.3/rel/en/ACE05-EN-plus/instructed/ACE2005_plus_RE_labelmap_test.jsonl"],
+    # ["ent_ace04_test", "resources/Mirror/v1.3/ent/en/ACE_2004/instructed/test.jsonl"],
+    # ["ent_ace05_test", "resources/Mirror/v1.3/ent/en/ACE05-EN-plus/instructed/test.jsonl"],
+    # ["ent_conll03_test", "resources/Mirror/v1.3/ent/en/CoNLL2003/instructed/test.jsonl"],
+    # ["rel_ace05_test", "resources/Mirror/v1.3/rel/en/ACE05-EN-plus/instructed/ACE2005_plus_RE_labelmap_test.jsonl"],
+    # ["rel_conll04_test", "resources/Mirror/v1.3/rel/en/CoNLL2004/instructed/CoNLL2004_RE_labelmap_test.jsonl"],
     ["rel_nyt_test", "resources/Mirror/v1.3/rel/en/NYT_multi/instructed/NYT_multi_test.jsonl"],
-    ["rel_scierc_test", "resources/Mirror/v1.3/rel/en/sciERC/instructed/sciERC_test.jsonl"],
-    ["event_ace05_test", "resources/Mirror/v1.3/event/en/ACE05-EN-plus/fixed_instructed/test.jsonl"],
-    ["event_casie_test", "resources/Mirror/v1.3/event/en/CASIE/instructed/test.jsonl"],
-    ["absa_14lap_test", "resources/Mirror/v1.3/rel/en/14lap/instructed/test.jsonl"],
-    ["absa_14res_test", "resources/Mirror/v1.3/rel/en/14res/instructed/test.jsonl"],
-    ["absa_15res_test", "resources/Mirror/v1.3/rel/en/15res/instructed/test.jsonl"],
-    ["absa_16res_test", "resources/Mirror/v1.3/rel/en/16res/instructed/test.jsonl"],
+    # ["rel_scierc_test", "resources/Mirror/v1.3/rel/en/sciERC/instructed/sciERC_test.jsonl"],
+    # ["event_ace05_test", "resources/Mirror/v1.3/event/en/ACE05-EN-plus/fixed_instructed/test.jsonl"],
+    # ["event_casie_test", "resources/Mirror/v1.3/event/en/CASIE/instructed/test.jsonl"],
+    # ["absa_14res_test", "resources/Mirror/v1.3/rel/en/14res/instructed/test.jsonl"],
+    # ["absa_14lap_test", "resources/Mirror/v1.3/rel/en/14lap/instructed/test.jsonl"],
+    # ["absa_15res_test", "resources/Mirror/v1.3/rel/en/15res/instructed/test.jsonl"],
+    # ["absa_16res_test", "resources/Mirror/v1.3/rel/en/16res/instructed/test.jsonl"],
     # fmt: on
 ]
 
+eval_res = {"task": [], "dataset": [], "metric_val": []}
+table.add_column("Task", justify="left", style="cyan")
+table.add_column("Dataset", justify="left", style="magenta")
+table.add_column("Metric (%)", justify="right", style="green")
 for dname, fpath in data_pairs:
     task.data_manager.update_datapath(dname, fpath)
-    task.eval(dname, verbose=True, dump=True, dump_middle=True)
+    _, res = task.eval(dname, verbose=True, dump=True, dump_middle=True)
+    if dname.startswith("ent_"):
+        eval_res["task"].append("ent")
+        eval_res["dataset"].append(dname)
+        eval_res["metric_val"].append(res["ent"]["micro"]["f1"])
+    elif dname.startswith("rel_"):
+        eval_res["task"].append("rel")
+        eval_res["dataset"].append(dname)
+        eval_res["metric_val"].append(res["rel"]["rel"]["micro"]["f1"])
+    elif dname.startswith("event_"):
+        eval_res["task"].append("event")
+        eval_res["dataset"].append(dname + "_tgg")
+        eval_res["metric_val"].append(res["event"]["trigger_cls"]["f1"])
+        eval_res["task"].append("event")
+        eval_res["dataset"].append(dname + "_arg")
+        eval_res["metric_val"].append(res["event"]["arg_cls"]["f1"])
+    elif dname.startswith("absa_"):
+        eval_res["task"].append("absa")
+        eval_res["dataset"].append(dname)
+        eval_res["metric_val"].append(res["rel"]["rel"]["micro"]["f1"])
+    else:
+        raise ValueError
+
+for i in range(len(eval_res["task"])):
+    table.add_row(
+        eval_res["task"][i],
+        eval_res["dataset"][i],
+        f"{100*eval_res['metric_val'][i]:.3f}",
+    )
+
+df = pd.DataFrame(eval_res)
+df.to_excel(task.measures_path.joinpath("uie_data_eval_res.xlsx"))
+
+console = Console()
+console.print(table)
+
+
+"""
+fixed upper bound
+
+mirror_outputs/InstructBert_TagSpan_DebertaV3Base_MergedUIEData2
+┏━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┓
+┃ Task      ┃ Dataset                        ┃      Metric (%) ┃
+┡━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━┩
+│ ent       │ ent_ace04_test                 │          99.934 │
+│ ent       │ ent_ace05_test                 │         100.000 │
+│ ent       │ ent_conll03_test               │         100.000 │
+│ rel       │ rel_ace05_test                 │          96.444 │
+│ rel       │ rel_conll04_test               │          96.009 │
+│ rel       │ rel_nyt_test                   │          78.145 │
+│ rel       │ rel_scierc_test                │          81.288 │
+│ event     │ event_ace05_test_tgg           │         100.000 │
+│ event     │ event_ace05_test_arg           │         100.000 │
+│ event     │ event_casie_test_tgg           │          92.987 │
+│ event     │ event_casie_test_arg           │          93.376 │
+│ absa      │ absa_14res_test                │          98.991 │
+│ absa      │ absa_14lap_test                │          99.815 │
+│ absa      │ absa_15res_test                │          99.794 │
+│ absa      │ absa_16res_test                │          99.611 │
+└───────────┴────────────────────────────────┴─────────────────┘
+
+eval UIEData2
+mirror_outputs/InstructBert_TagSpan_DebertaV3Base_MergedUIEData2
+┏━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┓
+┃ Task      ┃ Dataset                        ┃      Metric (%) ┃
+┡━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━┩
+│ ent       │ ent_ace04_test                 │          84.912 │
+│ ent       │ ent_ace05_test                 │          90.300 │
+│ ent       │ ent_conll03_test               │          92.335 │
+│ rel       │ rel_ace05_test                 │          59.879 │
+│ rel       │ rel_conll04_test               │          45.272 │
+│ rel       │ rel_nyt_test                   │          72.610 │
+│ rel       │ rel_scierc_test                │          19.890 │
+│ event     │ event_ace05_test_tgg           │          71.752 │
+│ event     │ event_ace05_test_arg           │          51.140 │
+│ event     │ event_casie_test_tgg           │          63.915 │
+│ event     │ event_casie_test_arg           │          32.243 │
+│ absa      │ absa_14res_test                │          75.456 │
+│ absa      │ absa_14lap_test                │          64.251 │
+│ absa      │ absa_15res_test                │          93.525 │
+│ absa      │ absa_16res_test                │          76.505 │
+└───────────┴────────────────────────────────┴─────────────────┘
+
+eval UIEData2 upperbound fixed-v1 with constraint
+mirror_outputs/InstructBert_TagSpan_DebertaV3Base_MergedUIEData2
+┏━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┓
+┃ Task      ┃ Dataset                        ┃      Metric (%) ┃
+┡━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━┩
+│ ent       │ ent_ace04_test                 │          99.934 │
+│ ent       │ ent_ace05_test                 │         100.000 │
+│ ent       │ ent_conll03_test               │         100.000 │
+│ rel       │ rel_ace05_test                 │          98.401 │
+│ rel       │ rel_conll04_test               │          99.176 │
+│ rel       │ rel_nyt_test                   │          78.573 │
+│ rel       │ rel_scierc_test                │          89.655 │
+│ event     │ event_ace05_test_tgg           │         100.000 │
+│ event     │ event_ace05_test_arg           │         100.000 │
+│ event     │ event_casie_test_tgg           │          92.987 │
+│ event     │ event_casie_test_arg           │          93.376 │
+│ absa      │ absa_14res_test                │          99.091 │
+│ absa      │ absa_14lap_test                │          99.815 │
+│ absa      │ absa_15res_test                │          99.794 │
+│ absa      │ absa_16res_test                │          99.708 │
+└───────────┴────────────────────────────────┴─────────────────┘
+
+eval UIEData2 fixed-v2 with constraint
+mirror_outputs/InstructBert_TagSpan_DebertaV3Base_MergedUIEData2
+┏━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┓
+┃ Task      ┃ Dataset                        ┃      Metric (%) ┃
+┡━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━┩
+│ ent       │ ent_ace04_test                 │          84.912 │
+│ ent       │ ent_ace05_test                 │          90.300 │
+│ ent       │ ent_conll03_test               │          92.335 │
+│ rel       │ rel_ace05_test                 │          60.365 │
+│ rel       │ rel_conll04_test               │          46.064 │
+│ rel       │ rel_nyt_test                   │          73.048 │
+│ rel       │ rel_scierc_test                │          20.084 │
+│ event     │ event_ace05_test_tgg           │          71.752 │
+│ event     │ event_ace05_test_arg           │          51.140 │
+│ event     │ event_casie_test_tgg           │          63.915 │
+│ event     │ event_casie_test_arg           │          32.243 │
+│ absa      │ absa_14res_test                │          75.456 │
+│ absa      │ absa_14lap_test                │          64.251 │
+│ absa      │ absa_15res_test                │          93.525 │
+│ absa      │ absa_16res_test                │          76.505 │
+└───────────┴────────────────────────────────┴─────────────────┘
+"""

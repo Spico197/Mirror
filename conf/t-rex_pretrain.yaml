@@ -1,0 +1,9 @@
+task_name: InstructBert_TagSpan_DebertaV3Base_TRExPretrain
+data_dir: resources/Mirror/v1.3/rel/en/T-REx/instructed
+train_filepath: ${data_dir}/t-rex.udi.fix.jsonl
+
+num_epochs: 3
+eval_on_data: [train]
+select_best_on_data: train
+select_best_by_key: loss
+final_eval_on_test: false

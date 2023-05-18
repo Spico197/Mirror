@@ -355,6 +355,7 @@ class MultiPartSpanMetric(MetricBase):
             gold_events, pred_events = [], []
             gold_spans, pred_spans = [], []
 
+            raw_schema = gold["raw_gold_content"]["raw"]["schema"]
             for span in gold["spans"]:
                 if span[0] in span_to_label:
                     label = span_to_label[span[0]]
@@ -366,9 +367,7 @@ class MultiPartSpanMetric(MetricBase):
                         gold_rels.append((label["string"], *span[1:]))
                     elif label["task"] == "event":
                         if label["type"] == "lm" and len(span) == 2:
-                            gold_trigger_to_event[span[1]]["event_type"] = label[
-                                "string"
-                            ]
+                            gold_trigger_to_event[span[1]]["event_type"] = label["string"]  # fmt: skip
                         elif label["type"] == "lr" and len(span) == 3:
                             gold_trigger_to_event[span[1]]["arguments"].append(
                                 {"argument": span[2], "role": label["string"]}
@@ -377,11 +376,18 @@ class MultiPartSpanMetric(MetricBase):
                     # span task has no labels
                     gold_spans.append(tuple(span))
             for trigger, item in gold_trigger_to_event.items():
+                legal_roles = raw_schema["event"][item["event_type"]]
                 gold_events.append(
                     {
                         "trigger": trigger,
                         "event_type": item["event_type"],
-                        "arguments": item["arguments"],
+                        "arguments": [
+                            arg
+                            for arg in filter(
+                                lambda arg: arg["role"] in legal_roles,
+                                item["arguments"],
+                            )
+                        ],
                     }
                 )
 
@@ -396,9 +402,7 @@ class MultiPartSpanMetric(MetricBase):
                         pred_rels.append((label["string"], *span[1:]))
                     elif label["task"] == "event":
                         if label["type"] == "lm" and len(span) == 2:
-                            pred_trigger_to_event[span[1]]["event_type"] = label[
-                                "string"
-                            ]
+                            pred_trigger_to_event[span[1]]["event_type"] = label["string"]  # fmt: skip
                         elif label["type"] == "lr" and len(span) == 3:
                             pred_trigger_to_event[span[1]]["arguments"].append(
                                 {"argument": span[2], "role": label["string"]}
@@ -407,11 +411,20 @@ class MultiPartSpanMetric(MetricBase):
                     # span task has no labels
                     pred_spans.append(tuple(span))
             for trigger, item in pred_trigger_to_event.items():
+                if item["event_type"] not in raw_schema["event"]:
+                    continue
+                legal_roles = raw_schema["event"][item["event_type"]]
                 pred_events.append(
                     {
                         "trigger": trigger,
                         "event_type": item["event_type"],
-                        "arguments": item["arguments"],
+                        "arguments": [
+                            arg
+                            for arg in filter(
+                                lambda arg: arg["role"] in legal_roles,
+                                item["arguments"],
+                            )
+                        ],
                     }
                 )
 

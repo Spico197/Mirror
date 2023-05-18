@@ -17,7 +17,12 @@ from transformers.models.deberta_v2.tokenization_deberta_v2_fast import (
     DebertaV2TokenizerFast,
 )
 
-from src.utils import decode_nnw_thw_mat, encode_nnw_nsw_thw_mat, encode_nnw_thw_mat
+from src.utils import (
+    decode_nnw_nsw_thw_mat,
+    decode_nnw_thw_mat,
+    encode_nnw_nsw_thw_mat,
+    encode_nnw_thw_mat,
+)
 
 Filled = TypeVar("Filled")
 
@@ -643,4 +648,10 @@ class CachedLabelPointerTransform(CachedTransformOneBase):
             )
             data["mask"][i] = data["mask"][i] + [0] * pad_len
             data["labels"][i] = encode_nnw_nsw_thw_mat(data["spans"][i], batch_seq_len)
+            # pred_spans = decode_nnw_nsw_thw_mat(data["labels"][i].unsqueeze(0))[0]
+            # sorted_gold = sorted(set(tuple(x) for x in data["spans"][i]))
+            # sorted_pred = sorted(set(tuple(x) for x in pred_spans))
+            # if sorted_gold != sorted_pred:
+            #     breakpoint()
+
         return data

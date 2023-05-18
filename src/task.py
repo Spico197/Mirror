@@ -10,6 +10,7 @@ from rex.data.data_manager import DataManager
 from rex.data.dataset import CachedDataset
 from rex.tasks.simple_metric_task import SimpleMetricTask
 from rex.utils.batch import decompose_batch_into_instances
+from rex.utils.config import ConfigParser
 from rex.utils.dict import flatten_dict
 from rex.utils.io import load_jsonlines
 from rex.utils.registry import register
@@ -315,11 +316,17 @@ class SchemaGuidedInstructBertTask(MrcTaggingTask):
         return results
 
 
+def further_finetune():
+    config = ConfigParser.parse_cmd(cmd_args=["-dc", "conf/mirror-ace05en.yaml", ""])
+
+
 if __name__ == "__main__":
-    from rex.utils.config import ConfigParser
+    further_finetune()
+
+    # from rex.utils.config import ConfigParser
 
     # config = ConfigParser.parse_cmd(cmd_args=["-dc", "conf/ner.yaml"])
-    config = ConfigParser.parse_cmd(cmd_args=["-dc", "conf/mirror-ace05en.yaml"])
+    # config = ConfigParser.parse_cmd(cmd_args=["-dc", "conf/mirror-ace05en.yaml"])
 
     # task = MrcTaggingTask(
     #     config,
@@ -327,12 +334,12 @@ if __name__ == "__main__":
     #     makedirs=True,
     #     dump_configfile=True,
     # )
-    task = SchemaGuidedInstructBertTask.from_taskdir(
-        "outputs/InstructBert_TagSpan_DebertaV3Base_ACE05EN_Rel",
-        initialize=True,
-        load_config=True,
-        dump_configfile=False,
-    )
+    # task = SchemaGuidedInstructBertTask.from_taskdir(
+    #     "outputs/InstructBert_TagSpan_DebertaV3Base_ACE05EN_Rel",
+    #     initialize=True,
+    #     load_config=True,
+    #     dump_configfile=False,
+    # )
     # task = SchemaGuidedInstructBertTask(
     #     config,
     #     initialize=True,
@@ -343,7 +350,7 @@ if __name__ == "__main__":
     #     "outputs/InstructBert_TagSpan_DebertaV3Base_ACE05EN_NerRelEvent/ckpt/SchemaGuidedInstructBertModel.epoch.0.pth",
     #     load_config=False,
     # )
-    task.eval("test", verbose=True, dump=True, dump_middle=True, postfix="re_eval")
+    # task.eval("test", verbose=True, dump=True, dump_middle=True, postfix="re_eval")
     # task.load(
     #     # "outputs/Mirror_RobertaBaseWwm_Cons_MsraMrc/ckpt/MrcGlobalPointerModel.best.pth",
     #     # "outputs/Mirror_RobertaBaseWwm_W2_MsraMrc_HyperParamExp1/ckpt/MrcGlobalPointerModel.best.pth",

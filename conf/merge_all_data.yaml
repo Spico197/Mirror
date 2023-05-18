@@ -1,0 +1,6 @@
+task_name: InstructBert_MergedAllData
+data_dir: resources/Mirror/v1.3/merged_pretrained_data
+train_filepath: ${data_dir}/train.jsonl
+dev_filepath: resources/Mirror/v1.3/uie_data/dev.jsonl
+test_filepath: resources/Mirror/v1.3/uie_data/test.jsonl
+num_epochs: 1

@@ -1,7 +1,7 @@
 # task
 task_type: SchemaGuidedInstructBertTask
-task_name: InstructBert_TagSpan_DebertaV3Base_MergedUIEData
-# task_name: InstructBert_TagSpan_DebertaV3Base_MergedAllData
+# task_name: InstructBert_TagSpan_DebertaV3Base_MergedUIEData2
+task_name: InstructBert_TagSpan_DebertaV3Base_MergedAllData
 # task_name: InstructBert_TagSpan_DebertaV3Base_ClsTest
 comment: '~~content as label, (start, end + 1) span'
 
@@ -19,8 +19,8 @@ plm_dir: /data/tzhu/PLM/microsoft--deberta-v3-base
 # data_dir: resources/Mirror/Tasks/RE/merged-20230502-2340-v1
 # data_dir: resources/Mirror/Tasks/RE/merged-20230502-2358-v2-woADE
 # data_dir: resources/Mirror/Tasks/RE/WebNLG/instructed
-# data_dir: resources/Mirror/v1.3/merged_pretrained_data
-data_dir: resources/Mirror/v1.3/uie_data
+data_dir: resources/Mirror/v1.3/merged_pretrained_data
+# data_dir: resources/Mirror/v1.3/uie_data
 # data_dir: resources/Mirror/v1.3/cls/en/ag_news/instructed
 # data_dir: resources/Mirror/Tasks/RE/FewRel
 # data_dir: resources/Mirror/Tasks/RE/New-York-Times-RE
@@ -42,10 +42,10 @@ task_dir: ${output_dir}/${task_name}
 # dev_filepath: ${data_dir}/ACE2005_oneie_dev.jsonl
 # test_filepath: ${data_dir}/ACE2005_oneie_test.jsonl
 train_filepath: ${data_dir}/train.jsonl
-dev_filepath: ${data_dir}/dev.jsonl
-test_filepath: ${data_dir}/test.jsonl
-# dev_filepath: resources/Mirror/v1.3/uie_data/dev.jsonl
-# test_filepath: resources/Mirror/v1.3/uie_data/test.jsonl
+# dev_filepath: ${data_dir}/dev.jsonl
+# test_filepath: ${data_dir}/test.jsonl
+dev_filepath: resources/Mirror/v1.3/uie_data/dev.jsonl
+test_filepath: resources/Mirror/v1.3/uie_data/test.jsonl
 dump_cache_dir: ${task_dir}/cache
 regenerate_cache: false
 
@@ -60,7 +60,7 @@ save_every_ckpt: true
 save_best_ckpt: true
 
 warmup_proportion: 0.1
-num_epochs: 10
+num_epochs: 1
 epoch_patience: -1
 num_steps: -1
 step_patience: -1

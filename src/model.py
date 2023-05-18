@@ -491,12 +491,24 @@ class SchemaGuidedInstructBertModel(nn.Module):
         logits: torch.Tensor,
         top_p: float = 0.5,
         top_k: int = -1,
+        legal_num_parts: tuple = (2, 3),
+        labels: torch.Tensor = None,
         **kwargs,
     ):
         # B x 3 x L x L
-        probs = logits.sigmoid()
-        pred = (probs > top_p).long()
+        if labels is None:
+            # `labels` is used for upper bound analysis
+            probs = logits.sigmoid()
+            pred = (probs > top_p).long()
+        else:
+            pred = labels
         preds = decode_nnw_nsw_thw_mat(pred, offsets=kwargs.get("offset"))
+        # for pred, gold in zip(preds, kwargs.get("spans")):
+        #     sorted_pred = sorted(set(tuple(x) for x in pred))
+        #     sorted_gold = sorted(set(tuple(x) for x in gold))
+        #     if sorted_pred != sorted_gold:
+        #         breakpoint()
+
         if top_k == -1:
             batch_preds = preds
         else:
@@ -506,4 +518,15 @@ class SchemaGuidedInstructBertModel(nn.Module):
                 paths_with_prob.sort(key=lambda pp: pp[1], reverse=True)
                 batch_preds.append([pp[0] for pp in paths_with_prob[:top_k]])
 
-        return batch_preds
+        if legal_num_parts is not None:
+            legal_preds = []
+            for ins_paths in batch_preds:
+                legal_paths = []
+                for path in ins_paths:
+                    if len(path) in legal_num_parts:
+                        legal_paths.append(path)
+                legal_preds.append(legal_paths)
+        else:
+            legal_preds = batch_preds
+
+        return legal_preds

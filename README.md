@@ -6,6 +6,9 @@
   - torch
   - pytorch-rex==0.10b0 (github latest commit)
   - transformers
+  - pandas
+  - openpyxl
+  - rich
 
 - Recommended (for dev as in `Makefile`)
   - formatting tools: isort, black
