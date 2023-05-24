@@ -541,7 +541,7 @@ class CachedLabelPointerTransform(CachedTransformOneBase):
                     position_seq = (text_off + ent_token_s,)
                 else:
                     position_seq = (text_off + ent_token_s, text_off + ent_token_e)
-                spans.append([label_part, position_seq])
+                spans.append([position_seq, label_part])
         if "rel" in instance["ans"]:
             for rel in instance["ans"]["rel"]:
                 label_part = label_map["lr"][rel["relation"]]
@@ -563,7 +563,8 @@ class CachedLabelPointerTransform(CachedTransformOneBase):
                         text_off + tail_token_s,
                         text_off + tail_token_e,
                     )
-                spans.append([label_part, head_position_seq, tail_position_seq])
+                spans.append([head_position_seq, label_part, tail_position_seq])
+                # spans.append([head_position_seq, tail_position_seq, label_part])
         if "event" in instance["ans"]:
             for event in instance["ans"]["event"]:
                 event_type_label_part = label_map["lm"][event["event_type"]]
@@ -580,7 +581,7 @@ class CachedLabelPointerTransform(CachedTransformOneBase):
                         text_off + trigger_token_s,
                         text_off + trigger_token_e,
                     )
-                trigger_part = [event_type_label_part, trigger_position_seq]
+                trigger_part = [trigger_position_seq, event_type_label_part]
                 spans.append(trigger_part)
                 for arg in event["args"]:
                     role_label_part = label_map["lr"][arg["role"]]
@@ -593,7 +594,8 @@ class CachedLabelPointerTransform(CachedTransformOneBase):
                             text_off + arg_token_s,
                             text_off + arg_token_e,
                         )
-                    arg_part = [role_label_part, trigger_position_seq, arg_position_seq]
+                    arg_part = [trigger_position_seq, role_label_part, arg_position_seq]
+                    # arg_part = [trigger_position_seq, arg_position_seq, role_label_part]
                     spans.append(arg_part)
         if "span" in instance["ans"]:
             # Extractive-QA or Extractive-MRC tasks
@@ -648,10 +650,10 @@ class CachedLabelPointerTransform(CachedTransformOneBase):
             )
             data["mask"][i] = data["mask"][i] + [0] * pad_len
             data["labels"][i] = encode_nnw_nsw_thw_mat(data["spans"][i], batch_seq_len)
-            # pred_spans = decode_nnw_nsw_thw_mat(data["labels"][i].unsqueeze(0))[0]
-            # sorted_gold = sorted(set(tuple(x) for x in data["spans"][i]))
-            # sorted_pred = sorted(set(tuple(x) for x in pred_spans))
-            # if sorted_gold != sorted_pred:
-            #     breakpoint()
+            pred_spans = decode_nnw_nsw_thw_mat(data["labels"][i].unsqueeze(0))[0]
+            sorted_gold = sorted(set(tuple(x) for x in data["spans"][i]))
+            sorted_pred = sorted(set(tuple(x) for x in pred_spans))
+            if sorted_gold != sorted_pred:
+                breakpoint()
 
         return data

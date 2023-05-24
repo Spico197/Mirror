@@ -16,7 +16,7 @@ task: SchemaGuidedInstructBertTask = SchemaGuidedInstructBertTask.from_taskdir(
     load_best_model=True,
     initialize=False,
     dump_configfile=False,
-    update_config={"regenerate_data": True},
+    update_config={"regenerate_cache": True},
 )
 table = Table(title=task_dir, width=len(task_dir))
 
@@ -41,10 +41,10 @@ data_pairs = [
     # ["ent_conll03_test", "resources/Mirror/v1.3/ent/en/CoNLL2003/instructed/test.jsonl"],
     # ["rel_ace05_test", "resources/Mirror/v1.3/rel/en/ACE05-EN-plus/instructed/ACE2005_plus_RE_labelmap_test.jsonl"],
     # ["rel_conll04_test", "resources/Mirror/v1.3/rel/en/CoNLL2004/instructed/CoNLL2004_RE_labelmap_test.jsonl"],
-    ["rel_nyt_test", "resources/Mirror/v1.3/rel/en/NYT_multi/instructed/NYT_multi_test.jsonl"],
+    # ["rel_nyt_test", "resources/Mirror/v1.3/rel/en/NYT_multi/instructed/NYT_multi_test.jsonl"],
     # ["rel_scierc_test", "resources/Mirror/v1.3/rel/en/sciERC/instructed/sciERC_test.jsonl"],
     # ["event_ace05_test", "resources/Mirror/v1.3/event/en/ACE05-EN-plus/fixed_instructed/test.jsonl"],
-    # ["event_casie_test", "resources/Mirror/v1.3/event/en/CASIE/instructed/test.jsonl"],
+    ["event_casie_test", "resources/Mirror/v1.3/event/en/CASIE/instructed/test.jsonl"],
     # ["absa_14res_test", "resources/Mirror/v1.3/rel/en/14res/instructed/test.jsonl"],
     # ["absa_14lap_test", "resources/Mirror/v1.3/rel/en/14lap/instructed/test.jsonl"],
     # ["absa_15res_test", "resources/Mirror/v1.3/rel/en/15res/instructed/test.jsonl"],
@@ -183,5 +183,49 @@ mirror_outputs/InstructBert_TagSpan_DebertaV3Base_MergedUIEData2
 │ absa      │ absa_14lap_test                │          64.251 │
 │ absa      │ absa_15res_test                │          93.525 │
 │ absa      │ absa_16res_test                │          76.505 │
+└───────────┴────────────────────────────────┴─────────────────┘
+
+sop (subj, obj, predicate) upper bound
+mirror_outputs/InstructBert_TagSpan_DebertaV3Base_MergedUIEData2
+┏━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┓
+┃ Task      ┃ Dataset                        ┃      Metric (%) ┃
+┡━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━┩
+│ ent       │ ent_ace04_test                 │          99.934 │
+│ ent       │ ent_ace05_test                 │         100.000 │
+│ ent       │ ent_conll03_test               │         100.000 │
+│ rel       │ rel_ace05_test                 │          98.401 │
+│ rel       │ rel_conll04_test               │          98.937 │
+│ rel       │ rel_nyt_test                   │          78.976 │
+│ rel       │ rel_scierc_test                │          89.552 │
+│ event     │ event_ace05_test_tgg           │         100.000 │
+│ event     │ event_ace05_test_arg           │         100.000 │
+│ event     │ event_casie_test_tgg           │          92.987 │
+│ event     │ event_casie_test_arg           │          93.376 │
+│ absa      │ absa_14res_test                │          98.941 │
+│ absa      │ absa_14lap_test                │          99.815 │
+│ absa      │ absa_15res_test                │          99.794 │
+│ absa      │ absa_16res_test                │          99.612 │
+└───────────┴────────────────────────────────┴─────────────────┘
+
+spo upper bound
+mirror_outputs/InstructBert_TagSpan_DebertaV3Base_MergedUIEData2
+┏━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┓
+┃ Task      ┃ Dataset                        ┃      Metric (%) ┃
+┡━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━┩
+│ ent       │ ent_ace04_test                 │          99.934 │
+│ ent       │ ent_ace05_test                 │         100.000 │
+│ ent       │ ent_conll03_test               │         100.000 │
+│ rel       │ rel_ace05_test                 │          96.378 │
+│ rel       │ rel_conll04_test               │          97.448 │
+│ rel       │ rel_nyt_test                   │          76.764 │
+│ rel       │ rel_scierc_test                │          78.158 │
+│ event     │ event_ace05_test_tgg           │         100.000 │
+│ event     │ event_ace05_test_arg           │         100.000 │
+│ event     │ event_casie_test_tgg           │          92.987 │
+│ event     │ event_casie_test_arg           │          93.376 │
+│ absa      │ absa_14res_test                │          98.883 │
+│ absa      │ absa_14lap_test                │          99.815 │
+│ absa      │ absa_15res_test                │         100.000 │
+│ absa      │ absa_16res_test                │          99.609 │
 └───────────┴────────────────────────────────┴─────────────────┘
 """

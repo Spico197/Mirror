@@ -464,7 +464,9 @@ class SchemaGuidedInstructBertModel(nn.Module):
             results["loss"] = loss
 
         if is_eval:
-            batch_positions = self.decode(logits, top_p=top_p, top_k=top_k, **kwargs)
+            batch_positions = self.decode(
+                logits, top_p=top_p, top_k=top_k, labels=labels, **kwargs
+            )
             results["pred"] = batch_positions
         return results
 

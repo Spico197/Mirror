@@ -357,19 +357,19 @@ class MultiPartSpanMetric(MetricBase):
 
             raw_schema = gold["raw_gold_content"]["raw"]["schema"]
             for span in gold["spans"]:
-                if span[0] in span_to_label:
-                    label = span_to_label[span[0]]
+                if span[1] in span_to_label:
+                    label = span_to_label[span[1]]
                     if label["task"] == "cls":
                         gold_clses.append(label["string"])
                     elif label["task"] == "ent":
-                        gold_ents.append((label["string"], *span[1:]))
+                        gold_ents.append((label["string"], span[0]))
                     elif label["task"] == "rel":
-                        gold_rels.append((label["string"], *span[1:]))
+                        gold_rels.append((label["string"], span[0], span[2]))
                     elif label["task"] == "event":
                         if label["type"] == "lm" and len(span) == 2:
-                            gold_trigger_to_event[span[1]]["event_type"] = label["string"]  # fmt: skip
+                            gold_trigger_to_event[span[0]]["event_type"] = label["string"]  # fmt: skip
                         elif label["type"] == "lr" and len(span) == 3:
-                            gold_trigger_to_event[span[1]]["arguments"].append(
+                            gold_trigger_to_event[span[0]]["arguments"].append(
                                 {"argument": span[2], "role": label["string"]}
                             )
                 else:
@@ -392,19 +392,19 @@ class MultiPartSpanMetric(MetricBase):
                 )
 
             for span in pred["spans"]:
-                if span[0] in span_to_label:
-                    label = span_to_label[span[0]]
+                if span[1] in span_to_label:
+                    label = span_to_label[span[1]]
                     if label["task"] == "cls":
                         pred_clses.append(label["string"])
                     elif label["task"] == "ent":
-                        pred_ents.append((label["string"], *span[1:]))
+                        pred_ents.append((label["string"], span[0]))
                     elif label["task"] == "rel":
-                        pred_rels.append((label["string"], *span[1:]))
+                        pred_rels.append((label["string"], span[0], span[2]))
                     elif label["task"] == "event":
                         if label["type"] == "lm" and len(span) == 2:
-                            pred_trigger_to_event[span[1]]["event_type"] = label["string"]  # fmt: skip
+                            pred_trigger_to_event[span[0]]["event_type"] = label["string"]  # fmt: skip
                         elif label["type"] == "lr" and len(span) == 3:
-                            pred_trigger_to_event[span[1]]["arguments"].append(
+                            pred_trigger_to_event[span[0]]["arguments"].append(
                                 {"argument": span[2], "role": label["string"]}
                             )
                 else:
