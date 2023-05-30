@@ -16,7 +16,7 @@ task: SchemaGuidedInstructBertTask = SchemaGuidedInstructBertTask.from_taskdir(
     load_best_model=True,
     initialize=False,
     dump_configfile=False,
-    update_config={"regenerate_data": True},
+    update_config={"regenerate_cache": True},
 )
 table = Table(title=task_dir, width=len(task_dir))
 
@@ -36,19 +36,22 @@ data_pairs = [
     # ["rel_ace05", "resources/Mirror/Tasks/EE/ACE05-EN/ACE2005_oneie_RE_test.jsonl"],
 
     # UIE eval data
-    # ["ent_ace04_test", "resources/Mirror/v1.3/ent/en/ACE_2004/instructed/test.jsonl"],
-    # ["ent_ace05_test", "resources/Mirror/v1.3/ent/en/ACE05-EN-plus/instructed/test.jsonl"],
-    # ["ent_conll03_test", "resources/Mirror/v1.3/ent/en/CoNLL2003/instructed/test.jsonl"],
-    # ["rel_ace05_test", "resources/Mirror/v1.3/rel/en/ACE05-EN-plus/instructed/ACE2005_plus_RE_labelmap_test.jsonl"],
-    # ["rel_conll04_test", "resources/Mirror/v1.3/rel/en/CoNLL2004/instructed/CoNLL2004_RE_labelmap_test.jsonl"],
-    ["rel_nyt_test", "resources/Mirror/v1.3/rel/en/NYT_multi/instructed/NYT_multi_test.jsonl"],
-    # ["rel_scierc_test", "resources/Mirror/v1.3/rel/en/sciERC/instructed/sciERC_test.jsonl"],
-    # ["event_ace05_test", "resources/Mirror/v1.3/event/en/ACE05-EN-plus/fixed_instructed/test.jsonl"],
-    # ["event_casie_test", "resources/Mirror/v1.3/event/en/CASIE/instructed/test.jsonl"],
-    # ["absa_14res_test", "resources/Mirror/v1.3/rel/en/14res/instructed/test.jsonl"],
-    # ["absa_14lap_test", "resources/Mirror/v1.3/rel/en/14lap/instructed/test.jsonl"],
-    # ["absa_15res_test", "resources/Mirror/v1.3/rel/en/15res/instructed/test.jsonl"],
-    # ["absa_16res_test", "resources/Mirror/v1.3/rel/en/16res/instructed/test.jsonl"],
+    ["ent_ace04_test", "resources/Mirror/uie/ent/ace04/test.jsonl"],
+    ["ent_ace05_test", "resources/Mirror/uie/ent/ace05/test.jsonl"],
+    ["ent_conll03_test", "resources/Mirror/uie/ent/conll03/test.jsonl"],
+
+    ["rel_ace05_test", "resources/Mirror/uie/rel/ace05-rel/test.jsonl"],
+    ["rel_conll04_test", "resources/Mirror/uie/rel/conll04/test.jsonl"],
+    ["rel_nyt_test", "resources/Mirror/uie/rel/nyt/test.jsonl"],
+    ["rel_scierc_test", "resources/Mirror/uie/rel/scierc/test.jsonl"],
+
+    ["event_ace05_test", "resources/Mirror/uie/event/ace05-evt/test.jsonl"],
+    ["event_casie_test", "resources/Mirror/uie/event/casie/test.jsonl"],
+
+    ["absa_14res_test", "resources/Mirror/uie/absa/14res/test.jsonl"],
+    ["absa_14lap_test", "resources/Mirror/uie/absa/14lap/test.jsonl"],
+    ["absa_15res_test", "resources/Mirror/uie/absa/15res/test.jsonl"],
+    ["absa_16res_test", "resources/Mirror/uie/absa/16res/test.jsonl"],
     # fmt: on
 ]
 
@@ -183,5 +186,93 @@ mirror_outputs/InstructBert_TagSpan_DebertaV3Base_MergedUIEData2
 │ absa      │ absa_14lap_test                │          64.251 │
 │ absa      │ absa_15res_test                │          93.525 │
 │ absa      │ absa_16res_test                │          76.505 │
+└───────────┴────────────────────────────────┴─────────────────┘
+
+pso upper bound, find all nnw paths
+mirror_outputs/InstructBert_TagSpan_DebertaV3Base_MergedUIEData2
+┏━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┓
+┃ Task      ┃ Dataset                        ┃      Metric (%) ┃
+┡━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━┩
+│ ent       │ ent_ace04_test                 │          99.934 │
+│ ent       │ ent_ace05_test                 │         100.000 │
+│ ent       │ ent_conll03_test               │         100.000 │
+│ rel       │ rel_ace05_test                 │          98.463 │
+│ rel       │ rel_conll04_test               │          99.176 │
+│ rel       │ rel_nyt_test                   │          98.392 │
+│ rel       │ rel_scierc_test                │          92.593 │
+│ event     │ event_ace05_test_tgg           │         100.000 │
+│ event     │ event_ace05_test_arg           │         100.000 │
+│ event     │ event_casie_test_tgg           │          92.987 │
+│ event     │ event_casie_test_arg           │          93.376 │
+│ absa      │ absa_14res_test                │          98.947 │
+│ absa      │ absa_14lap_test                │          99.815 │
+│ absa      │ absa_15res_test                │          99.794 │
+│ absa      │ absa_16res_test                │          99.709 │
+└───────────┴────────────────────────────────┴─────────────────┘
+
+MergedUIEDataMultitaskSFT
+pso find all nnw paths
+output label type to span len constraint
+┏━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┓
+┃ Task      ┃ Dataset                        ┃      Metric (%) ┃
+┡━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━┩
+│ ent       │ ent_ace04_test                 │          99.934 │
+│ ent       │ ent_ace05_test                 │         100.000 │
+│ ent       │ ent_conll03_test               │         100.000 │
+│ rel       │ rel_ace05_test                 │         100.000 │
+│ rel       │ rel_conll04_test               │          99.881 │
+│ rel       │ rel_nyt_test                   │          99.362 │
+│ rel       │ rel_scierc_test                │          97.113 │
+│ event     │ event_ace05_test_tgg           │         100.000 │
+│ event     │ event_ace05_test_arg           │         100.000 │
+│ event     │ event_casie_test_tgg           │          92.987 │
+│ event     │ event_casie_test_arg           │          93.376 │
+│ absa      │ absa_14res_test                │          99.496 │
+│ absa      │ absa_14lap_test                │          99.908 │
+│ absa      │ absa_15res_test                │          99.794 │
+│ absa      │ absa_16res_test                │          99.903 │
+└───────────┴────────────────────────────────┴─────────────────┘
+
+pso upper bound
+new merged uie data
+┏━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┓
+┃ Task      ┃ Dataset                        ┃      Metric (%) ┃
+┡━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━┩
+│ ent       │ ent_ace04_test                 │          99.951 │
+│ ent       │ ent_ace05_test                 │          99.852 │
+│ ent       │ ent_conll03_test               │         100.000 │
+│ rel       │ rel_ace05_test                 │          99.957 │
+│ rel       │ rel_conll04_test               │          99.643 │
+│ rel       │ rel_nyt_test                   │          99.380 │
+│ rel       │ rel_scierc_test                │          97.113 │
+│ event     │ event_ace05_test_tgg           │         100.000 │
+│ event     │ event_ace05_test_arg           │         100.000 │
+│ event     │ event_casie_test_tgg           │         100.000 │
+│ event     │ event_casie_test_arg           │          99.991 │
+│ absa      │ absa_14res_test                │          99.496 │
+│ absa      │ absa_14lap_test                │          99.908 │
+│ absa      │ absa_15res_test                │          99.794 │
+│ absa      │ absa_16res_test                │          99.903 │
+└───────────┴────────────────────────────────┴─────────────────┘
+
+merged uie data v2 eval on new data
+┏━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┓
+┃ Task      ┃ Dataset                        ┃      Metric (%) ┃
+┡━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━┩
+│ ent       │ ent_ace04_test                 │          83.055 │
+│ ent       │ ent_ace05_test                 │          89.497 │
+│ ent       │ ent_conll03_test               │          86.333 │
+│ rel       │ rel_ace05_test                 │          67.989 │
+│ rel       │ rel_conll04_test               │           0.000 │
+│ rel       │ rel_nyt_test                   │          91.656 │
+│ rel       │ rel_scierc_test                │           7.509 │
+│ event     │ event_ace05_test_tgg           │          71.170 │
+│ event     │ event_ace05_test_arg           │          49.408 │
+│ event     │ event_casie_test_tgg           │          30.459 │
+│ event     │ event_casie_test_arg           │           7.966 │
+│ absa      │ absa_14res_test                │          73.684 │
+│ absa      │ absa_14lap_test                │          62.737 │
+│ absa      │ absa_15res_test                │          90.928 │
+│ absa      │ absa_16res_test                │          74.853 │
 └───────────┴────────────────────────────────┴─────────────────┘
 """

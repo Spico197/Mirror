@@ -359,11 +359,11 @@ class MultiPartSpanMetric(MetricBase):
             for span in gold["spans"]:
                 if span[0] in span_to_label:
                     label = span_to_label[span[0]]
-                    if label["task"] == "cls":
+                    if label["task"] == "cls" and len(span) == 1:
                         gold_clses.append(label["string"])
-                    elif label["task"] == "ent":
+                    elif label["task"] == "ent" and len(span) == 2:
                         gold_ents.append((label["string"], *span[1:]))
-                    elif label["task"] == "rel":
+                    elif label["task"] == "rel" and len(span) == 3:
                         gold_rels.append((label["string"], *span[1:]))
                     elif label["task"] == "event":
                         if label["type"] == "lm" and len(span) == 2:
@@ -394,11 +394,11 @@ class MultiPartSpanMetric(MetricBase):
             for span in pred["spans"]:
                 if span[0] in span_to_label:
                     label = span_to_label[span[0]]
-                    if label["task"] == "cls":
+                    if label["task"] == "cls" and len(span) == 1:
                         pred_clses.append(label["string"])
-                    elif label["task"] == "ent":
+                    elif label["task"] == "ent" and len(span) == 2:
                         pred_ents.append((label["string"], *span[1:]))
-                    elif label["task"] == "rel":
+                    elif label["task"] == "rel" and len(span) == 3:
                         pred_rels.append((label["string"], *span[1:]))
                     elif label["task"] == "event":
                         if label["type"] == "lm" and len(span) == 2:

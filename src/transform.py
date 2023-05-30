@@ -648,6 +648,8 @@ class CachedLabelPointerTransform(CachedTransformOneBase):
             )
             data["mask"][i] = data["mask"][i] + [0] * pad_len
             data["labels"][i] = encode_nnw_nsw_thw_mat(data["spans"][i], batch_seq_len)
+
+            # # for debugging only
             # pred_spans = decode_nnw_nsw_thw_mat(data["labels"][i].unsqueeze(0))[0]
             # sorted_gold = sorted(set(tuple(x) for x in data["spans"][i]))
             # sorted_pred = sorted(set(tuple(x) for x in pred_spans))

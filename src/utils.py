@@ -35,9 +35,9 @@ def find_paths_from_adj_mat(adj_mat: torch.Tensor) -> list[tuple[int]]:
                         continue
                     visited.add((c, n))
                     stack.append((path + (c,), n))
-            else:
-                if path:
-                    paths.append(path + (c,))
+            # else:
+            if path:
+                paths.append(path + (c,))
 
     # def track(path: tuple[int], c: int, visited: set[tuple[int]]):
     #     if c in adj_map:
@@ -199,7 +199,7 @@ def decode_nnw_nsw_thw_mat(
     result_batch = []
     for ins_id in range(ins_num):
         offset = offsets[ins_id] if offsets else 0
-        ins_span_paths = []
+        ins_span_paths = set()
         # ins_mat: (2, seq_len, seq_len)
         ins_mat = batch_mat[ins_id]
         nsw_connections = {
@@ -234,8 +234,8 @@ def decode_nnw_nsw_thw_mat(
                             parts = split_tuple_by_positions(chain, all_sep_positions)
                         if not parts:
                             parts = [chain]
-                        ins_span_paths.append(parts)
-        result_batch.append(ins_span_paths)
+                        ins_span_paths.add(tuple(parts))
+        result_batch.append(list(ins_span_paths))
 
     return result_batch
 

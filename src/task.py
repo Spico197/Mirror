@@ -253,14 +253,23 @@ class SchemaGuidedInstructBertTask(MrcTaggingTask):
         )
 
     def init_model(self):
-        m = SchemaGuidedInstructBertModel(
+        self.model = SchemaGuidedInstructBertModel(
             self.config.plm_dir,
             vocab_size=len(self.transform.tokenizer),
             use_rope=self.config.use_rope,
             biaffine_size=self.config.biaffine_size,
             dropout=self.config.dropout,
         )
-        return m
+
+        if hasattr(self.config, "base_model_path"):
+            self.load(
+                self.config.base_model_path,
+                load_config=False,
+                load_model=True,
+                load_optimizer=False,
+                load_history=False,
+            )
+        return self.model
 
     def init_optimizer(self):
         no_decay = r"(embedding|LayerNorm|\.bias$)"
@@ -316,12 +325,9 @@ class SchemaGuidedInstructBertTask(MrcTaggingTask):
         return results
 
 
-def further_finetune():
-    config = ConfigParser.parse_cmd(cmd_args=["-dc", "conf/mirror-ace05en.yaml", ""])
-
-
 if __name__ == "__main__":
-    further_finetune()
+    pass
+    # further_finetune()
 
     # from rex.utils.config import ConfigParser
 

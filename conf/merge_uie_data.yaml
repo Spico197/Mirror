@@ -1,5 +1,5 @@
-task_name: InstructBert_MergedUIEData
-data_dir: resources/Mirror/v1.3/uie_data
+task_name: InstructBert_NewMergedUIEData
+data_dir: resources/Mirror/uie/merged
 train_filepath: ${data_dir}/train.jsonl
 dev_filepath: ${data_dir}/dev.jsonl
 test_filepath: ${data_dir}/test.jsonl

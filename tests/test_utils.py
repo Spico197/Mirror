@@ -20,7 +20,14 @@ def test_find_path_from_adj_mat():
     ]
     adj_mat = torch.tensor(adj_mat).byte()
     paths = find_paths_from_adj_mat(adj_mat)
-    assert set(paths) == {(0, 1, 2, 5, 4, 3)}
+    # except for the first one, the others are not ideal paths, which are redundant
+    assert set(paths) == {
+        (0, 1, 2, 5, 4, 3),
+        (0, 1),
+        (0, 1, 2, 5, 4),
+        (0, 1, 2, 5),
+        (0, 1, 2),
+    }
 
     adj_mat = [
         [0, 1, 0, 0, 0, 0],
@@ -32,7 +39,8 @@ def test_find_path_from_adj_mat():
     ]
     adj_mat = torch.tensor(adj_mat).byte()
     paths = find_paths_from_adj_mat(adj_mat)
-    assert set(paths) == {(3,)}
+    # except for the first one, the others are not ideal paths, which are redundant
+    assert set(paths) == {(3,), (0, 1), (0, 1, 2, 1), (0, 1, 2)}
 
 
 def test_encode_decode_nnw_thw_mat():
@@ -59,7 +67,7 @@ def test_encode_decode_nnw_thw_mat():
 
 
 def test_encode_decode_nnw_nsw_thw_mat():
-    spans = [[(18,), (39,)], [(22,), (35, 37)], [(24,), (46,)], [(24,), (46, 49)]]
+    spans = [((18,), (39,)), ((22,), (35, 37)), ((24,), (46,)), ((24,), (46, 49))]
     spans = sorted(spans)
     labels = encode_nnw_nsw_thw_mat(spans, 50)
     # nnw
@@ -86,10 +94,10 @@ def test_encode_decode_nnw_nsw_thw_mat():
 
 def test_recursive_encode_decode_nnw_nsw_thw_mat():
     spans = [
-        [(51,), (117,), (115,)],
-        [(29,), (117,), (115,)],
-        [(42,), (117,), (115,)],
-        [(40,), (115,), (117,)],
+        ((51,), (117,), (115,)),
+        ((29,), (117,), (115,)),
+        ((42,), (117,), (115,)),
+        ((40,), (115,), (117,)),
     ]
     spans = sorted(spans)
     labels = encode_nnw_nsw_thw_mat(spans, 120)
