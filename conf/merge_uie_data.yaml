@@ -1,6 +1,9 @@
-task_name: InstructBert_NewMergedUIEData
+task_name: InstructBert_Large_NewMergedUIEData
+plm_dir: /data/tzhu/PLM/microsoft--deberta-v3-large
 data_dir: resources/Mirror/uie/merged
 train_filepath: ${data_dir}/train.jsonl
 dev_filepath: ${data_dir}/dev.jsonl
 test_filepath: ${data_dir}/test.jsonl
 num_epochs: 10
+epoch_patience: -1
+base_model_path: null

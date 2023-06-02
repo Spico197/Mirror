@@ -1,9 +1,11 @@
-task_name: InstructBert_RelSciERC
-base_model_path: mirror_outputs/InstructBert_TagSpan_DebertaV3Base_MergedUIEData2/ckpt/SchemaGuidedInstructBertModel.best.pth
-data_dir: resources/Mirror/v1.3/rel/en/sciERC/instructed
-train_filepath: ${data_dir}/sciERC_train.jsonl
-dev_filepath: ${data_dir}/sciERC_dev.jsonl
-test_filepath: ${data_dir}/sciERC_test.jsonl
+task_name: InstructBert_Large_RelSciERC
+plm_dir: /data/tzhu/PLM/microsoft--deberta-v3-large
+# base_model_path: mirror_outputs/InstructBert_TagSpan_DebertaV3Base_MergedUIEData2/ckpt/SchemaGuidedInstructBertModel.best.pth
+base_model_path: null
+data_dir: resources/Mirror/uie/rel/scierc
+train_filepath: ${data_dir}/train.jsonl
+dev_filepath: ${data_dir}/dev.jsonl
+test_filepath: ${data_dir}/test.jsonl
 num_epochs: 20
 epoch_patience: -1
 best_metric_field: rel.rel.micro.f1

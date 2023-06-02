@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export CUDA_VISIBLE_DEVICES="1"
+export CUDA_VISIBLE_DEVICES="4"
 
 
 single() {
@@ -12,10 +12,10 @@ single() {
 
     rex train \
         -m src.task \
-        -dc conf/mirror-multi-task-pretrain.yaml \
-        -c conf/merge_uie_data.yaml
-        # -dc conf/mirror-ace05en.yaml \
+        -dc conf/mirror-multi-task-pretrain.yaml  # \
         # -c conf/uie_data/rel_scierc.yaml #  \
+        # -c conf/merge_uie_data.yaml
+        # -dc conf/mirror-ace05en.yaml \
         # -a task_name=InstructBert_TagW2_DebertaV3Base_ACE05EN_NerRelEvent \
         #     label_span=tag mode=w2
 

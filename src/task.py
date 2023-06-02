@@ -261,7 +261,7 @@ class SchemaGuidedInstructBertTask(MrcTaggingTask):
             dropout=self.config.dropout,
         )
 
-        if hasattr(self.config, "base_model_path"):
+        if self.config.get("base_model_path"):
             self.load(
                 self.config.base_model_path,
                 load_config=False,

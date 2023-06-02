@@ -9,7 +9,8 @@ set_seed_and_log_path(log_path="eval.log")
 
 
 # task_dir = "mirror_outputs/InstructBert_TagSpan_DebertaV3Base_MergedUIEData"
-task_dir = "mirror_outputs/InstructBert_TagSpan_DebertaV3Base_MergedUIEData2"
+# task_dir = "mirror_outputs/InstructBert_TagSpan_DebertaV3Base_MergedUIEData2"
+task_dir = "mirror_outputs/InstructBert_NewMergedUIEData"
 # task_dir = "outputs/InstructBert_TagSpan_DebertaV3Base_ACE05ENPlus"
 task: SchemaGuidedInstructBertTask = SchemaGuidedInstructBertTask.from_taskdir(
     task_dir,
@@ -275,4 +276,46 @@ merged uie data v2 eval on new data
 │ absa      │ absa_15res_test                │          90.928 │
 │ absa      │ absa_16res_test                │          74.853 │
 └───────────┴────────────────────────────────┴─────────────────┘
+
+InstructBert_NewMergedUIEData middle
+┏━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃ Task  ┃ Dataset             ┃ Metric (%) ┃
+┡━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ ent   │ ent_ace04_test      │     85.686 │
+│ ent   │ ent_ace05_test      │     90.354 │
+│ ent   │ ent_conll03_test    │     92.456 │
+│ rel   │ rel_ace05_test      │     61.343 │
+│ rel   │ rel_conll04_test    │     67.797 │
+│ rel   │ rel_nyt_test        │     92.122 │
+│ rel   │ rel_scierc_test     │     21.911 │
+│ event │ event_ace05_test_t… │     67.178 │
+│ event │ event_ace05_test_a… │     43.394 │
+│ event │ event_casie_test_t… │     59.827 │
+│ event │ event_casie_test_a… │     37.390 │
+│ absa  │ absa_14res_test     │     74.384 │
+│ absa  │ absa_14lap_test     │     65.564 │
+│ absa  │ absa_15res_test     │     85.775 │
+│ absa  │ absa_16res_test     │     74.533 │
+└───────┴─────────────────────┴────────────┘
+
+mirror_outputs/InstructBert_NewMergedUIEData
+┏━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃ Task  ┃ Dataset             ┃ Metric (%) ┃
+┡━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ ent   │ ent_ace04_test      │     86.929 │
+│ ent   │ ent_ace05_test      │     92.290 │
+│ ent   │ ent_conll03_test    │     92.747 │
+│ rel   │ rel_ace05_test      │     67.777 │
+│ rel   │ rel_conll04_test    │     71.159 │
+│ rel   │ rel_nyt_test        │     93.226 │
+│ rel   │ rel_scierc_test     │     34.031 │
+│ event │ event_ace05_test_t… │     72.372 │
+│ event │ event_ace05_test_a… │     52.946 │
+│ event │ event_casie_test_t… │     69.821 │
+│ event │ event_casie_test_a… │     56.977 │
+│ absa  │ absa_14res_test     │     75.732 │
+│ absa  │ absa_14lap_test     │     66.401 │
+│ absa  │ absa_15res_test     │     92.798 │
+│ absa  │ absa_16res_test     │     74.138 │
+└───────┴─────────────────────┴────────────┘
 """
