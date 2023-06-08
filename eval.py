@@ -10,7 +10,9 @@ set_seed_and_log_path(log_path="eval.log")
 
 # task_dir = "mirror_outputs/InstructBert_TagSpan_DebertaV3Base_MergedUIEData"
 # task_dir = "mirror_outputs/InstructBert_TagSpan_DebertaV3Base_MergedUIEData2"
-task_dir = "mirror_outputs/InstructBert_NewMergedUIEData"
+# task_dir = "mirror_outputs/InstructBert_NewMergedUIEData"
+# task_dir = "mirror_outputs/InstructBert_Large_NewMergedUIEData"
+task_dir = "mirror_outputs/InstructBert_Large_NewMergedUIEData_bs10"
 # task_dir = "outputs/InstructBert_TagSpan_DebertaV3Base_ACE05ENPlus"
 task: SchemaGuidedInstructBertTask = SchemaGuidedInstructBertTask.from_taskdir(
     task_dir,
@@ -318,4 +320,47 @@ mirror_outputs/InstructBert_NewMergedUIEData
 │ absa  │ absa_15res_test     │     92.798 │
 │ absa  │ absa_16res_test     │     74.138 │
 └───────┴─────────────────────┴────────────┘
+
+large model on new data
+mirror_outputs/InstructBert_Large_NewMergedUIEData
+┏━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━┓
+┃ Task   ┃ Dataset                 ┃  Metric (%) ┃
+┡━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━┩
+│ ent    │ ent_ace04_test          │      88.531 │
+│ ent    │ ent_ace05_test          │      93.515 │
+│ ent    │ ent_conll03_test        │      93.094 │
+│ rel    │ rel_ace05_test          │      72.015 │
+│ rel    │ rel_conll04_test        │      75.933 │
+│ rel    │ rel_nyt_test            │      93.995 │
+│ rel    │ rel_scierc_test         │      42.069 │
+│ event  │ event_ace05_test_tgg    │      73.177 │
+│ event  │ event_ace05_test_arg    │      57.833 │
+│ event  │ event_casie_test_tgg    │      71.659 │
+│ event  │ event_casie_test_arg    │      59.336 │
+│ absa   │ absa_14res_test         │      76.899 │
+│ absa   │ absa_14lap_test         │      63.448 │
+│ absa   │ absa_15res_test         │      95.436 │
+│ absa   │ absa_16res_test         │      75.624 │
+└────────┴─────────────────────────┴─────────────┘
+
+mirror_outputs/InstructBert_Large_NewMergedUIEData_bs10
+┏━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┓
+┃ Task    ┃ Dataset                    ┃   Metric (%) ┃
+┡━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━┩
+│ ent     │ ent_ace04_test             │       87.759 │
+│ ent     │ ent_ace05_test             │       93.673 │
+│ ent     │ ent_conll03_test           │       92.449 │
+│ rel     │ rel_ace05_test             │       72.188 │
+│ rel     │ rel_conll04_test           │       77.255 │
+│ rel     │ rel_nyt_test               │       93.764 │
+│ rel     │ rel_scierc_test            │       42.358 │
+│ event   │ event_ace05_test_tgg       │       72.256 │
+│ event   │ event_ace05_test_arg       │       58.561 │
+│ event   │ event_casie_test_tgg       │       71.800 │
+│ event   │ event_casie_test_arg       │       59.477 │
+│ absa    │ absa_14res_test            │       77.663 │
+│ absa    │ absa_14lap_test            │       66.142 │
+│ absa    │ absa_15res_test            │       93.769 │
+│ absa    │ absa_16res_test            │       74.835 │
+└─────────┴────────────────────────────┴──────────────┘
 """

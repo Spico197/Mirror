@@ -7,7 +7,7 @@ from typing import List
 import torch.optim as optim
 from rex import accelerator
 from rex.data.data_manager import DataManager
-from rex.data.dataset import CachedDataset
+from rex.data.dataset import CachedDataset, StreamReadDataset
 from rex.tasks.simple_metric_task import SimpleMetricTask
 from rex.utils.batch import decompose_batch_into_instances
 from rex.utils.config import ConfigParser
@@ -227,6 +227,11 @@ class MrcQaTask(MrcTaggingTask):
         return results
 
 
+class StreamReadDatasetWithLen(StreamReadDataset):
+    def __len__(self):
+        return 631346
+
+
 @register("task")
 class SchemaGuidedInstructBertTask(MrcTaggingTask):
     # def __init__(self, config, **kwargs) -> None:
@@ -244,12 +249,51 @@ class SchemaGuidedInstructBertTask(MrcTaggingTask):
     #     )
     #     client.wait()
 
+    # def init_lr_scheduler(self):
+    #     num_training_steps = int(
+    #         631346 / self.config.train_batch_size
+    #         * self.config.num_epochs
+    #         * accelerator.num_processes
+    #     )
+    #     num_warmup_steps = math.floor(
+    #         num_training_steps * self.config.warmup_proportion
+    #     )
+    #     # return get_linear_schedule_with_warmup(
+    #     return get_cosine_schedule_with_warmup(
+    #         self.optimizer,
+    #         num_warmup_steps=num_warmup_steps,
+    #         num_training_steps=num_training_steps,
+    #     )
+
     def init_transform(self):
         return CachedLabelPointerTransform(
             self.config.max_seq_len,
             self.config.plm_dir,
             mode=self.config.mode,
             label_span=self.config.label_span,
+        )
+
+    def init_data_manager(self):
+        if self.config.get("stream_mode", False):
+            DatasetClass = StreamReadDatasetWithLen
+            transform = self.transform.transform
+        else:
+            DatasetClass = CachedDataset
+            transform = self.transform
+        return DataManager(
+            self.config.train_filepath,
+            self.config.dev_filepath,
+            self.config.test_filepath,
+            DatasetClass,
+            transform,
+            load_jsonlines,
+            self.config.train_batch_size,
+            self.config.eval_batch_size,
+            self.transform.collate_fn,
+            use_stream_transform=self.config.get("stream_mode", False),
+            debug_mode=self.config.debug_mode,
+            dump_cache_dir=self.config.dump_cache_dir,
+            regenerate_cache=self.config.regenerate_cache,
         )
 
     def init_model(self):
