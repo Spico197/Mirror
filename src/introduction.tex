@@ -1,0 +1,19 @@
+\section{Introduction}
+
+\begin{table*}[t]
+    \centering
+    \begin{tabular}{l|cccccccc}
+    \toprule
+    & \shortstack{TANL \\ T5-base} & \shortstack{UIE \\ T5-large}
+     % & TANL & UIE & DeepStruct & InstructUIE & USM & UniEX & RexUIE & Mirror \\
+     % & T5-base 220M & T5-large 770M & GLM-10B & FlanT5-11B & RoBERTa-large 372M & RoBERTa-large 372M & DeBERTa-v3-large 434M & DeBERTa-v3-large 434M \\
+     \cmidrule
+    NAR         & \xmark    & \xmark   & \xmark          & \xmark           & \cmark   & \cmark     & \cmark      & \cmark      \\
+    Single-step & \cmark    & \cmark   & \cmark          & \cmark           & \cmark   & \cmark     & \xmark      & \cmark      \\
+    Multi-span  & \xmark    & ◯   & ◯          & ◯           & \xmark   & \xmark     & \xmark      & \cmark      \\
+    N-ary       & \xmark    & \xmark   & \xmark          & \xmark           & \xmark   & \xmark     & \cmark      & \cmark \\
+    \bottomrule
+    \end{tabular}
+    \caption{Caption}
+    \label{tab:method_comparison}
+\end{table*}
