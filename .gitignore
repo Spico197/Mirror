@@ -182,3 +182,4 @@ debug/
 debug.json
 mirror_outputs/
 sampled_stats.xlsx
+mirror_fewshot_outputs/

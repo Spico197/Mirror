@@ -1,0 +1,3 @@
+task_name: Mirror_SingleTask_ABSA_14lap
+data_dir: resources/Mirror/v1.4/rel/en/14lap
+best_metric_field: rel.rel.micro.f1

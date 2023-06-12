@@ -5,7 +5,9 @@ from rex.metrics import calc_p_r_f1_from_tp_fp_fn, safe_division
 from rex.metrics.base import MetricBase
 from rex.metrics.tagging import tagging_prf1
 from rex.utils.batch import decompose_batch_into_instances
+from rex.utils.iteration import windowed_queue_iter
 from rex.utils.random import generate_random_string_with_datetime
+from sklearn.metrics import accuracy_score, matthews_corrcoef
 
 
 class MrcNERMetric(MetricBase):
@@ -277,6 +279,62 @@ def calc_rel(golds, preds):
     return metrics
 
 
+def calc_cls(golds, preds):
+    metrics = {
+        "mcc": -1,
+        "acc": -1,
+        "mf1": tagging_prf1(golds, preds, type_idx=None),
+    }
+    y_true = []
+    y_pred = []
+    for gold, pred in zip(golds, preds):
+        y_true.append(" ".join(sorted(gold)))
+        y_pred.append(" ".join(sorted(pred)))
+    metrics["acc"] = accuracy_score(y_true, y_pred)
+    metrics["mcc"] = matthews_corrcoef(y_true, y_pred)
+    return metrics
+
+
+def calc_span(golds, preds, mode="span"):
+    def _get_tokens(spans: list[tuple[tuple[int]]]) -> list[int]:
+        tokens = []
+        for span in spans:
+            for part in span:
+                _toks = []
+                if len(part) == 1:
+                    _toks = [part[0]]
+                elif len(part) > 1:
+                    if mode == "w2":
+                        _toks = [*part]
+                    elif mode == "span":
+                        _toks = [*range(part[0], part[1] + 1)]
+                    else:
+                        raise ValueError
+                tokens.extend(_toks)
+        return tokens
+
+    metrics = {
+        "em": -1,
+        "f1": None,
+    }
+    acc_num = 0
+    tp = fp = fn = 0
+    for gold, pred in zip(golds, preds):
+        if gold == pred:
+            acc_num += 1
+        gold_tokens = _get_tokens(gold)
+        pred_tokens = _get_tokens(pred)
+        tp += len(set(gold_tokens) & set(pred_tokens))
+        fp += len(set(pred_tokens) - set(gold_tokens))
+        fn += len(set(gold_tokens) - set(pred_tokens))
+    if len(golds) > 0:
+        metrics["em"] = acc_num / len(golds)
+    else:
+        metrics["em"] = 0.0
+    metrics["f1"] = calc_p_r_f1_from_tp_fp_fn(tp, fp, fn)
+    return metrics
+
+
 class MultiPartSpanMetric(MetricBase):
     def _encode_span_to_label_dict(self, span_to_label: dict) -> list:
         span_to_label_list = []
@@ -443,7 +501,7 @@ class MultiPartSpanMetric(MetricBase):
             "general_spans": tagging_prf1(
                 general_gold_spans, general_pred_spans, type_idx=None
             ),
-            "cls": tagging_prf1(gold_cls_list, pred_cls_list, type_idx=None),
+            "cls": calc_cls(gold_cls_list, pred_cls_list),
             "ent": calc_ent(gold_ent_list, pred_ent_list),
             "rel": calc_rel(gold_rel_list, pred_rel_list),
             "event": {
@@ -461,7 +519,8 @@ class MultiPartSpanMetric(MetricBase):
                 ),
                 "char_event": calc_char_event(gold_event_list, pred_event_list),
             },
-            "span": tagging_prf1(gold_span_list, pred_span_list, type_idx=None),
+            # "span": tagging_prf1(gold_span_list, pred_span_list, type_idx=None),
+            "span": calc_span(gold_span_list, pred_span_list),
         }
 
         return metrics

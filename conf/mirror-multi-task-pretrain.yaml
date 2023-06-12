@@ -1,7 +1,7 @@
 # task
 task_type: SchemaGuidedInstructBertTask
 # task_name: InstructBert_TagSpan_DebertaV3Base_MergedUIEData2
-task_name: MirrorLarge_SamplingPretrain_woZeroShotNER
+task_name: MirrorLarge_SamplingPretrain_woLowResource_woOverlap
 # task_name: InstructBert_TagSpan_DebertaV3Base_ClsTest
 comment: '~~content as label, (start, end + 1) span'
 
@@ -23,7 +23,9 @@ plm_dir: /data/tzhu/PLM/microsoft--deberta-v3-large
 # data_dir: resources/Mirror/Tasks/RE/WebNLG/instructed
 # data_dir: resources/Mirror/v1.3/merged_pretrained_data
 # data_dir: resources/Mirror/v1.4_sampled_v3/merged/all
-data_dir: resources/Mirror/v1.4_sampled_v3/merged/all_woZeroShotNER
+# data_dir: resources/Mirror/v1.4_sampled_v3/merged/all_woZeroShotNER
+# data_dir: resources/Mirror/v1.4_sampled_v3/merged/all
+data_dir: resources/Mirror/v1.4_sampled_v3/merged/woLowResource
 # data_dir: resources/Mirror/v1.3/uie_data
 # data_dir: resources/Mirror/v1.3/cls/en/ag_news/instructed
 # data_dir: resources/Mirror/Tasks/RE/FewRel
@@ -45,7 +47,7 @@ task_dir: ${output_dir}/${task_name}
 # train_filepath: ${data_dir}/ACE2005_oneie_train.jsonl
 # dev_filepath: ${data_dir}/ACE2005_oneie_dev.jsonl
 # test_filepath: ${data_dir}/ACE2005_oneie_test.jsonl
-train_filepath: ${data_dir}/train.jsonl
+train_filepath: ${data_dir}/train_wo_overlap.jsonl
 dev_filepath: ${data_dir}/dev.jsonl
 test_filepath: ${data_dir}/test.jsonl
 # dev_filepath: resources/Mirror/v1.3/uie_data/dev.jsonl

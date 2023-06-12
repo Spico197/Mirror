@@ -12,31 +12,29 @@ set_seed_and_log_path(log_path="eval.log")
 # task_dir = "mirror_outputs/InstructBert_TagSpan_DebertaV3Base_MergedUIEData2"
 # task_dir = "mirror_outputs/InstructBert_NewMergedUIEData"
 # task_dir = "mirror_outputs/InstructBert_Large_NewMergedUIEData"
-task_dir = "mirror_outputs/InstructBert_Large_NewMergedUIEData_bs10"
+# task_dir = "mirror_outputs/InstructBert_Large_NewMergedUIEData_bs10"
 # task_dir = "outputs/InstructBert_TagSpan_DebertaV3Base_ACE05ENPlus"
+# task_dir = "mirror_outputs/MirrorLarge_SamplingPretrain"
+# task_dir = "mirror_outputs/MirrorLarge_SamplingPretrain_woZeroShotNER"
+# task_dir = "mirror_outputs/MirrorLarge_SamplingPretrain_woOverlap"
+task_dir = "mirror_outputs/MirrorLarge_SamplingPretrain_woLowResource_woOverlap"
 task: SchemaGuidedInstructBertTask = SchemaGuidedInstructBertTask.from_taskdir(
     task_dir,
     load_best_model=True,
     initialize=False,
     dump_configfile=False,
-    update_config={"regenerate_cache": True},
+    update_config={
+        "regenerate_cache": True,
+        "eval_on_data": ["dev"],
+        "select_best_on_data": "dev",
+        "select_best_by_key": "metric",
+        "best_metric_field": "general_spans.micro.f1",
+    },
 )
 table = Table(title=task_dir, width=len(task_dir))
 
 data_pairs = [
     # fmt: off
-
-    # [
-    #     "rel_conll2004",
-    #     "resources/Mirror/Tasks/RE/CoNLL2004/formatted/CoNLL2004_RE_test.jsonl",
-    # ],
-    # ["rel_gids", "resources/Mirror/Tasks/RE/GIDS/formatted/GIDS_test.jsonl"],
-    # [
-    #     "rel_nyt11hrl",
-    #     "resources/Mirror/Tasks/RE/NYT11HRL/formatted/NYT11HRL_test.jsonl",
-    # ],
-    # ["rel_webnlg", "resources/Mirror/Tasks/RE/WebNLG/formatted/WebNLG_test.jsonl"],
-    # ["rel_ace05", "resources/Mirror/Tasks/EE/ACE05-EN/ACE2005_oneie_RE_test.jsonl"],
 
     # UIE eval data
     ["ent_ace04_test", "resources/Mirror/uie/ent/ace04/test.jsonl"],
@@ -55,6 +53,25 @@ data_pairs = [
     ["absa_14lap_test", "resources/Mirror/uie/absa/14lap/test.jsonl"],
     ["absa_15res_test", "resources/Mirror/uie/absa/15res/test.jsonl"],
     ["absa_16res_test", "resources/Mirror/uie/absa/16res/test.jsonl"],
+
+    # zero-shot NER
+    ["ent_movie", "resources/Mirror/v1.4/ent/en/MIT_MOVIE_Review/instructed/test.jsonl"],
+    ["ent_restaurant", "resources/Mirror/v1.4/ent/en/MIT_Restaurant_Review/instructed/test.jsonl"],
+    ["ent_ai", "resources/Mirror/v1.4/ent/en/CrossNER_AI/instructed/test.jsonl"],
+    ["ent_literature", "resources/Mirror/v1.4/ent/en/CrossNER_literature/instructed/test.jsonl"],
+    ["ent_music", "resources/Mirror/v1.4/ent/en/CrossNER_music/instructed/test.jsonl"],
+    ["ent_politics", "resources/Mirror/v1.4/ent/en/CrossNER_politics/instructed/test.jsonl"],
+    ["ent_science", "resources/Mirror/v1.4/ent/en/CrossNER_science/instructed/test.jsonl"],
+    # glue
+    # ["cls_glue_cola", "resources/Mirror/v1.4/cls/en/CoLA/formated/test.jsonl"],
+    # ["cls_glue_qqp", "resources/Mirror/v1.4/cls/en/QQP/new/dev.jsonl"],
+    # ["cls_glue_mnli", "resources/Mirror/v1.4/cls/en/MNLI/formated/MNLI_dev.jsonl"],
+    # ["cls_glue_sst2", "resources/Mirror/v1.4/cls/en/SST-2/instructed/SST-2_dev.jsonl"],
+    # ["cls_glue_qnli", "resources/Mirror/v1.4/cls/en/QNLI/processed/QNLI_dev.jsonl"],
+    # ["cls_glue_rte", "resources/Mirror/v1.4/cls/en/RTE/formated/RTE_dev.jsonl"],
+    # ["cls_glue_mrpc", "resources/Mirror/v1.4/cls/en/MRPC/formated/dev.jsonl"],
+    # mrc
+    # ["span_squad2", "resources/Mirror/v1.4/span/en/squad_v2/dev.jsonl"],
     # fmt: on
 ]
 
@@ -84,6 +101,23 @@ for dname, fpath in data_pairs:
         eval_res["task"].append("absa")
         eval_res["dataset"].append(dname)
         eval_res["metric_val"].append(res["rel"]["rel"]["micro"]["f1"])
+    elif dname.startswith("cls_"):
+        eval_res["task"].append("cls")
+        eval_res["dataset"].append(dname)
+        if "_glue_" in dname:
+            if "_cola" in dname:
+                eval_res["metric_val"].append(res["cls"]["mcc"])
+            else:
+                eval_res["metric_val"].append(res["cls"]["acc"])
+        else:
+            eval_res["metric_val"].append(res["cls"]["mf1"]["micro"]["f1"])
+    elif dname.startswith("span"):
+        eval_res["task"].append("span_em")
+        eval_res["dataset"].append(dname)
+        eval_res["metric_val"].append(res["span"]["em"])
+        eval_res["task"].append("span_f1")
+        eval_res["dataset"].append(dname)
+        eval_res["metric_val"].append(res["span"]["f1"]["f1"])
     else:
         raise ValueError
 
@@ -95,7 +129,7 @@ for i in range(len(eval_res["task"])):
     )
 
 df = pd.DataFrame(eval_res)
-df.to_excel(task.measures_path.joinpath("uie_data_eval_res.xlsx"))
+df.to_excel(task.measures_path.joinpath("data_eval_res.xlsx"))
 
 console = Console()
 console.print(table)
@@ -363,4 +397,142 @@ mirror_outputs/InstructBert_Large_NewMergedUIEData_bs10
 │ absa    │ absa_15res_test            │       93.769 │
 │ absa    │ absa_16res_test            │       74.835 │
 └─────────┴────────────────────────────┴──────────────┘
+
+pretrain direct infer
+mirror_outputs/MirrorLarge_SamplingPretrain
+┏━━━━━━━┳━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃ Task  ┃ Dataset            ┃ Metric (%) ┃
+┡━━━━━━━╇━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ ent   │ ent_ace04_test     │     82.892 │
+│ ent   │ ent_ace05_test     │     85.304 │
+│ ent   │ ent_conll03_test   │     91.905 │
+│ rel   │ rel_ace05_test     │      9.233 │
+│ rel   │ rel_conll04_test   │     52.615 │
+│ rel   │ rel_nyt_test       │     88.260 │
+│ rel   │ rel_scierc_test    │      1.621 │
+│ event │ event_ace05_test_… │     54.799 │
+│ event │ event_ace05_test_… │     14.267 │
+│ event │ event_casie_test_… │     19.541 │
+│ event │ event_casie_test_… │      0.701 │
+│ absa  │ absa_14res_test    │     59.305 │
+│ absa  │ absa_14lap_test    │     57.208 │
+│ absa  │ absa_15res_test    │     62.546 │
+│ absa  │ absa_16res_test    │     67.333 │
+└───────┴────────────────────┴────────────┘
+
+pretrain direct infer
+mirror_outputs/MirrorLarge_SamplingPretrain
+┏━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━┓
+┃ Task  ┃ Dataset           ┃  Metric (%) ┃
+┡━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━┩
+│ ent   │ ent_movie         │      85.367 │
+│ ent   │ ent_restaurant    │      81.790 │
+│ ent   │ ent_ai            │      61.803 │
+│ ent   │ ent_literature    │      66.210 │
+│ ent   │ ent_music         │      75.516 │
+│ ent   │ ent_politics      │      75.653 │
+│ ent   │ ent_science       │      69.719 │
+└───────┴───────────────────┴─────────────┘
+
+pretrain w/o zero-shot NER, direct infer
+mirror_outputs/MirrorLarge_SamplingPretrain_woZeroShotNER
+┏━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┓
+┃ Task     ┃ Dataset                 ┃       Metric (%) ┃
+┡━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━┩
+│ ent      │ ent_movie               │           39.229 │
+│ ent      │ ent_restaurant          │           22.413 │
+│ ent      │ ent_ai                  │           51.155 │
+│ ent      │ ent_literature          │           51.484 │
+│ ent      │ ent_music               │           62.215 │
+│ ent      │ ent_politics            │           62.087 │
+│ ent      │ ent_science             │           52.632 │
+└──────────┴─────────────────────────┴──────────────────┘
+
+pretrain direct infer, upper-bound
+mirror_outputs/MirrorLarge_SamplingPretrain
+┏━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃ Task     ┃ Dataset         ┃ Metric (%) ┃
+┡━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ cls      │ cls_glue_cola   │    100.000 │
+│ cls      │ cls_glue_qqp    │    100.000 │
+│ cls      │ cls_glue_mnli   │    100.000 │
+│ cls      │ cls_glue_sst2   │    100.000 │
+│ cls      │ cls_glue_qnli   │    100.000 │
+│ cls      │ cls_glue_rte    │    100.000 │
+│ cls      │ cls_glue_mrpc   │    100.000 │
+│ span_em  │ span_squad2     │     95.614 │
+│ span_f1  │ span_squad2     │     99.907 │
+└──────────┴─────────────────┴────────────┘
+
+pretrain direct infer on glue and mrc
+mirror_outputs/MirrorLarge_SamplingPretrain
+┏━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃ Task     ┃ Dataset         ┃ Metric (%) ┃
+┡━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ cls      │ cls_glue_cola   │      0.000 │
+│ cls      │ cls_glue_qqp    │     62.895 │
+│ cls      │ cls_glue_mnli   │      0.000 │
+│ cls      │ cls_glue_sst2   │     22.222 │
+│ cls      │ cls_glue_qnli   │     43.053 │
+│ cls      │ cls_glue_rte    │      0.000 │
+│ cls      │ cls_glue_mrpc   │     68.382 │
+│ span_em  │ span_squad2     │     38.664 │
+│ span_f1  │ span_squad2     │     55.380 │
+└──────────┴─────────────────┴────────────┘
+
+mirror_outputs/MirrorLarge_SamplingPretrain_woOverlap
+┏━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┓
+┃ Task    ┃ Dataset                  ┃   Metric (%) ┃
+┡━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━┩
+│ ent     │ ent_ace04_test           │       84.426 │
+│ ent     │ ent_ace05_test           │       86.357 │
+│ ent     │ ent_conll03_test         │       92.716 │
+│ rel     │ rel_ace05_test           │       22.812 │
+│ rel     │ rel_conll04_test         │       53.652 │
+│ rel     │ rel_nyt_test             │       89.094 │
+│ rel     │ rel_scierc_test          │        7.832 │
+│ event   │ event_ace05_test_tgg     │       63.624 │
+│ event   │ event_ace05_test_arg     │       25.000 │
+│ event   │ event_casie_test_tgg     │       50.017 │
+│ event   │ event_casie_test_arg     │       17.642 │
+│ absa    │ absa_14res_test          │       66.818 │
+│ absa    │ absa_14lap_test          │       62.260 │
+│ absa    │ absa_15res_test          │       62.896 │
+│ absa    │ absa_16res_test          │       69.530 │
+│ ent     │ ent_movie                │       85.942 │
+│ ent     │ ent_restaurant           │       83.304 │
+│ ent     │ ent_ai                   │       65.724 │
+│ ent     │ ent_literature           │       67.932 │
+│ ent     │ ent_music                │       78.245 │
+│ ent     │ ent_politics             │       75.921 │
+│ ent     │ ent_science              │       70.959 │
+└─────────┴──────────────────────────┴──────────────┘
+
+mirror_outputs/MirrorLarge_SamplingPretrain_woLowResource_woOverlap
+┏━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┓
+┃ Task      ┃ Dataset                          ┃       Metric (%) ┃
+┡━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━┩
+│ ent       │ ent_ace04_test                   │           84.325 │
+│ ent       │ ent_ace05_test                   │           86.262 │
+│ ent       │ ent_conll03_test                 │           69.106 │
+│ rel       │ rel_ace05_test                   │           20.818 │
+│ rel       │ rel_conll04_test                 │           16.601 │
+│ rel       │ rel_nyt_test                     │           88.332 │
+│ rel       │ rel_scierc_test                  │            3.910 │
+│ event     │ event_ace05_test_tgg             │            0.000 │
+│ event     │ event_ace05_test_arg             │            0.000 │
+│ event     │ event_casie_test_tgg             │           39.003 │
+│ event     │ event_casie_test_arg             │            9.116 │
+│ absa      │ absa_14res_test                  │           63.170 │
+│ absa      │ absa_14lap_test                  │           60.268 │
+│ absa      │ absa_15res_test                  │           60.633 │
+│ absa      │ absa_16res_test                  │           68.119 │
+│ ent       │ ent_movie                        │           40.964 │
+│ ent       │ ent_restaurant                   │           20.022 │
+│ ent       │ ent_ai                           │           51.130 │
+│ ent       │ ent_literature                   │           44.803 │
+│ ent       │ ent_music                        │           60.626 │
+│ ent       │ ent_politics                     │           61.190 │
+│ ent       │ ent_science                      │           53.649 │
+└───────────┴──────────────────────────────────┴──────────────────┘
 """

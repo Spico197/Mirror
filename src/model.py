@@ -491,7 +491,7 @@ class SchemaGuidedInstructBertModel(nn.Module):
         logits: torch.Tensor,
         top_p: float = 0.5,
         top_k: int = -1,
-        legal_num_parts: tuple = (2, 3),
+        legal_num_parts: tuple = (1, 2, 3),
         labels: torch.Tensor = None,
         **kwargs,
     ):

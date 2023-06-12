@@ -1,0 +1,16 @@
+plm_dir: /data/tzhu/PLM/microsoft--deberta-v3-large
+base_model_path: mirror_outputs/MirrorLarge_SamplingPretrain_woOverlap/ckpt/SchemaGuidedInstructBertModel.best.pth
+
+stream_mode: false
+train_filepath: ${data_dir}/train.jsonl
+dev_filepath: ${data_dir}/dev.jsonl
+test_filepath: ${data_dir}/test.jsonl
+
+num_epochs: 20
+epoch_patience: 3
+
+eval_on_data: [dev]
+select_best_on_data: dev
+select_best_by_key: metric
+best_metric_field: general_spans.micro.f1
+final_eval_on_test: true
