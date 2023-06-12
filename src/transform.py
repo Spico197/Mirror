@@ -415,7 +415,7 @@ class CachedLabelPointerTransform(CachedTransformOneBase):
         tokens = [self.tokenizer.cls_token]
         mask = [1]
         label_map = {"lc": {}, "lm": {}, "lr": {}}
-        # (2, 3): {"type": "lc", "task": "cls/ent/rel/event", "string": ""}
+        # (2, 3): {"type": "lc", "task": "cls/ent/rel/event/hyper_rel/discontinuous_ent", "string": ""}
         span_to_label = {}
 
         def _update_seq(
@@ -478,10 +478,20 @@ class CachedLabelPointerTransform(CachedTransformOneBase):
         if mention_types:
             for mt in mention_types:
                 _update_seq(mt, "lm", task="ent")
+        discon_ent_types = instance["schema"].get("discontinuous_ent")
+        if discon_ent_types:
+            for mt in discon_ent_types:
+                _update_seq(mt, "lm", task="discontinuous_ent")
         rel_types = instance["schema"].get("rel")
         if rel_types:
             for rt in rel_types:
                 _update_seq(rt, "lr", task="rel")
+        hyper_rel_schema = instance["schema"].get("hyper_rel")
+        if hyper_rel_schema:
+            for rel, qualifiers in hyper_rel_schema.items():
+                _update_seq(rel, "lr", task="hyper_rel")
+                for qualifier in qualifiers:
+                    _update_seq(qualifier, "lr", task="hyper_rel")
         event_schema = instance["schema"].get("event")
         if event_schema:
             for event_type, roles in event_schema.items():
@@ -543,6 +553,16 @@ class CachedLabelPointerTransform(CachedTransformOneBase):
                     ent["span"], text_tokenized, text_off
                 )
                 spans.append([label_part, position_seq])
+        if "discontinuous_ent" in instance["ans"]:
+            for ent in instance["ans"]["discontinuous_ent"]:
+                label_part = label_map["lm"][ent["type"]]
+                ent_span = [label_part]
+                for part in ent["span"]:
+                    position_seq = self.char_to_token_span(
+                        part, text_tokenized, text_off
+                    )
+                    ent_span.append(position_seq)
+                spans.append(ent_span)
         if "rel" in instance["ans"]:
             for rel in instance["ans"]["rel"]:
                 label_part = label_map["lr"][rel["relation"]]
@@ -553,6 +573,30 @@ class CachedLabelPointerTransform(CachedTransformOneBase):
                     rel["tail"]["span"], text_tokenized, text_off
                 )
                 spans.append([label_part, head_position_seq, tail_position_seq])
+        if "hyper_rel" in instance["ans"]:
+            for rel in instance["ans"]["hyper_rel"]:
+                label_part = label_map["lr"][rel["relation"]]
+                head_position_seq = self.char_to_token_span(
+                    rel["head"]["span"], text_tokenized, text_off
+                )
+                tail_position_seq = self.char_to_token_span(
+                    rel["tail"]["span"], text_tokenized, text_off
+                )
+                # rel_span = [label_part, head_position_seq, tail_position_seq]
+                for q in rel["qualifiers"]:
+                    q_label_part = label_map["lr"][q["label"]]
+                    q_position_seq = self.char_to_token_span(
+                        q["span"], text_tokenized, text_off
+                    )
+                    spans.append(
+                        [
+                            label_part,
+                            head_position_seq,
+                            tail_position_seq,
+                            q_label_part,
+                            q_position_seq,
+                        ]
+                    )
         if "event" in instance["ans"]:
             for event in instance["ans"]["event"]:
                 event_type_label_part = label_map["lm"][event["event_type"]]

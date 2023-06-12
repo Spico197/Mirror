@@ -37,7 +37,7 @@
             "program": "eval.py",
             "console": "integratedTerminal",
             "env": {
-                "CUDA_VISIBLE_DEVICES": "3"
+                "CUDA_VISIBLE_DEVICES": "2"
             },
             "justMyCode": false
         }

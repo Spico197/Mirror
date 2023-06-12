@@ -396,6 +396,10 @@ class MultiPartSpanMetric(MetricBase):
         gold_event_list, pred_event_list = [], []
         # span task
         gold_span_list, pred_span_list = [], []
+        # discon ent task
+        gold_discon_ent_list, pred_discon_ent_list = [], []
+        # hyper rel task
+        gold_hyper_rel_list, pred_hyper_rel_list = [], []
 
         for gold, pred in zip(golds, preds):
             general_gold_spans.append(gold["spans"])
@@ -412,6 +416,8 @@ class MultiPartSpanMetric(MetricBase):
             )
             gold_events, pred_events = [], []
             gold_spans, pred_spans = [], []
+            gold_discon_ents, pred_discon_ents = [], []
+            gold_hyper_rels, pred_hyper_rels = [], []
 
             raw_schema = gold["raw_gold_content"]["raw"]["schema"]
             for span in gold["spans"]:
@@ -430,6 +436,11 @@ class MultiPartSpanMetric(MetricBase):
                             gold_trigger_to_event[span[1]]["arguments"].append(
                                 {"argument": span[2], "role": label["string"]}
                             )
+                    elif label["task"] == "discontinuous_ent" and len(span) > 1:
+                        gold_discon_ents.append((label["string"], *span[1:]))
+                    elif label["task"] == "hyper_rel" and len(span) == 5 and span[3] in span_to_label:  # fmt: skip
+                        q_label = span_to_label[span[3]]
+                        gold_hyper_rels.append((label["string"], span[1], span[2], q_label["string"], span[4]))  # fmt: skip
                 else:
                     # span task has no labels
                     gold_spans.append(tuple(span))
@@ -465,6 +476,11 @@ class MultiPartSpanMetric(MetricBase):
                             pred_trigger_to_event[span[1]]["arguments"].append(
                                 {"argument": span[2], "role": label["string"]}
                             )
+                    elif label["task"] == "discontinuous_ent" and len(span) > 1:
+                        pred_discon_ents.append((label["string"], *span[1:]))
+                    elif label["task"] == "hyper_rel" and len(span) == 5 and span[3] in span_to_label:  # fmt: skip
+                        q_label = span_to_label[span[3]]
+                        pred_hyper_rels.append((label["string"], span[1], span[2], q_label["string"], span[4]))  # fmt: skip
                 else:
                     # span task has no labels
                     pred_spans.append(tuple(span))
@@ -496,6 +512,10 @@ class MultiPartSpanMetric(MetricBase):
             pred_event_list.append(pred_events)
             gold_span_list.append(gold_spans)
             pred_span_list.append(pred_spans)
+            gold_discon_ent_list.append(gold_discon_ents)
+            pred_discon_ent_list.append(pred_discon_ents)
+            gold_hyper_rel_list.append(gold_hyper_rels)
+            pred_hyper_rel_list.append(pred_hyper_rels)
 
         metrics = {
             "general_spans": tagging_prf1(
@@ -519,6 +539,12 @@ class MultiPartSpanMetric(MetricBase):
                 ),
                 "char_event": calc_char_event(gold_event_list, pred_event_list),
             },
+            "discontinuous_ent": tagging_prf1(
+                gold_discon_ent_list, pred_discon_ent_list, type_idx=None
+            ),
+            "hyper_rel": tagging_prf1(
+                gold_hyper_rel_list, pred_hyper_rel_list, type_idx=None
+            ),
             # "span": tagging_prf1(gold_span_list, pred_span_list, type_idx=None),
             "span": calc_span(gold_span_list, pred_span_list),
         }
