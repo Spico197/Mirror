@@ -1,19 +1,31 @@
 \section{Introduction}
 
+\citet{li-et-al-w2ner} develop the W2NER for various NER tasks.
+
 \begin{table*}[t]
     \centering
-    \begin{tabular}{l|cccccccc}
-    \toprule
-    & \shortstack{TANL \\ T5-base} & \shortstack{UIE \\ T5-large}
-     % & TANL & UIE & DeepStruct & InstructUIE & USM & UniEX & RexUIE & Mirror \\
-     % & T5-base 220M & T5-large 770M & GLM-10B & FlanT5-11B & RoBERTa-large 372M & RoBERTa-large 372M & DeBERTa-v3-large 434M & DeBERTa-v3-large 434M \\
-     \cmidrule
-    NAR         & \xmark    & \xmark   & \xmark          & \xmark           & \cmark   & \cmark     & \cmark      & \cmark      \\
-    Single-step & \cmark    & \cmark   & \cmark          & \cmark           & \cmark   & \cmark     & \xmark      & \cmark      \\
-    Multi-span  & \xmark    & ◯   & ◯          & ◯           & \xmark   & \xmark     & \xmark      & \cmark      \\
-    N-ary       & \xmark    & \xmark   & \xmark          & \xmark           & \xmark   & \xmark     & \cmark      & \cmark \\
-    \bottomrule
-    \end{tabular}
-    \caption{Caption}
+    \scalebox{0.85}{
+        \begin{tabular}{c|ccccccc|c}
+        \toprule
+        Model & TANL & UIE & DeepStruct & InstructUIE & USM & UniEX & RexUIE & Mirror \\
+        \midrule
+        PLM & T5-base & T5-large & GLM & FlanT5 & RoBERTa & RoBERTa & DeBERTa-v3 & DeBERTa-v3 \\
+        \#Params & 220M & 770M & 10B & 11B & large 372M & large 372M & large 434M & large 434M \\
+        \midrule
+        NAR         & \textcolor{red}{\xmark}    & \textcolor{red}{\xmark}   & \textcolor{red}{\xmark}          & \textcolor{red}{\xmark}           & {\color[HTML]{008114}\cmark}   & {\color[HTML]{008114}\cmark}     & {\color[HTML]{008114}\cmark}      & {\color[HTML]{008114}\cmark}      \\
+        Single-step & {\color[HTML]{008114}\cmark}    & {\color[HTML]{008114}\cmark}   & {\color[HTML]{008114}\cmark}          & {\color[HTML]{008114}\cmark}           & {\color[HTML]{008114}\cmark}   & {\color[HTML]{008114}\cmark}     & \textcolor{red}{\xmark}      & {\color[HTML]{008114}\cmark}      \\
+        Multi-span  & \textcolor{red}{\xmark}    & $\circ$    & $\circ$           & $\circ$            & \textcolor{red}{\xmark}   & \textcolor{red}{\xmark}     & \textcolor{red}{\xmark}      & {\color[HTML]{008114}\cmark}      \\
+        N-ary       & \textcolor{red}{\xmark}    & \textcolor{red}{\xmark}   & \textcolor{red}{\xmark}          & \textcolor{red}{\xmark}           & \textcolor{red}{\xmark}   & \textcolor{red}{\xmark}     & {\color[HTML]{008114}\cmark}      & {\color[HTML]{008114}\cmark} \\
+        \bottomrule
+        \end{tabular}
+    }
+    \caption{
+        Comparisons with other systems.
+        NAR denotes the non-autoregressive decoding strategy.
+        Single-step represents that the model predicts results in a single step.
+        Multi-span means the model supports multi-span extraction, e.g. the discontinuous named entity recognition task.
+        N-ary denotes the ability of n-ary tuple extraction.
+        $\circ$ means the model supports the task theoretically, but the implementation is not available.
+    }
     \label{tab:method_comparison}
 \end{table*}
