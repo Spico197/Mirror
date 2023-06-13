@@ -1,8 +1,8 @@
-task_name: Mirror_woPT_NewMergedUIEData_woOverlap
+task_name: Mirror_MultiTask_Analysis
 plm_dir: /data/tzhu/PLM/microsoft--deberta-v3-large
 
-data_dir: resources/Mirror/uie/merged
-train_filepath: ${data_dir}/train_wo_overlap.jsonl
+data_dir: resources/Mirror/uie/merged_analysis
+train_filepath: ${data_dir}/train.jsonl
 dev_filepath: ${data_dir}/dev.jsonl
 test_filepath: ${data_dir}/test.jsonl
 num_epochs: 20

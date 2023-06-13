@@ -1,0 +1,3 @@
+task_name: Mirror_SingleTask_HyperRel_HyperRED
+data_dir: resources/Mirror/new_abilities_v2/HyperRED/new
+best_metric_field: hyper_rel.micro.f1

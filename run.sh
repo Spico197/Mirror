@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export CUDA_VISIBLE_DEVICES="3"
+export CUDA_VISIBLE_DEVICES="0"
 
 
 single() {
@@ -10,10 +10,12 @@ single() {
     #     --wait="schedule" \
     #     --req_gpu_num=1
 
-    rex train \
-        -m src.task \
-        -dc conf/mirror-multi-task-pretrain.yaml # \
-        # -c conf/merge_uie_data.yaml
+    # # uie multi-task without pretraining
+    # rex train -m src.task -dc conf/mirror-multi-task-pretrain.yaml -c conf/merge_uie_data.yaml
+
+    # uie multi-task fine-tuning with pretrain
+    rex train -m src.task -dc conf/mirror-multi-task-pretrain.yaml -c conf/merge_uie_data.yaml -a base_model_path=mirror_outputs/MirrorLarge_SamplingPretrain_woOverlap/ckpt/SchemaGuidedInstructBertModel.best.pth task_name=Mirror_UIE_wPT
+
         # -c conf/uie_data/rel_scierc.yaml #  \
         # -c conf/merge_uie_data.yaml
         # -dc conf/mirror-ace05en.yaml \
@@ -49,6 +51,30 @@ uie() {
     rex train -m src.task -dc conf/mirror-multi-task-pretrain.yaml -c conf/uie_data/wPretrain.yaml -c conf/uie_data/absa_16res.yaml
 }
 
+new_tasks() {
+    rex train -m src.task -dc conf/mirror-multi-task-pretrain.yaml -c conf/uie_data/wPretrain.yaml -c conf/cadec.yaml
+    rex train -m src.task -dc conf/mirror-multi-task-pretrain.yaml -c conf/uie_data/wPretrain.yaml -c conf/hyperred.yaml
+}
+
+pretraining_analysis() {
+    # included pretrain
+    rex train -m src.task -dc conf/mirror-multi-task-pretrain.yaml -c conf/merge_analysis_data.yaml -a "base_model_path=mirror_outputs/MirrorLarge_SamplingPretrain_woOverlap/ckpt/SchemaGuidedInstructBertModel.best.pth" "task_name=Mirror_IncludedPretrain_MultiTask"
+    # excluded pretrain
+    rex train -m src.task -dc conf/mirror-multi-task-pretrain.yaml -c conf/merge_analysis_data.yaml -a "base_model_path=mirror_outputs/MirrorLarge_SamplingPretrain_woLowResource_woOverlap/ckpt/SchemaGuidedInstructBertModel.best.pth" "task_name=Mirror_ExcludedPretrain_MultiTask"
+    # excluded pretrain single task
+    rex train -m src.task -dc conf/mirror-multi-task-pretrain.yaml -c conf/merge_analysis_data.yaml -c conf/uie_data/ent_conll03.yaml -a "base_model_path=mirror_outputs/MirrorLarge_SamplingPretrain_woLowResource_woOverlap/ckpt/SchemaGuidedInstructBertModel.best.pth" "task_name=Mirror_ExcludedPretrain_Ent_CoNLL03"
+    rex train -m src.task -dc conf/mirror-multi-task-pretrain.yaml -c conf/merge_analysis_data.yaml -c conf/uie_data/rel_conll04.yaml -a "base_model_path=mirror_outputs/MirrorLarge_SamplingPretrain_woLowResource_woOverlap/ckpt/SchemaGuidedInstructBertModel.best.pth" "task_name=Mirror_ExcludedPretrain_Rel_CoNLL04"
+    rex train -m src.task -dc conf/mirror-multi-task-pretrain.yaml -c conf/merge_analysis_data.yaml -c conf/uie_data/event_ace05.yaml -a "base_model_path=mirror_outputs/MirrorLarge_SamplingPretrain_woLowResource_woOverlap/ckpt/SchemaGuidedInstructBertModel.best.pth" "task_name=Mirror_ExcludedPretrain_Event_ACE05"
+    rex train -m src.task -dc conf/mirror-multi-task-pretrain.yaml -c conf/merge_analysis_data.yaml -c conf/uie_data/absa_16res.yaml -a "base_model_path=mirror_outputs/MirrorLarge_SamplingPretrain_woLowResource_woOverlap/ckpt/SchemaGuidedInstructBertModel.best.pth" "task_name=Mirror_ExcludedPretrain_ABSA_16res"
+}
+
+ablation() {
+    # without pretrain
+    rex train -m src.task -dc conf/mirror-multi-task-pretrain.yaml -c conf/merge_analysis_data.yaml -a "base_model_path=null" "task_name=Mirror_woPT_MultiTask"
+    # without pretrain & instruction
+    rex train -m src.task -dc conf/mirror-multi-task-pretrain.yaml -c conf/merge_analysis_data_woInstruction.yaml -a "base_model_path=null" "task_name=Mirror_woPT_woInstruction_MultiTask"
+}
+
 
 RUN_METHOD=$1
 case $RUN_METHOD in
@@ -57,6 +83,15 @@ case $RUN_METHOD in
         ;;
     uie)
         uie
+        ;;
+    new_tasks)
+        new_tasks
+        ;;
+    pretraining_analysis)
+        pretraining_analysis
+        ;;
+    ablation)
+        ablation
         ;;
     *)
         single

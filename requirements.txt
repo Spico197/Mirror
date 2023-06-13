@@ -1,0 +1,9 @@
+pandas
+rich
+numpy
+omegaconf
+gpu-watchmen
+tqdm
+datasets
+transformers
+git+https://github.com/Spico197/REx

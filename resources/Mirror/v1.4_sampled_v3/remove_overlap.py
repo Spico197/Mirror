@@ -3,7 +3,8 @@ from pathlib import Path
 from rex.utils.io import dump_jsonlines, load_jsonlines
 from rex.utils.progress_bar import pbar
 
-outdir = Path("resources/Mirror/v1.4_sampled_v3/merged/all_woZeroShotNER")
+# outdir = Path("resources/Mirror/v1.4_sampled_v3/merged/all_woZeroShotNER")
+outdir = Path("resources/Mirror/uie/merged")
 
 train_filepath = outdir / "train.jsonl"
 test_filepath = outdir / "test.jsonl"
@@ -19,3 +20,4 @@ for d in pbar(train_data):
     if d["text"] not in test_texts:
         new_train_data.append(d)
 dump_jsonlines(new_train_data, outdir / "train_wo_overlap.jsonl")
+print(f"#original: {len(train_data)}, #new: {len(new_train_data)}")
