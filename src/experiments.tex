@@ -1,3 +1,253 @@
 \section{Experiments}
 
+\subsection{Experiment Setup}
+
+\subsection{Datasets}
+
+\subsection{Main Results}
+
+
+\begin{table*}[t]
+  \resizebox{\textwidth}{!}{%
+  \begin{tabular}{c|c|rrrrrrrr}
+    \toprule
+  Task &
+    Datasets &
+    \multicolumn{1}{c}{TANL} &
+    \multicolumn{1}{c}{UIE} &
+    \multicolumn{1}{c}{DeepStruct} &
+    \multicolumn{1}{c}{InstructUIE} &
+    \multicolumn{1}{c}{USM} &
+    \multicolumn{1}{c}{UniEX} &
+    \multicolumn{1}{c}{RexUIE} &
+    \multicolumn{1}{c}{Mirror} \\
+    \midrule
+  \multirow{3}{*}{NER}   & ACE04     & -     & 86.89 & -    & -     & 87.62 & 87.12 & 87.25 & 87.63 \\
+                         & ACE05     & 84.90 & 85.78 & 86.9 & 86.66 & 87.14 & 87.02 & 87.23 & 86.81 \\
+                         & CoNLL03   & 91.70 & 92.99 & 93   & 92.94 & 93.16 & 92.65 & 93.67 & 92.83 \\
+  \midrule
+  \multirow{4}{*}{RE}    & ACE05     & 63.70 & 66.06 & 66.8 & -     & 67.88 & 66.06 & 64.87 & 66.70 \\
+                         & CoNLL04   & 71.40 & 75.00 & 78.3 & 78.48 & 78.84 & 73.40 & 78.39 & 71.48 \\
+                         & NYT       & -     & 93.54 & 93.3 & 90.47 & 94.07 & -     & 94.55 & 91.66 \\
+                         & SciERC    & -     & 36.53 & -    & 45.15 & 37.36 & 38.00 & 38.37 & 36.08 \\
+    \midrule
+  \multirow{4}{*}{Event} & ACE05-Tgg & 68.40 & 73.36 & 69.8 & 77.13 & 72.41 & 74.08 & 75.17 & 69.95 \\
+                         & ACE05-Arg & 47.60 & 54.79 & 56.2 & 72.94 & 55.83 & 53.92 & 59.15 & 48.12 \\
+                         & CASIE-Tgg & -     & 69.33 & -    & 67.80 & 71.73 & 71.46 & 73.01 & 69.19 \\
+                         & CASIE-Arg & -     & 61.30 & -    & 63.53 & 63.26 & 62.91 & 63.87 & 55.09 \\
+  \midrule
+  \multirow{4}{*}{ABSA}  & 14-res    & -     & 74.52 & -    & -     & 77.26 & 74.77 & 77.46 & 77.20 \\
+                         & 14-lap    & -     & 63.88 & -    & -     & 65.51 & 65.23 & 66.41 & 62.84 \\
+                         & 15-res    & -     & 67.15 & -    & -     & 69.86 & 68.58 & 70.84 & 68.82 \\
+                         & 16-res    & -     & 75.07 & -    & -     & 78.25 & 76.02 & 77.20 & 75.53 \\
+  \bottomrule
+  \end{tabular}%
+  }
+  \caption{Main results.}
+  \label{tab:main-results}
+\end{table*}
+
+\begin{table}[]
+  % \resizebox{\columnwidth}{!}{%
+  \centering
+  \begin{tabular}{lrrr}
+    \toprule
+    & \multicolumn{1}{c}{P} & \multicolumn{1}{c}{R} & \multicolumn{1}{c}{F1} \\
+    \midrule
+    \multicolumn{4}{l}{\textit{Discontinuous NER: CADEC}}                           \\
+    BART-NER & 70.08                 & \underline{ 71.21}           & 70.64                  \\
+    W2NER    & \underline{ 74.09}           & \textbf{72.35}        & \textbf{73.21}         \\
+    Mirror   & \textbf{74.83}        & 67.88                 & \underline{ 71.19}            \\
+    \midrule
+    \multicolumn{4}{l}{\textit{N-ary Tuples: HyperRED}}                             \\
+    CubeRE   & 66.39                 & 67.12                 & 66.75                  \\
+    RexUIE   & \multicolumn{1}{l}{-} & \multicolumn{1}{l}{-} & \textbf{75.20}         \\
+    Mirror   & 70.88                 & 64.05                 & \underline{ 67.29} \\
+    \bottomrule
+  \end{tabular}%
+  % }
+  \caption{
+    Results on multi-span and n-ary inforamtion extraction tasks.
+    The best results are in \textbf{bold}, and the second best results are \underline{underlined}.
+  }
+  \label{tab:multi-span-n-ary-results}
+\end{table}
+
+\subsection{Few-shot Results}
+
+\begin{table}[t]
+    \centering
+    \resizebox{\columnwidth}{!}{%
+    \begin{tabular}{l|l|rrr|r}
+    \toprule
+     &
+      Model &
+      1-shot &
+      5-shot &
+      10-shot &
+      \multicolumn{1}{l}{Avg.} \\
+    \midrule
+    \multirow{4}{*}{\shortstack{NER\\ CoNLL03}}         & UIE & 57.53 & 75.32 & 79.12 & 70.66 \\
+     &
+      USM &
+      71.11 &
+      \underline{ 83.25} &
+      \underline{ 84.58} &
+      79.65 \\
+     &
+      RexUIE &
+      \textbf{86.57} &
+      \textbf{89.63} &
+      \textbf{90.82} &
+      \textbf{89.07} \\
+     &
+      Mirror &
+      \underline{ 77.50} &
+      82.73 &
+      84.48 &
+      \underline{ 81.57} \\
+    \midrule
+    \multirow{4}{*}{\shortstack{RE\\ CoNLL04}} &
+      UIE &
+      34.88 &
+      51.64 &
+      58.98 &
+      48.50 \\
+     &
+      USM &
+      \underline{ 36.17} &
+      \underline{ 53.20} &
+      \underline{ 60.99} &
+      \underline{ 50.12} \\
+     &
+      RexUIE &
+      \textbf{43.80} &
+      \textbf{54.90} &
+      \textbf{61.68} &
+      \textbf{53.46} \\
+     &
+      Mirror &
+      34.66 &
+      52.23 &
+      58.68 &
+      48.52 \\
+      
+    \midrule
+    \multirow{4}{*}{\shortstack{Event Trigger\\ ACE05}} & UIE & 42.37 & 53.07 & 54.35 & 49.93 \\
+     &
+      USM &
+      40.86 &
+      55.61 &
+      58.79 &
+      51.75 \\
+     &
+      RexUIE &
+      \textbf{56.95} &
+      64.12 &
+      \textbf{65.41} &
+      \textbf{62.16} \\
+     &
+      Mirror &
+      \underline{ 49.50} &
+      \underline{ \textbf{65.61}} &
+      \underline{ 60.68} &
+      \underline{ 58.60} \\
+      
+    \midrule
+    \multirow{4}{*}{\shortstack{Event Arg\\ ACE05}}     & UIE & 14.56 & 31.20 & 35.19 & 26.98 \\
+     &
+      USM &
+      19.01 &
+      36.69 &
+      \underline{ 42.48} &
+      32.73 \\
+     &
+      RexUIE &
+      \textbf{30.43} &
+      \underline{ 41.04} &
+      \textbf{45.14} &
+      \textbf{38.87} \\
+     &
+      Mirror &
+      \underline{ 23.46} &
+      \textbf{48.32} &
+      41.90 &
+      \underline{ 37.89} \\
+      
+    \midrule
+    \multirow{4}{*}{\shortstack{ ABSA\\ 16res}} &
+      UIE &
+      23.04 &
+      42.67 &
+      53.28 &
+      39.66 \\
+     &
+      USM &
+      30.81 &
+      \underline{ 52.06} &
+      58.29 &
+      47.05 \\
+     &
+      RexUIE &
+      \underline{ 37.70} &
+      49.84 &
+      \underline{ 60.56} &
+      \underline{ 49.37} \\
+     &
+      Mirror &
+      \textbf{67.06} &
+      \textbf{73.51} &
+      \textbf{68.70} &
+      \textbf{69.76} \\
+    \bottomrule
+    \end{tabular}%
+    }
+    \caption{
+        Few-shot results.
+        The best results are in \textbf{bold}, and the second best results are \underline{underlined}.
+    }
+    \label{tab:few_shot}
+\end{table}
+
+\subsection{Zero-shot Results}
+
+\begin{table*}[t]
+    % \resizebox{\textwidth}{!}{%
+    \centering
+    \begin{tabular}{lrrrrrrrr}
+        \toprule
+    Model &
+      \multicolumn{1}{c}{Movie} &
+      \multicolumn{1}{c}{Restaurant} &
+      \multicolumn{1}{c}{AI} &
+      \multicolumn{1}{c}{Literature} &
+      \multicolumn{1}{c}{Music} &
+      \multicolumn{1}{c}{Politics} &
+      \multicolumn{1}{c}{Science} &
+      \multicolumn{1}{c}{Avg.} \\
+      \midrule
+    Davinci          & 0.84           & 2.94           & 2.97           & 9.87           & 13.83          & 18.42          & 10.04          & 8.42           \\
+    ChatGPT          & \underline{ 41.00}    & \textbf{37.76} & \textbf{54.40} & \underline{ 54.07}    & \textbf{61.24} & \underline{ 59.12}    & \textbf{63.00} & \textbf{52.94} \\
+    USM              & 37.73          & 14.73          & 28.18          & \textbf{56.00} & 44.93          & 36.10          & 44.09          & 37.39          \\
+    InstructUIE      & \textbf{63.00} & \underline{ 20.99}    & 49.00          & 47.21          & 53.61          & 48.15          & 49.30          & 47.32          \\
+    Mirror & 40.96          & 20.02          & \underline{ 51.13}    & 44.80          & \underline{ 60.63}    & \textbf{61.19} & \underline{ 53.65}    & \underline{ 47.48}    \\
+    \midrule
+    Upper Bound      & 85.94          & 83.30          & 65.72          & 67.93          & 78.25          & 75.92          & 70.96          & 75.43 \\
+    \bottomrule
+    \end{tabular}%
+    % }
+    \caption{
+        Zero-shot NER results.
+        The best results are in \textbf{bold}, and the second best results are \underline{underlined}.
+        The upper bound is the Mirror performance where these zero-shot NER training sets are included in the pretraining phase.
+    }
+    \label{tab:zero_shot_ner}
+\end{table*}
+
+
+\subsection{Analysis on Training Strategies}
+
+
+\subsection{Ablation Study}
+
 
