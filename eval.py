@@ -1,5 +1,8 @@
+from pathlib import Path
+
 import pandas as pd
 from rex.utils.initialization import set_seed_and_log_path
+from rex.utils.io import load_json
 from rich.console import Console
 from rich.table import Table
 
@@ -14,9 +17,12 @@ set_seed_and_log_path(log_path="eval.log")
 # task_dir = "mirror_outputs/InstructBert_Large_NewMergedUIEData"
 # task_dir = "mirror_outputs/InstructBert_Large_NewMergedUIEData_bs10"
 # task_dir = "outputs/InstructBert_TagSpan_DebertaV3Base_ACE05ENPlus"
-task_dir = "mirror_outputs/MirrorLarge_SamplingPretrain"
+# task_dir = "mirror_outputs/MirrorLarge_SamplingPretrain"
+# task_dir = "mirror_outputs/Mirror_UIE_wPT"
+# task_dir = "mirror_outputs/Mirror_UIE_wPT_woOverlapV2"
+# task_dir = "mirror_outputs/Mirror_ExcludedPretrain_MultiTask"
 # task_dir = "mirror_outputs/MirrorLarge_SamplingPretrain_woZeroShotNER"
-# task_dir = "mirror_outputs/MirrorLarge_SamplingPretrain_woOverlap"
+task_dir = "mirror_outputs/MirrorLarge_SamplingPretrain_woOverlap"
 # task_dir = "mirror_outputs/MirrorLarge_SamplingPretrain_woLowResource_woOverlap"
 task: SchemaGuidedInstructBertTask = SchemaGuidedInstructBertTask.from_taskdir(
     task_dir,
@@ -31,7 +37,7 @@ task: SchemaGuidedInstructBertTask = SchemaGuidedInstructBertTask.from_taskdir(
         "best_metric_field": "general_spans.micro.f1",
     },
 )
-table = Table(title=task_dir, width=len(task_dir))
+table = Table(title=task_dir)
 
 data_pairs = [
     # fmt: off
@@ -54,6 +60,12 @@ data_pairs = [
     # ["absa_15res_test", "resources/Mirror/uie/absa/15res/test.jsonl"],
     # ["absa_16res_test", "resources/Mirror/uie/absa/16res/test.jsonl"],
 
+    # # analysis
+    # ["ent_conll03_test", "resources/Mirror/uie/ent/conll03/test.jsonl"],
+    # ["rel_conll04_test", "resources/Mirror/uie/rel/conll04/test.jsonl"],
+    # ["event_ace05_test", "resources/Mirror/uie/event/ace05-evt/test.jsonl"],
+    # ["absa_16res_test", "resources/Mirror/uie/absa/16res/test.jsonl"],
+
     # # zero-shot NER
     # ["ent_movie", "resources/Mirror/v1.4/ent/en/MIT_MOVIE_Review/instructed/test.jsonl"],
     # ["ent_restaurant", "resources/Mirror/v1.4/ent/en/MIT_Restaurant_Review/instructed/test.jsonl"],
@@ -63,12 +75,13 @@ data_pairs = [
     # ["ent_politics", "resources/Mirror/v1.4/ent/en/CrossNER_politics/instructed/test.jsonl"],
     # ["ent_science", "resources/Mirror/v1.4/ent/en/CrossNER_science/instructed/test.jsonl"],
 
-    # discontinuous NER
-    ["discontinuous_ent", "resources/Mirror/new_abilities_v2/cadec/new/test.jsonl"],
+    # # discontinuous NER
+    # ["discontinuous_ent", "resources/Mirror/new_abilities_v2/cadec/new/test.jsonl"],
 
-    # hyper-RE
-    ["hyper_rel", "resources/Mirror/new_abilities_v2/HyperRED/new/test.jsonl"],
-    # glue
+    # # hyper-RE
+    # ["hyper_rel", "resources/Mirror/new_abilities_v2/HyperRED/new/test.jsonl"],
+
+    # # glue
     # ["cls_glue_cola", "resources/Mirror/v1.4/cls/en/CoLA/formated/test.jsonl"],
     # ["cls_glue_qqp", "resources/Mirror/v1.4/cls/en/QQP/new/dev.jsonl"],
     # ["cls_glue_mnli", "resources/Mirror/v1.4/cls/en/MNLI/formated/MNLI_dev.jsonl"],
@@ -76,8 +89,134 @@ data_pairs = [
     # ["cls_glue_qnli", "resources/Mirror/v1.4/cls/en/QNLI/processed/QNLI_dev.jsonl"],
     # ["cls_glue_rte", "resources/Mirror/v1.4/cls/en/RTE/formated/RTE_dev.jsonl"],
     # ["cls_glue_mrpc", "resources/Mirror/v1.4/cls/en/MRPC/formated/dev.jsonl"],
-    # mrc
+
+    # # mrc
     # ["span_squad2", "resources/Mirror/v1.4/span/en/squad_v2/dev.jsonl"],
+
+    # Mirror v1.4 all train
+    # ["cls_ag_news_train", "resources/Mirror/v1.4/cls/en/ag_news/instructed/train.jsonl"],
+    # ["cls_ANLI_R1_train", "resources/Mirror/v1.4/cls/en/ANLI/R1_processed/train.jsonl"],
+    # ["cls_ANLI_R2_train", "resources/Mirror/v1.4/cls/en/ANLI/R2_processed/train.jsonl"],
+    # ["cls_ANLI_R3_train", "resources/Mirror/v1.4/cls/en/ANLI/R3_processed/train.jsonl"],
+    # ["cls_ARC_train", "resources/Mirror/v1.4/cls/en/ARC/new/train.jsonl"],
+    # ["cls_CoLA_train", "resources/Mirror/v1.4/cls/en/CoLA/formated/train.jsonl"],
+    # ["cls_CosmosQA_train", "resources/Mirror/v1.4/cls/en/CosmosQA/new/train.jsonl"],
+    # ["cls_dbpedia_train", "resources/Mirror/v1.4/cls/en/dbpedia/new/train.jsonl"],
+    # ["cls_DREAM_train", "resources/Mirror/v1.4/cls/en/DREAM/new/train.jsonl"],
+    # ["cls_MedQA_train", "resources/Mirror/v1.4/cls/en/MedQA/new/train.jsonl"],
+    # ["cls_MRPC_train", "resources/Mirror/v1.4/cls/en/MRPC/formated/train.jsonl"],
+    # ["cls_OpenBookQA_train", "resources/Mirror/v1.4/cls/en/OpenBookQA/new/train.jsonl"],
+    # ["cls_RACE_train", "resources/Mirror/v1.4/cls/en/RACE/instructed/train.jsonl"],
+    # ["cls_RACE-_trainC", "resources/Mirror/v1.4/cls/en/RACE-C/new/train.jsonl"],
+    # ["cls_SciQ_train", "resources/Mirror/v1.4/cls/en/SciQ/instructed/train.jsonl"],
+    # ["cls_SNLI_train", "resources/Mirror/v1.4/cls/en/SNLI/instructed/train.jsonl"],
+    # ["ent_ace04_train", "resources/Mirror/v1.4/ent/en/ace04/train.jsonl"],
+    # ["ent_ace05-uie_train", "resources/Mirror/v1.4/ent/en/ace05-uie/train.jsonl"],
+    # ["ent_AnatEM_train", "resources/Mirror/v1.4/ent/en/AnatEM/instructed/train.jsonl"],
+    # ["ent_bc2gm_train", "resources/Mirror/v1.4/ent/en/bc2gm/instructed/train.jsonl"],
+    # ["ent_bc4chemd_train", "resources/Mirror/v1.4/ent/en/bc4chemd/instructed/train.jsonl"],
+    # ["ent_bc5cdr_train", "resources/Mirror/v1.4/ent/en/bc5cdr/instructed/train.jsonl"],
+    # ["ent_Broad_Tweet_Corpus_train", "resources/Mirror/v1.4/ent/en/Broad_Tweet_Corpus/instructed/train.jsonl"],
+    # ["ent_conll03_train", "resources/Mirror/v1.4/ent/en/conll03/train.jsonl"],
+    # ["ent_CrossNER_AI_train", "resources/Mirror/v1.4/ent/en/CrossNER_AI/instructed/train.jsonl"],
+    # ["ent_CrossNER_literature_train", "resources/Mirror/v1.4/ent/en/CrossNER_literature/instructed/train.jsonl"],
+    # ["ent_CrossNER_music_train", "resources/Mirror/v1.4/ent/en/CrossNER_music/instructed/train.jsonl"],
+    # ["ent_CrossNER_politics_train", "resources/Mirror/v1.4/ent/en/CrossNER_politics/instructed/train.jsonl"],
+    # ["ent_CrossNER_science_train", "resources/Mirror/v1.4/ent/en/CrossNER_science/instructed/train.jsonl"],
+    # ["ent_FabNER_train", "resources/Mirror/v1.4/ent/en/FabNER/instructed/train.jsonl"],
+    # ["ent_FindVehicle_train", "resources/Mirror/v1.4/ent/en/FindVehicle/instructed/train.jsonl"],
+    # ["ent_GENIA_NER_train", "resources/Mirror/v1.4/ent/en/GENIA_NER/instructed/train.jsonl"],
+    # ["ent_HarveyNER_train", "resources/Mirror/v1.4/ent/en/HarveyNER/instructed/train.jsonl"],
+    # ["ent_MIT_MOVIE_Review_train", "resources/Mirror/v1.4/ent/en/MIT_MOVIE_Review/instructed/train.jsonl"],
+    # ["ent_MIT_Restaurant_Review_train", "resources/Mirror/v1.4/ent/en/MIT_Restaurant_Review/instructed/train.jsonl"],
+    # ["ent_MultiNERD_train", "resources/Mirror/v1.4/ent/en/MultiNERD/instructed/train.jsonl"],
+    # ["ent_NCBIdiease_train", "resources/Mirror/v1.4/ent/en/NCBIdiease/instructed/train.jsonl"],
+    # ["ent_ontoNotes5_train", "resources/Mirror/v1.4/ent/en/ontoNotes5/instructed/train.jsonl"],
+    # ["ent_TweetNER7_train", "resources/Mirror/v1.4/ent/en/TweetNER7/instructed/train.jsonl"],
+    # ["ent_WikiANN_en_train", "resources/Mirror/v1.4/ent/en/WikiANN_en/instructed/train.jsonl"],
+    # ["ent_WNUT-16_train", "resources/Mirror/v1.4/ent/en/WNUT-16/train.jsonl"],
+    # ["event_ace05-evt-uie_train", "resources/Mirror/v1.4/event/en/ace05-evt-uie/train.jsonl"],
+    # ["event_casie_train", "resources/Mirror/v1.4/event/en/casie/train.jsonl"],
+    # ["event_PHEE_train", "resources/Mirror/v1.4/event/en/PHEE/instructed/train.jsonl"],
+    # ["rel_14lap_train", "resources/Mirror/v1.4/rel/en/14lap/train.jsonl"],
+    # ["rel_14res_train", "resources/Mirror/v1.4/rel/en/14res/train.jsonl"],
+    # ["rel_15res_train", "resources/Mirror/v1.4/rel/en/15res/train.jsonl"],
+    # ["rel_16res_train", "resources/Mirror/v1.4/rel/en/16res/train.jsonl"],
+    # ["rel_ace05-rel-uie_train", "resources/Mirror/v1.4/rel/en/ace05-rel-uie/train.jsonl"],
+    # ["rel_conll04_train", "resources/Mirror/v1.4/rel/en/conll04/train.jsonl"],
+    # ["rel_nyt_multi_train", "resources/Mirror/v1.4/rel/en/nyt_multi/train.jsonl"],
+    # ["rel_scierc_train", "resources/Mirror/v1.4/rel/en/scierc/train.jsonl"],
+    # # ["span_BiPaR_train", "resources/Mirror/v1.4/span/en/BiPaR/train.jsonl"],  # x
+    # ["span_SubjQA_books_train", "resources/Mirror/v1.4/span/en/SubjQA/books/train.jsonl"],
+    # ["span_SubjQA_electronics_train", "resources/Mirror/v1.4/span/en/SubjQA/electronics/train.jsonl"],
+    # ["span_SubjQA_grocery_train", "resources/Mirror/v1.4/span/en/SubjQA/grocery/train.jsonl"],
+    # ["span_SubjQA_movies_train", "resources/Mirror/v1.4/span/en/SubjQA/movies/train.jsonl"],
+    # ["span_SubjQA_restaurants_train", "resources/Mirror/v1.4/span/en/SubjQA/restaurants/train.jsonl"],
+    # ["span_SubjQA_tripadvisor_train", "resources/Mirror/v1.4/span/en/SubjQA/tripadvisor/train.jsonl"],
+    # ["span_ms_marco_v2.1", "resources/Mirror/v1.4/span/en/ms_marco_v2.1/train.jsonl"],
+    # ["span_newsqa", "resources/Mirror/v1.4/span/en/newsqa/train.jsonl"],
+    # ["span_squad_v2", "resources/Mirror/v1.4/span/en/squad_v2/train.jsonl"],
+
+    # # Mirror v1.4 all test
+    ["cls_ag_news_test", "resources/Mirror/v1.4/cls/en/ag_news/instructed/test.jsonl"],
+    # ["cls_ANLI_R1_test", "resources/Mirror/v1.4/cls/en/ANLI/R1_processed/test.jsonl"],
+    # ["cls_ANLI_R2_test", "resources/Mirror/v1.4/cls/en/ANLI/R2_processed/test.jsonl"],
+    # ["cls_ANLI_R3_test", "resources/Mirror/v1.4/cls/en/ANLI/R3_processed/test.jsonl"],
+    # ["cls_ARC_test", "resources/Mirror/v1.4/cls/en/ARC/new/test.jsonl"],
+    # ["cls_CoLA_test", "resources/Mirror/v1.4/cls/en/CoLA/formated/test.jsonl"],
+    # ["cls_CosmosQA_test", "resources/Mirror/v1.4/cls/en/CosmosQA/new/test.jsonl"],
+    # ["cls_dbpedia_test", "resources/Mirror/v1.4/cls/en/dbpedia/new/test.jsonl"],
+    # ["cls_DREAM_test", "resources/Mirror/v1.4/cls/en/DREAM/new/test.jsonl"],
+    # ["cls_MedQA_test", "resources/Mirror/v1.4/cls/en/MedQA/new/test.jsonl"],
+    # ["cls_MRPC_test", "resources/Mirror/v1.4/cls/en/MRPC/formated/test.jsonl"],
+    # ["cls_OpenBookQA_test", "resources/Mirror/v1.4/cls/en/OpenBookQA/new/test.jsonl"],
+    # ["cls_RACE_test", "resources/Mirror/v1.4/cls/en/RACE/instructed/test.jsonl"],
+    # ["cls_RACE-C_test", "resources/Mirror/v1.4/cls/en/RACE-C/new/test.jsonl"],
+    # ["cls_SciQ_test", "resources/Mirror/v1.4/cls/en/SciQ/instructed/test.jsonl"],
+    # ["cls_SNLI_test", "resources/Mirror/v1.4/cls/en/SNLI/instructed/test.jsonl"],
+    # ["ent_ace04_test", "resources/Mirror/v1.4/ent/en/ace04/test.jsonl"],
+    # ["ent_ace05-uie_test", "resources/Mirror/v1.4/ent/en/ace05-uie/test.jsonl"],
+    # ["ent_AnatEM_test", "resources/Mirror/v1.4/ent/en/AnatEM/instructed/test.jsonl"],
+    # ["ent_bc2gm_test", "resources/Mirror/v1.4/ent/en/bc2gm/instructed/test.jsonl"],
+    # ["ent_bc4chemd_test", "resources/Mirror/v1.4/ent/en/bc4chemd/instructed/test.jsonl"],
+    # ["ent_bc5cdr_test", "resources/Mirror/v1.4/ent/en/bc5cdr/instructed/test.jsonl"],
+    # ["ent_Broad_Tweet_Corpus_test", "resources/Mirror/v1.4/ent/en/Broad_Tweet_Corpus/instructed/test.jsonl"],
+    # ["ent_conll03_test", "resources/Mirror/v1.4/ent/en/conll03/test.jsonl"],
+    # ["ent_CrossNER_AI_test", "resources/Mirror/v1.4/ent/en/CrossNER_AI/instructed/test.jsonl"],
+    # ["ent_CrossNER_literature_test", "resources/Mirror/v1.4/ent/en/CrossNER_literature/instructed/test.jsonl"],
+    # ["ent_CrossNER_music_test", "resources/Mirror/v1.4/ent/en/CrossNER_music/instructed/test.jsonl"],
+    # ["ent_CrossNER_politics_test", "resources/Mirror/v1.4/ent/en/CrossNER_politics/instructed/test.jsonl"],
+    # ["ent_CrossNER_science_test", "resources/Mirror/v1.4/ent/en/CrossNER_science/instructed/test.jsonl"],
+    # ["ent_FabNER_test", "resources/Mirror/v1.4/ent/en/FabNER/instructed/test.jsonl"],
+    # ["ent_FindVehicle_test", "resources/Mirror/v1.4/ent/en/FindVehicle/instructed/test.jsonl"],
+    # ["ent_GENIA_NER_test", "resources/Mirror/v1.4/ent/en/GENIA_NER/instructed/test.jsonl"],
+    # ["ent_HarveyNER_test", "resources/Mirror/v1.4/ent/en/HarveyNER/instructed/test.jsonl"],
+    # ["ent_MIT_MOVIE_Review_test", "resources/Mirror/v1.4/ent/en/MIT_MOVIE_Review/instructed/test.jsonl"],
+    # ["ent_MIT_Restaurant_Review_test", "resources/Mirror/v1.4/ent/en/MIT_Restaurant_Review/instructed/test.jsonl"],
+    # ["ent_MultiNERD_test", "resources/Mirror/v1.4/ent/en/MultiNERD/instructed/test.jsonl"],
+    # ["ent_NCBIdiease_test", "resources/Mirror/v1.4/ent/en/NCBIdiease/instructed/test.jsonl"],
+    # ["ent_ontoNotes5_test", "resources/Mirror/v1.4/ent/en/ontoNotes5/instructed/test.jsonl"],
+    # ["ent_TweetNER7_test", "resources/Mirror/v1.4/ent/en/TweetNER7/instructed/test.jsonl"],
+    # ["ent_WikiANN_en_test", "resources/Mirror/v1.4/ent/en/WikiANN_en/instructed/test.jsonl"],
+    # ["ent_WNUT-16_test", "resources/Mirror/v1.4/ent/en/WNUT-16/test.jsonl"],
+    # ["event_ace05-evt-uie_test", "resources/Mirror/v1.4/event/en/ace05-evt-uie/test.jsonl"],
+    # ["event_casie_test", "resources/Mirror/v1.4/event/en/casie/test.jsonl"],
+    # ["event_PHEE_test", "resources/Mirror/v1.4/event/en/PHEE/instructed/test.jsonl"],
+    # ["rel_14lap_test", "resources/Mirror/v1.4/rel/en/14lap/test.jsonl"],
+    # ["rel_14res_test", "resources/Mirror/v1.4/rel/en/14res/test.jsonl"],
+    # ["rel_15res_test", "resources/Mirror/v1.4/rel/en/15res/test.jsonl"],
+    # ["rel_16res_test", "resources/Mirror/v1.4/rel/en/16res/test.jsonl"],
+    # ["rel_ace05-rel-uie_test", "resources/Mirror/v1.4/rel/en/ace05-rel-uie/test.jsonl"],
+    # ["rel_conll04_test", "resources/Mirror/v1.4/rel/en/conll04/test.jsonl"],
+    # ["rel_nyt_multi_test", "resources/Mirror/v1.4/rel/en/nyt_multi/test.jsonl"],
+    # ["rel_scierc_test", "resources/Mirror/v1.4/rel/en/scierc/test.jsonl"],
+    # ["span_BiPaR_test", "resources/Mirror/v1.4/span/en/BiPaR/test.jsonl"],
+    # ["span_SubjQA_books_test", "resources/Mirror/v1.4/span/en/SubjQA/books/test.jsonl"],
+    # ["span_SubjQA_electronics_test", "resources/Mirror/v1.4/span/en/SubjQA/electronics/test.jsonl"],
+    # ["span_SubjQA_grocery_test", "resources/Mirror/v1.4/span/en/SubjQA/grocery/test.jsonl"],
+    # ["span_SubjQA_movies_test", "resources/Mirror/v1.4/span/en/SubjQA/movies/test.jsonl"],
+    # ["span_SubjQA_restaurants_test", "resources/Mirror/v1.4/span/en/SubjQA/restaurants/test.jsonl"],
+    # ["span_SubjQA_tripadvisor_test", "resources/Mirror/v1.4/span/en/SubjQA/tripadvisor/test.jsonl"],
     # fmt: on
 ]
 
@@ -86,8 +225,10 @@ table.add_column("Task", justify="left", style="cyan")
 table.add_column("Dataset", justify="left", style="magenta")
 table.add_column("Metric (%)", justify="right", style="green")
 for dname, fpath in data_pairs:
+    dname = dname.lower()
     task.data_manager.update_datapath(dname, fpath)
     _, res = task.eval(dname, verbose=True, dump=True, dump_middle=True)
+    # res = load_json(Path(task_dir) / "measures" / f"{dname}.json")["metrics"]
     if dname.startswith("ent_"):
         eval_res["task"].append("ent")
         eval_res["dataset"].append(dname)
@@ -142,11 +283,11 @@ for i in range(len(eval_res["task"])):
         f"{100*eval_res['metric_val'][i]:.3f}",
     )
 
-df = pd.DataFrame(eval_res)
-df.to_excel(task.measures_path.joinpath("data_eval_res.xlsx"))
-
 console = Console()
 console.print(table)
+
+df = pd.DataFrame(eval_res)
+df.to_excel(task.measures_path.joinpath("data_eval_res.xlsx"))
 
 
 """
@@ -549,4 +690,131 @@ mirror_outputs/MirrorLarge_SamplingPretrain_woLowResource_woOverlap
 │ ent       │ ent_politics                     │           61.190 │
 │ ent       │ ent_science                      │           53.649 │
 └───────────┴──────────────────────────────────┴──────────────────┘
+
+mirror_outputs/Mirror_UIE_wPT
+┏━━━━━━━┳━━━━━━━━━┳━━━━━━━━━┓
+┃       ┃         ┃  Metric ┃
+┃ Task  ┃ Dataset ┃     (%) ┃
+┡━━━━━━━╇━━━━━━━━━╇━━━━━━━━━┩
+│ ent   │ ent_ac… │  85.526 │
+│ ent   │ ent_ac… │  88.250 │
+│ ent   │ ent_co… │  91.896 │
+│ rel   │ rel_ac… │  40.157 │
+│ rel   │ rel_co… │  60.436 │
+│ rel   │ rel_ny… │  91.525 │
+│ rel   │ rel_sc… │  11.492 │
+│ event │ event_… │  65.405 │
+│ event │ event_… │  38.835 │
+│ event │ event_… │  67.409 │
+│ event │ event_… │  41.953 │
+│ absa  │ absa_1… │  70.852 │
+│ absa  │ absa_1… │  61.635 │
+│ absa  │ absa_1… │  67.660 │
+│ absa  │ absa_1… │  71.414 │
+└───────┴─────────┴─────────┘
+
+mirror_outputs/Mirror_UIE_wPT_woOverlapV2
+┏━━━━━━━┳━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃ Task  ┃ Dataset          ┃ Metric (%) ┃
+┡━━━━━━━╇━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ ent   │ ent_ace04_test   │     85.493 │
+│ ent   │ ent_ace05_test   │     87.883 │
+│ ent   │ ent_conll03_test │     91.378 │
+│ rel   │ rel_ace05_test   │     57.431 │
+│ rel   │ rel_conll04_test │     67.831 │
+│ rel   │ rel_nyt_test     │     91.636 │
+│ rel   │ rel_scierc_test  │     19.835 │
+│ event │ event_ace05_tes… │     72.596 │
+│ event │ event_ace05_tes… │     48.807 │
+│ event │ event_casie_tes… │     66.073 │
+│ event │ event_casie_tes… │     44.836 │
+│ absa  │ absa_14res_test  │     74.842 │
+│ absa  │ absa_14lap_test  │     65.126 │
+│ absa  │ absa_15res_test  │     64.768 │
+│ absa  │ absa_16res_test  │     73.867 │
+└───────┴──────────────────┴────────────┘
+
+mirror_outputs/Mirror_ExcludedPretrain_MultiTask
+┏━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃ Task   ┃ Dataset                ┃ Metric (%) ┃
+┡━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ ent    │ ent_conll03_test       │     91.840 │
+│ rel    │ rel_conll04_test       │     72.391 │
+│ event  │ event_ace05_test_tgg   │     68.241 │
+│ event  │ event_ace05_test_arg   │     47.725 │
+│ absa   │ absa_16res_test        │     75.310 │
+└────────┴────────────────────────┴────────────┘
+
+  mirror_outputs/MirrorLarge_SamplingPretrain_woOverlap
+┏━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃ Task    ┃ Dataset                         ┃ Metric (%) ┃
+┡━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ cls     │ cls_ag_news_train               │      0.000 │
+│ cls     │ cls_anli_r1_train               │      0.000 │
+│ cls     │ cls_anli_r2_train               │      0.000 │
+│ cls     │ cls_anli_r3_train               │      0.000 │
+│ cls     │ cls_arc_train                   │      0.000 │
+│ cls     │ cls_cola_train                  │      0.000 │
+│ cls     │ cls_cosmosqa_train              │      0.000 │
+│ cls     │ cls_dbpedia_train               │      0.000 │
+│ cls     │ cls_dream_train                 │      0.000 │
+│ cls     │ cls_medqa_train                 │      0.000 │
+│ cls     │ cls_mrpc_train                  │      0.000 │
+│ cls     │ cls_openbookqa_train            │      0.000 │
+│ cls     │ cls_race_train                  │      0.000 │
+│ cls     │ cls_race-_trainc                │      0.000 │
+│ cls     │ cls_sciq_train                  │      0.000 │
+│ cls     │ cls_snli_train                  │      0.000 │
+│ ent     │ ent_ace04_train                 │     86.606 │
+│ ent     │ ent_ace05-uie_train             │     86.901 │
+│ ent     │ ent_anatem_train                │     93.182 │
+│ ent     │ ent_bc2gm_train                 │     86.888 │
+│ ent     │ ent_bc4chemd_train              │     92.380 │
+│ ent     │ ent_bc5cdr_train                │     93.862 │
+│ ent     │ ent_broad_tweet_corpus_train    │     86.098 │
+│ ent     │ ent_conll03_train               │     97.071 │
+│ ent     │ ent_crossner_ai_train           │     70.653 │
+│ ent     │ ent_crossner_literature_train   │     68.750 │
+│ ent     │ ent_crossner_music_train        │     83.007 │
+│ ent     │ ent_crossner_politics_train     │     84.950 │
+│ ent     │ ent_crossner_science_train      │     71.975 │
+│ ent     │ ent_fabner_train                │     81.018 │
+│ ent     │ ent_findvehicle_train           │     97.073 │
+│ ent     │ ent_genia_ner_train             │     82.966 │
+│ ent     │ ent_harveyner_train             │     68.535 │
+│ ent     │ ent_mit_movie_review_train      │     88.486 │
+│ ent     │ ent_mit_restaurant_review_train │     84.813 │
+│ ent     │ ent_multinerd_train             │     93.767 │
+│ ent     │ ent_ncbidiease_train            │     92.506 │
+│ ent     │ ent_ontonotes5_train            │     90.458 │
+│ ent     │ ent_tweetner7_train             │     66.421 │ x
+│ ent     │ ent_wikiann_en_train            │     87.184 │
+│ ent     │ ent_wnut-16_train               │     74.102 │
+│ event   │ event_ace05-evt-uie_train_tgg   │     71.371 │
+│ event   │ event_ace05-evt-uie_train_arg   │     37.193 │
+│ event   │ event_casie_train_tgg           │     49.564 │
+│ event   │ event_casie_train_arg           │     15.333 │
+│ event   │ event_phee_train_tgg            │     73.528 │
+│ event   │ event_phee_train_arg            │     56.512 │
+│ rel     │ rel_14lap_train                 │     62.124 │
+│ rel     │ rel_14res_train                 │     66.458 │
+│ rel     │ rel_15res_train                 │     77.044 │
+│ rel     │ rel_16res_train                 │     73.037 │
+│ rel     │ rel_ace05-rel-uie_train         │     27.854 │
+│ rel     │ rel_conll04_train               │     58.760 │
+│ rel     │ rel_nyt_multi_train             │     91.525 │
+│ rel     │ rel_scierc_train                │     10.131 │
+│ span_em │ span_subjqa_books_train         │     45.947 │
+│ span_f1 │ span_subjqa_books_train         │     35.552 │
+│ span_em │ span_subjqa_electronics_train   │     47.546 │
+│ span_f1 │ span_subjqa_electronics_train   │     40.358 │
+│ span_em │ span_subjqa_grocery_train       │     49.658 │
+│ span_f1 │ span_subjqa_grocery_train       │     44.521 │
+│ span_em │ span_subjqa_movies_train        │     42.560 │
+│ span_f1 │ span_subjqa_movies_train        │     36.206 │
+│ span_em │ span_subjqa_restaurants_train   │     50.195 │
+│ span_f1 │ span_subjqa_restaurants_train   │     44.211 │
+│ span_em │ span_subjqa_tripadvisor_train   │     38.765 │
+│ span_f1 │ span_subjqa_tripadvisor_train   │     36.225 │
+└─────────┴─────────────────────────────────┴────────────┘
 """

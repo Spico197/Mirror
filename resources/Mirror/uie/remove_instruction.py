@@ -2,7 +2,7 @@ from pathlib import Path
 
 from rex.utils.io import dump_jsonlines, load_jsonlines
 
-data_dir = Path("resources/Mirror/uie/merged_analysis")
+data_dir = Path("resources/Mirror/uie/rel/scierc")
 
 for fname in ["train.jsonl", "dev.jsonl", "test.jsonl"]:
     p = data_dir / fname

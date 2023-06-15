@@ -1,3 +1,3 @@
 task_name: Mirror_SingleTask_Rel_SciERC
-data_dir: resources/Mirror/v1.4/rel/en/scierc
+data_dir: resources/Mirror/uie/rel/scierc
 best_metric_field: rel.rel.micro.f1

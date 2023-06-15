@@ -1,0 +1,51 @@
+# task
+task_type: SchemaGuidedInstructBertTask
+task_name: Mirror_Pretrain_woOverlapV2
+comment: '~~content as label, (start, end + 1) span'
+
+# data preprocessing
+max_seq_len: 512
+debug_mode: false
+label_span: tag  # tag `[LM]` or content `person`
+mode: span  # w2 (1,2,3) or span (1,3)
+stream_mode: false
+
+# filepaths
+plm_dir: /data/tzhu/PLM/microsoft--deberta-v3-large
+data_dir: resources/Mirror/v1.4_sampled_v3/merged/all
+output_dir: mirror_outputs
+task_dir: ${output_dir}/${task_name}
+train_filepath: ${data_dir}/train_wo_overlap_v2.jsonl
+dev_filepath: ${data_dir}/dev.jsonl
+test_filepath: ${data_dir}/test.jsonl
+dump_cache_dir: ${task_dir}/cache
+regenerate_cache: false
+
+# training
+random_seed: 1227
+base_model_path: null
+eval_on_data: [train]
+select_best_on_data: train
+select_best_by_key: loss
+final_eval_on_test: false
+save_every_ckpt: true
+save_best_ckpt: true
+
+warmup_proportion: 0.1
+num_epochs: 3
+epoch_patience: -1
+num_steps: -1
+step_patience: -1
+step_eval_interval: 10000
+train_batch_size: 8
+eval_batch_size: 8
+grad_accum_steps: 1
+learning_rate: !!float 2e-5
+other_learning_rate: !!float 1e-4
+max_grad_norm: 1.0
+weight_decay: 0.1
+
+# model
+dropout: 0.3
+use_rope: true
+biaffine_size: 512

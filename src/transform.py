@@ -523,7 +523,7 @@ class CachedLabelPointerTransform(CachedTransformOneBase):
         bg = instance.get("bg")
         if bg:
             bg_tokenized = self.tokenizer(
-                text, return_offsets_mapping=True, add_special_tokens=False
+                bg, return_offsets_mapping=True, add_special_tokens=False
             )
             tokens.append(self.b_token)
             mask.append(8)
