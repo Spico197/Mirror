@@ -852,6 +852,7 @@ mirror_outputs/Mirror_Pretrain_AllExcl
 │ ent  │ ent_science    │     53.454 │
 └──────┴────────────────┴────────────┘
 
+best ckpt after the whole training
 mirror_outputs/Mirror_Pretrain_AllExcl
                 uded_2
 ┏━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
