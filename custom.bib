@@ -443,3 +443,20 @@ version: 1},
   biburl       = {https://dblp.org/rec/journals/corr/abs-2210-11416.bib},
   bibsource    = {dblp computer science bibliography, https://dblp.org}
 }
+
+@inproceedings{ner-as-dp,
+    title = "Named Entity Recognition as Dependency Parsing",
+    author = "Yu, Juntao  and
+      Bohnet, Bernd  and
+      Poesio, Massimo",
+    booktitle = "Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics",
+    month = jul,
+    year = "2020",
+    address = "Online",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2020.acl-main.577",
+    doi = "10.18653/v1/2020.acl-main.577",
+    pages = "6470--6476",
+    abstract = "Named Entity Recognition (NER) is a fundamental task in Natural Language Processing, concerned with identifying spans of text expressing references to entities. NER research is often focused on flat entities only (flat NER), ignoring the fact that entity references can be nested, as in [Bank of [China]] (Finkel and Manning, 2009). In this paper, we use ideas from graph-based dependency parsing to provide our model a global view on the input via a biaffine model (Dozat and Manning, 2017). The biaffine model scores pairs of start and end tokens in a sentence which we use to explore all spans, so that the model is able to predict named entities accurately. We show that the model works well for both nested and flat NER through evaluation on 8 corpora and achieving SoTA performance on all of them, with accuracy gains of up to 2.2 percentage points.",
+}
+

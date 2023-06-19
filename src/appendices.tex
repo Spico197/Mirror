@@ -2,3 +2,55 @@
 \section{Dataset Statistics}
 \label{sec:appendix_data}
 test
+
+\section{Multi-span Cyclic Graph Decoding}
+
+\begin{figure*}[htbp]
+\centering
+\caption{Python Code - find\_paths\_from\_adj\_mat}
+\label{fig:python_code}
+\begin{lstlisting}[language=Python]
+def find_paths_from_adj_mat(adj_mat: torch.Tensor) -> list[tuple[int]]:
+    assert adj_mat.shape[0] == adj_mat.shape[1] and len(adj_mat.shape) == 2
+
+    paths = []
+    self_loops = set()
+    adj_map = defaultdict(set)
+    rev_adj_map = defaultdict(set)
+    # current -> next
+    for c, n in adj_mat.detach().nonzero().tolist():
+        # self-loop
+        if c == n:
+            self_loops.add(c)
+        else:
+            adj_map[c].add(n)
+            # reversed map
+            rev_adj_map[n].add(c)
+    for self_loop_node in self_loops:
+        paths.append((self_loop_node,))
+
+    def track(path: tuple[int], c: int):
+        visited: set[tuple[int]] = set()
+        stack = [(path, c)]
+        while stack:
+            path, c = stack.pop()
+            if c in adj_map:
+                for n in adj_map[c]:
+                    if (c, n) in visited:
+                        continue
+                    visited.add((c, n))
+                    stack.append((path + (c,), n))
+            # else:
+            if path:
+                paths.append(path + (c,))
+
+    start_nodes = set(adj_map.keys()) - set(rev_adj_map.keys())
+    for c in start_nodes:
+        ns = adj_map[c]
+        for n in ns:
+            track((c,), n)
+
+    return paths
+\end{lstlisting}
+\end{figure*}
+
