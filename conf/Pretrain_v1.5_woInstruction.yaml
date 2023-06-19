@@ -1,6 +1,6 @@
 # task
 task_type: SchemaGuidedInstructBertTask
-task_name: Mirror_Pretrain_DataV1.5_2
+task_name: Mirror_Pretrain_DataV1.5_woInstruction
 comment: '~~content as label, (start, end + 1) span'
 
 # data preprocessing
@@ -12,7 +12,7 @@ stream_mode: false
 
 # filepaths
 plm_dir: /data/tzhu/PLM/microsoft--deberta-v3-large
-data_dir: resources/Mirror/v1.5/merged/t-rex-200k
+data_dir: resources/Mirror/v1.5/merged/t-rex-200k-woInstruction/remove_instruction
 output_dir: mirror_outputs
 task_dir: ${output_dir}/${task_name}
 train_filepath: ${data_dir}/train.jsonl

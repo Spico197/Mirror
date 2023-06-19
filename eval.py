@@ -22,8 +22,11 @@ set_seed_and_log_path(log_path="eval.log")
 # task_dir = "mirror_outputs/Mirror_UIE_wPT_woOverlapV2"
 # task_dir = "mirror_outputs/Mirror_ExcludedPretrain_MultiTask"
 # task_dir = "mirror_outputs/MirrorLarge_SamplingPretrain_woZeroShotNER"
-task_dir = "mirror_outputs/MirrorLarge_SamplingPretrain_woOverlap"
+# task_dir = "mirror_outputs/MirrorLarge_SamplingPretrain_woOverlap"
 # task_dir = "mirror_outputs/MirrorLarge_SamplingPretrain_woLowResource_woOverlap"
+# task_dir = "mirror_outputs/Mirror_Pretrain_DataV1.5_2"
+# task_dir = "mirror_outputs/Mirror_Pretrain_AllExcluded_2"
+task_dir = "mirror_outputs/Mirror_Pretrain_DataV1.5_woInstruction"
 task: SchemaGuidedInstructBertTask = SchemaGuidedInstructBertTask.from_taskdir(
     task_dir,
     load_best_model=True,
@@ -75,12 +78,18 @@ data_pairs = [
     # ["ent_politics", "resources/Mirror/v1.4/ent/en/CrossNER_politics/instructed/test.jsonl"],
     # ["ent_science", "resources/Mirror/v1.4/ent/en/CrossNER_science/instructed/test.jsonl"],
 
+    # zero-shot NER w/o instructions
+    ["ent_movie", "resources/Mirror/v1.4/ent/en/MIT_MOVIE_Review/instructed/remove_instruction/test.jsonl"],
+    ["ent_restaurant", "resources/Mirror/v1.4/ent/en/MIT_Restaurant_Review/instructed/remove_instruction/test.jsonl"],
+    ["ent_ai", "resources/Mirror/v1.4/ent/en/CrossNER_AI/instructed/remove_instruction/test.jsonl"],
+    ["ent_literature", "resources/Mirror/v1.4/ent/en/CrossNER_literature/instructed/remove_instruction/test.jsonl"],
+    ["ent_music", "resources/Mirror/v1.4/ent/en/CrossNER_music/instructed/remove_instruction/test.jsonl"],
+    ["ent_politics", "resources/Mirror/v1.4/ent/en/CrossNER_politics/instructed/remove_instruction/test.jsonl"],
+    ["ent_science", "resources/Mirror/v1.4/ent/en/CrossNER_science/instructed/remove_instruction/test.jsonl"],
     # # discontinuous NER
     # ["discontinuous_ent", "resources/Mirror/new_abilities_v2/cadec/new/test.jsonl"],
-
     # # hyper-RE
     # ["hyper_rel", "resources/Mirror/new_abilities_v2/HyperRED/new/test.jsonl"],
-
     # # glue
     # ["cls_glue_cola", "resources/Mirror/v1.4/cls/en/CoLA/formated/test.jsonl"],
     # ["cls_glue_qqp", "resources/Mirror/v1.4/cls/en/QQP/new/dev.jsonl"],
@@ -89,10 +98,8 @@ data_pairs = [
     # ["cls_glue_qnli", "resources/Mirror/v1.4/cls/en/QNLI/processed/QNLI_dev.jsonl"],
     # ["cls_glue_rte", "resources/Mirror/v1.4/cls/en/RTE/formated/RTE_dev.jsonl"],
     # ["cls_glue_mrpc", "resources/Mirror/v1.4/cls/en/MRPC/formated/dev.jsonl"],
-
     # # mrc
     # ["span_squad2", "resources/Mirror/v1.4/span/en/squad_v2/dev.jsonl"],
-
     # Mirror v1.4 all train
     # ["cls_ag_news_train", "resources/Mirror/v1.4/cls/en/ag_news/instructed/train.jsonl"],
     # ["cls_ANLI_R1_train", "resources/Mirror/v1.4/cls/en/ANLI/R1_processed/train.jsonl"],
@@ -156,9 +163,8 @@ data_pairs = [
     # ["span_ms_marco_v2.1", "resources/Mirror/v1.4/span/en/ms_marco_v2.1/train.jsonl"],
     # ["span_newsqa", "resources/Mirror/v1.4/span/en/newsqa/train.jsonl"],
     # ["span_squad_v2", "resources/Mirror/v1.4/span/en/squad_v2/train.jsonl"],
-
     # # Mirror v1.4 all test
-    ["cls_ag_news_test", "resources/Mirror/v1.4/cls/en/ag_news/instructed/test.jsonl"],
+    # ["cls_ag_news_test", "resources/Mirror/v1.4/cls/en/ag_news/instructed/test.jsonl"],
     # ["cls_ANLI_R1_test", "resources/Mirror/v1.4/cls/en/ANLI/R1_processed/test.jsonl"],
     # ["cls_ANLI_R2_test", "resources/Mirror/v1.4/cls/en/ANLI/R2_processed/test.jsonl"],
     # ["cls_ANLI_R3_test", "resources/Mirror/v1.4/cls/en/ANLI/R3_processed/test.jsonl"],
@@ -817,4 +823,60 @@ mirror_outputs/Mirror_ExcludedPretrain_MultiTask
 │ span_em │ span_subjqa_tripadvisor_train   │     38.765 │
 │ span_f1 │ span_subjqa_tripadvisor_train   │     36.225 │
 └─────────┴─────────────────────────────────┴────────────┘
+
+mirror_outputs/Mirror_Pretrain_DataV1.
+                 5_2
+┏━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃ Task ┃ Dataset        ┃ Metric (%) ┃
+┡━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ ent  │ ent_movie      │     34.907 │
+│ ent  │ ent_restaurant │     20.259 │
+│ ent  │ ent_ai         │     23.115 │
+│ ent  │ ent_literature │     36.566 │
+│ ent  │ ent_music      │     33.716 │
+│ ent  │ ent_politics   │     48.165 │
+│ ent  │ ent_science    │     44.995 │
+└──────┴────────────────┴────────────┘
+
+mirror_outputs/Mirror_Pretrain_AllExcl
+                uded_2
+┏━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃ Task ┃ Dataset        ┃ Metric (%) ┃
+┡━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ ent  │ ent_movie      │     38.360 │
+│ ent  │ ent_restaurant │     13.511 │
+│ ent  │ ent_ai         │     42.998 │
+│ ent  │ ent_literature │     41.638 │
+│ ent  │ ent_music      │     56.655 │
+│ ent  │ ent_politics   │     68.906 │
+│ ent  │ ent_science    │     53.454 │
+└──────┴────────────────┴────────────┘
+
+mirror_outputs/Mirror_Pretrain_AllExcl
+                uded_2
+┏━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃ Task ┃ Dataset        ┃ Metric (%) ┃
+┡━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ ent  │ ent_movie      │     39.201 │
+│ ent  │ ent_restaurant │     16.318 │
+│ ent  │ ent_ai         │     45.230 │
+│ ent  │ ent_literature │     46.318 │
+│ ent  │ ent_music      │     58.611 │
+│ ent  │ ent_politics   │     67.303 │
+│ ent  │ ent_science    │     54.837 │
+└──────┴────────────────┴────────────┘
+
+mirror_outputs/Mirror_Pretrain_DataV1.
+           5_woInstruction
+┏━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃ Task ┃ Dataset        ┃ Metric (%) ┃
+┡━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ ent  │ ent_movie      │     30.864 │
+│ ent  │ ent_restaurant │     12.439 │
+│ ent  │ ent_ai         │     32.317 │
+│ ent  │ ent_literature │     40.048 │
+│ ent  │ ent_music      │     40.600 │
+│ ent  │ ent_politics   │     46.247 │
+│ ent  │ ent_science    │     42.422 │
+└──────┴────────────────┴────────────┘
 """

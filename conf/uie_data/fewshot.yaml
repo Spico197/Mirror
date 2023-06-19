@@ -1,4 +1,5 @@
 num_epochs: 200
 epoch_patience: 10
 output_dir: mirror_fewshot_outputs
-base_model_path: mirror_outputs/MirrorLarge_SamplingPretrain_woLowResource_woOverlap/ckpt/SchemaGuidedInstructBertModel.best.pth
+base_model_path: mirror_outputs/Mirror_Pretrain_AllExcluded_2/ckpt/SchemaGuidedInstructBertModel.best.pth
+save_every_ckpt: false

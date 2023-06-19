@@ -6,6 +6,8 @@ export CUDA_VISIBLE_DEVICES="0"
 pretrain() {
     # rex train -m src.task -dc conf/Pretrain_woOverlapV2.yaml
     rex train -m src.task -dc conf/Pretrain_v1.5.yaml
+    rex train -m src.task -dc conf/Pretrain_excluded.yaml
+    rex train -m src.task -dc conf/Pretrain_v1.5_woInstruction.yaml
 }
 
 single() {

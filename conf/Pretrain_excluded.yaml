@@ -1,6 +1,6 @@
 # task
 task_type: SchemaGuidedInstructBertTask
-task_name: Mirror_Pretrain_AllExcluded
+task_name: Mirror_Pretrain_AllExcluded_2
 comment: '~~content as label, (start, end + 1) span'
 
 # data preprocessing
