@@ -247,7 +247,37 @@
 
 \subsection{Analysis on Training Strategies}
 
+\begin{table*}[t]
+  \resizebox{\textwidth}{!}{%
+    \begin{tabular}{ll|rrrrrr}
+      \toprule
+    Dataset & Training & \shortstack{NER\\ CoNLL03} & \shortstack{RE \\ CoNLL04} & \shortstack{Event Trigger\\ ACE05} & \shortstack{Event Arg\\ ACE05} & \shortstack{ ABSA\\ 16res} & Avg.  \\
+    \midrule
+    \multirow{2}{*}{Included in PT} & Multi-task FT  &             &             &               &               &            &       \\
+                                      & Single-task FT & 92.83       & 71.48       & 69.95         & 48.12         & 75.53      & 71.58 \\
+    \multirow{2}{*}{Excluded in PT} & Multi-task FT  & 91.84       & 72.39       & 68.24         & 47.73         & 75.31      & 71.10 \\
+                                      & Single-task FT & 92.45       & 73.70       & 71.01         & 52.57         & 75.55      & 73.06 \\
+    \bottomrule
+    \end{tabular}%
+  }
+  \caption{Analysis on training strategy.}
+  \label{tab:training-strategy}
+\end{table*}
 
 \subsection{Ablation Study}
 
-
+\begin{table*}[t]
+  % \resizebox{\columnwidth}{!}{%
+  \begin{tabular}{l|rrrrr|r}
+    \toprule
+                             & \shortstack{NER\\ CoNLL03} & \shortstack{RE \\ CoNLL04} & \shortstack{Event Trigger\\ ACE05} & \shortstack{Event Arg\\ ACE05} & \shortstack{ ABSA\\ 16res} & Avg. \\
+    \midrule
+  Mirror                     &             &             &               &               &            &      \\
+  - Pretrain                 &             &             &               &               &            &      \\
+  - Pretrain \& Instruction &             &             &               &               &            &     \\
+  \bottomrule
+  \end{tabular}%
+  % }
+  \caption{Ablation study.}
+  \label{tab:ablation-study}
+\end{table*}
