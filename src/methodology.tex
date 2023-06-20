@@ -125,7 +125,7 @@ With the unified data interface and the multi-span cyclic graph, we propose a un
 For each token $x_i$ from the inputs, Mirror transforms it into a vector $h_i \in \mathbb{R}^{d_h}$ via a BERT-style extractive pretrained language model (PLM).
 Similar to \citet{ner-as-dp}, we use biaffine attention to obtain the adjacency matrix $\mathcal{A}$ of the multi-span cyclic graph.
 Mirror calculates the linking probability $p_{ij}^{k}, k \in \{\text{consecutive}, \text{jump}, \text{tail-to-head}\}$ between $x_i$ and $x_j$.
-The final $\mathcal{A}$ is obtained via thresholding.
+The final $\mathcal{A}$ is obtained via thresholding ($\mathcal{A}_{ij}^{k}=1$ if $p_{ij}^{k} > 0.5$ else 0).
 \begin{equation}
     \label{eqn:sim_calc}
     \begin{gathered}
@@ -133,14 +133,15 @@ The final $\mathcal{A}$ is obtained via thresholding.
     p_{ij}^{k} = \text{sigmoid}\left(\tilde{h_i}^{\top} U \tilde{h_j} / \sqrt{d_h}\right)
     \end{gathered} \\
 \end{equation}
-\begin{equation}
-    \label{eqn:adjacent}
-    \mathcal{A}_{i,j}^{k} = \begin{cases}
-        1 & p_{ij} > \gamma \\
-        0 & \text{otherwise}
-    \end{cases}
-\end{equation}
-where $U \in \mathbb{R}^{d_h \times 3 \times d_h}$ is trainable parameter, and 3 denotes consecutive, jump and tail-to-head connections.
+% \begin{equation}
+%     \label{eqn:adjacent}
+%     \mathcal{A}_{i,j}^{k} = \begin{cases}
+%         1 & p_{ij} > \gamma \\
+%         0 & \text{otherwise}
+%     \end{cases}
+% \end{equation}
+where $\tilde{h_i},\tilde{h_j} \in \mathbb{R}^{d_b}$.
+$U \in \mathbb{R}^{d_b \times 3 \times d_b}$ is trainable parameter, and 3 denotes consecutive, jump and tail-to-head connections.
 $\text{FFNN}$ is the feed forward neural network with rotary positional embedding as introduced in \citet{roformer}.
 The FFNN is composed of linear transformation, GELU activation function~\cite{gelu} and dropout~\cite{dropout}.
 

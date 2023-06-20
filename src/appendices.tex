@@ -143,3 +143,36 @@ Pretraining data statistics are listed in Table~\ref{tab:data-statistics-cls}, \
     }
     \label{tab:data-statistics-ee}
 \end{table}
+
+
+\section{Hyper-parameter Settings}
+\label{sec:app-hyper-param}
+
+Table~\ref{tab:hyper-param} shows the hyper-parameters in our experiments.
+For few-shot experiments, we follow \citet{uie} and generate 1-, 5-, 10-shot data with 5 seeds.
+
+\begin{table}
+    \centering
+    \begin{tabular}[h]{cc}
+        \toprule
+        Item & Setting \\
+        \midrule
+            warmup proportion & 0.1 \\
+            pretraining epochs & 3 \\
+            fine-tuning epochs & 20 \\
+            fine-tuning epoch patience & 3 \\
+            few-shot epochs & 200 \\
+            few-shot epoch patience & 10 \\
+            batch size & 8 \\
+            PLM learning rate & 2e-5 \\
+            PLM weight decay & 0.1 \\
+            others learning rate & 1e-4 \\
+            max gradient norm & 1.0 \\
+            dropout & 0.3 \\
+        \bottomrule
+    \end{tabular}
+    \caption{
+        Hyper-parameter settings.
+    }
+    \label{tab:hyper-param}
+\end{table}

@@ -1,4 +1,73 @@
 % Use this file for citations not found in the ACL Anthology (contained in "anthology.bib").
+@inproceedings{squad-v2,
+    title = "Know What You Don{'}t Know: Unanswerable Questions for {SQ}u{AD}",
+    author = "Rajpurkar, Pranav  and
+      Jia, Robin  and
+      Liang, Percy",
+    booktitle = "Proceedings of the 56th Annual Meeting of the Association for Computational Linguistics (Volume 2: Short Papers)",
+    month = jul,
+    year = "2018",
+    address = "Melbourne, Australia",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/P18-2124",
+    doi = "10.18653/v1/P18-2124",
+    pages = "784--789",
+    abstract = "Extractive reading comprehension systems can often locate the correct answer to a question in a context document, but they also tend to make unreliable guesses on questions for which the correct answer is not stated in the context. Existing datasets either focus exclusively on answerable questions, or use automatically generated unanswerable questions that are easy to identify. To address these weaknesses, we present SQuADRUn, a new dataset that combines the existing Stanford Question Answering Dataset (SQuAD) with over 50,000 unanswerable questions written adversarially by crowdworkers to look similar to answerable ones. To do well on SQuADRUn, systems must not only answer questions when possible, but also determine when no answer is supported by the paragraph and abstain from answering. SQuADRUn is a challenging natural language understanding task for existing models: a strong neural system that gets 86{\%} F1 on SQuAD achieves only 66{\%} F1 on SQuADRUn. We release SQuADRUn to the community as the successor to SQuAD.",
+}
+
+@inproceedings{glue,
+  author       = {Alex Wang and
+                  Amanpreet Singh and
+                  Julian Michael and
+                  Felix Hill and
+                  Omer Levy and
+                  Samuel R. Bowman},
+  title        = {{GLUE:} {A} Multi-Task Benchmark and Analysis Platform for Natural
+                  Language Understanding},
+  booktitle    = {7th International Conference on Learning Representations, {ICLR} 2019,
+                  New Orleans, LA, USA, May 6-9, 2019},
+  publisher    = {OpenReview.net},
+  year         = {2019},
+  url          = {https://openreview.net/forum?id=rJ4km2R5t7},
+  timestamp    = {Thu, 25 Jul 2019 14:25:46 +0200},
+  biburl       = {https://dblp.org/rec/conf/iclr/WangSMHLB19.bib},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
+}
+
+@inproceedings{hyperred,
+    title = "A Dataset for Hyper-Relational Extraction and a Cube-Filling Approach",
+    author = "Chia, Yew Ken  and
+      Bing, Lidong  and
+      Aljunied, Sharifah Mahani  and
+      Si, Luo  and
+      Poria, Soujanya",
+    booktitle = "Proceedings of the 2022 Conference on Empirical Methods in Natural Language Processing",
+    month = dec,
+    year = "2022",
+    address = "Abu Dhabi, United Arab Emirates",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2022.emnlp-main.688",
+    pages = "10114--10133",
+    abstract = "Relation extraction has the potential for large-scale knowledge graph construction, but current methods do not consider the qualifier attributes for each relation triplet, such as time, quantity or location. The qualifiers form hyper-relational facts which better capture the rich and complex knowledge graph structure. For example, the relation triplet (Leonard Parker, Educated At, Harvard University) can be factually enriched by including the qualifier (End Time, 1967). Hence, we propose the task of hyper-relational extraction to extract more specific and complete facts from text. To support the task, we construct HyperRED, a large-scale and general-purpose dataset. Existing models cannot perform hyper-relational extraction as it requires a model to consider the interaction between three entities. Hence, we propose CubeRE, a cube-filling model inspired by table-filling approaches and explicitly considers the interaction between relation triplets and qualifiers. To improve model scalability and reduce negative class imbalance, we further propose a cube-pruning method. Our experiments show that CubeRE outperforms strong baselines and reveal possible directions for future research. Our code and data are available at github.com/declare-lab/HyperRED.",
+}
+
+@article{deberta,
+  author       = {Pengcheng He and
+                  Jianfeng Gao and
+                  Weizhu Chen},
+  title        = {DeBERTaV3: Improving DeBERTa using ELECTRA-Style Pre-Training with
+                  Gradient-Disentangled Embedding Sharing},
+  journal      = {CoRR},
+  volume       = {abs/2111.09543},
+  year         = {2021},
+  url          = {https://arxiv.org/abs/2111.09543},
+  eprinttype    = {arXiv},
+  eprint       = {2111.09543},
+  timestamp    = {Mon, 22 Nov 2021 16:44:07 +0100},
+  biburl       = {https://dblp.org/rec/journals/corr/abs-2111-09543.bib},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
+}
+
 @misc{global_pointer,
 	title = {Global {Pointer}: {Novel} {Efficient} {Span}-based {Approach} for {Named} {Entity} {Recognition}},
 	shorttitle = {Global {Pointer}},
