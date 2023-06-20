@@ -26,35 +26,39 @@ However, such method is limited in a small range of triplet-based tasks, and not
 \begin{table*}[t]
     \centering
     % \resizebox{\textwidth}{!}{%
-        \begin{tabular}{c|cccc|c}
+        \begin{tabular}{c|ccccc|c}
         \toprule
-        Model       & TANL    & UIE      & DeepStruct & USM        & Mirror \\
+        Model       & TANL    & UIE      & DeepStruct & InstructUIE & USM        & Mirror \\
         \midrule
-        PLM         & T5-base & T5-large & GLM        & RoBERTa    & DeBERTa-v3 \\
-        \#Params    & 220M    & 770M     & 10B        & large 372M & large 434M \\
+        PLM         & T5-base & T5-large & GLM        & FlanT5 & RoBERTa    & DeBERTa-v3 \\
+        \#Params    & 220M    & 770M     & 10B        & 11B & large 372M & large 434M \\
         \midrule
         % Single-step & {\color[HTML]{008114}\cmark}    & {\color[HTML]{008114}\cmark}   & {\color[HTML]{008114}\cmark} & {\color[HTML]{008114}\cmark} & {\color[HTML]{008114}\cmark} \\
         % NAR         & \textcolor{red}{\xmark}         & \textcolor{red}{\xmark}        & \textcolor{red}{\xmark}      & {\color[HTML]{008114}\cmark} & {\color[HTML]{008114}\cmark} \\
-        Decoding    & AR                      & AR                      & AR                      & NAR                          & NAR                          \\
-        Indexing    & \textcolor{red}{\xmark} & \textcolor{red}{\xmark} & \textcolor{red}{\xmark} & {\color[HTML]{008114}\cmark} & {\color[HTML]{008114}\cmark} \\
+        Decoding    & AR                      & AR                      & AR                      & AR                      & NAR                          & NAR                          \\
+        Indexing    & \textcolor{red}{\xmark} & \textcolor{red}{\xmark} & \textcolor{red}{\xmark} & \textcolor{red}{\xmark} & {\color[HTML]{008114}\cmark} & {\color[HTML]{008114}\cmark} \\
         \midrule
-        Multi-span  & \textcolor{red}{\xmark} & $\circ$                 & $\circ$                 & $\circ$                 & {\color[HTML]{008114}\cmark} \\
-        N-ary       & \textcolor{red}{\xmark} & \textcolor{red}{\xmark} & \textcolor{red}{\xmark} & \textcolor{red}{\xmark} & {\color[HTML]{008114}\cmark} \\
-        Cls.        & \textcolor{red}{\xmark} & \textcolor{red}{\xmark} & \textcolor{red}{\xmark} & \textcolor{red}{\xmark} & {\color[HTML]{008114}\cmark} \\
-        MRC         & \textcolor{red}{\xmark} & \textcolor{red}{\xmark} & \textcolor{red}{\xmark} & $\circ$                 & {\color[HTML]{008114}\cmark} \\
+        Triplet     & {\color[HTML]{008114}\cmark} & {\color[HTML]{008114}\cmark} & {\color[HTML]{008114}\cmark} & {\color[HTML]{008114}\cmark} & {\color[HTML]{008114}\cmark} & {\color[HTML]{008114}\cmark} \\
+        Single-span NER & {\color[HTML]{008114}\cmark} & {\color[HTML]{008114}\cmark} & {\color[HTML]{008114}\cmark} & {\color[HTML]{008114}\cmark} & {\color[HTML]{008114}\cmark} & {\color[HTML]{008114}\cmark} \\
+        Multi-span  & \textcolor{red}{\xmark} & $\circ$                 & $\circ$                 & $\circ$                 & \textcolor{red}{\xmark} & {\color[HTML]{008114}\cmark} \\
+        N-ary       & \textcolor{red}{\xmark} & \textcolor{red}{\xmark} & \textcolor{red}{\xmark} & \textcolor{red}{\xmark} & \textcolor{red}{\xmark} & {\color[HTML]{008114}\cmark} \\
+        Cls.        & \textcolor{red}{\xmark} & \textcolor{red}{\xmark} & \textcolor{red}{\xmark} & $\circ$                 & \textcolor{red}{\xmark} & {\color[HTML]{008114}\cmark} \\
+        MRC         & \textcolor{red}{\xmark} & \textcolor{red}{\xmark} & \textcolor{red}{\xmark} & \textcolor{red}{\xmark} & $\circ$                 & {\color[HTML]{008114}\cmark} \\
         \bottomrule
         \end{tabular}
     % }
     \caption{
         Comparisons with other systems.
         % Single-step represents that the model predicts results in a single step.
-        AR denotes the auto-regressive decoding while NAR is the non-autoregressive decoding strategy.
-        Indexing means whether the model could provide exact information positions.
-        $\circ$ indicates the model supports the task theoretically, but the implementation is not available.
-        Multi-span means the model supports multi-span extraction, e.g. the discontinuous named entity recognition task.
-        N-ary denotes the ability of n-ary tuple extraction.
-        Cls. represents the classfication task support.
-        MRC stands for the machine reading comprehension task support.
+        \textbf{Circle} $\circ$ indicates the model supports the task theoretically, but the implementation is not available.
+        \textbf{AR} denotes the auto-regressive decoding while \textbf{NAR} is the non-autoregressive decoding strategy.
+        \textbf{Indexing} means whether the model could provide exact information positions.
+        \textbf{Triplet} stands for ``(head, relation, tail)'' triplet extraction.
+        \textbf{Single-span NER} denotes flat, and nested NER tasks with consecutive spans.
+        \textbf{Multi-span} means the model supports multi-span extraction, e.g. the discontinuous named entity recognition task.
+        \textbf{N-ary} denotes the ability of n-ary tuple extraction, e.g. quadruple extraction.
+        \textbf{Cls.} represents the classfication and multi-choice Machine Reading Comprehension (MRC) support.
+        \textbf{MRC} stands for extractive Question Answering (QA) and extractive MRC task support.
     }
     \label{tab:method_comparison}
 \end{table*}
@@ -97,7 +101,7 @@ Mirror takes schemas as part of the model inputs, and this benefits few-shot and
 
 % how well did we do it
 We conduct extensive experiments on 30 datasets from 8 tasks, including NER, RE, EE, Aspect-based Sentiment Analysis (ABSA), multi-span discontinuous NER, n-ary hyper RE, MRC and classfication.
-To enhance the few-shot and zero-shot abilities, we manually collect 62 datasets into a whole corpus for model pretraining.
+To enhance the few-shot and zero-shot abilities, we manually collect 57 datasets into a whole corpus for model pretraining.
 Our Mirror shows good compatibility across different tasks and datasets, and achieves competitive results on few-shot and zero-shot settings.
 
 % contribution

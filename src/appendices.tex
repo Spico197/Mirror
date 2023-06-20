@@ -1,56 +1,145 @@
 \appendix
 \section{Dataset Statistics}
 \label{sec:appendix_data}
-test
 
-\section{Multi-span Cyclic Graph Decoding}
+This section contains detailed statistics for pretraining datasets and fine-tuning datasets.
+Pretraining data statistics are listed in Table~\ref{tab:data-statistics-cls}, \ref{tab:data-statistics-ner}, \ref{tab:data-statistics-re}, \ref{tab:data-statistics-mrc} and \ref{tab:data-statistics-ee}.
 
-\begin{figure*}[htbp]
-\centering
-\caption{Python Code - find\_paths\_from\_adj\_mat}
-\label{fig:python_code}
-\begin{lstlisting}[language=Python]
-def find_paths_from_adj_mat(adj_mat: torch.Tensor) -> list[tuple[int]]:
-    assert adj_mat.shape[0] == adj_mat.shape[1] and len(adj_mat.shape) == 2
+\begin{table}
+    \centering
+    \begin{tabular}[]{lrr}
+        \toprule
+        Name & \#Instruction & \#Instance \\
+        \midrule
+        ag\_news & 5 & 5,000 \\
+        ANLI$^{\clubsuit}$  & 29 & 15,000 \\
+        ARC & 3,361 & 3,370 \\
+        CoLA & 43 & 5,000 \\
+        CosmosQA & 4,483 & 5,000 \\
+        cos\_e & 5,000 & 5,000 \\
+        dbpedia & 6 & 5,000 \\
+        DREAM & 3,842 & 5,000 \\
+        hellaswag & 20 & 5,000 \\
+        IMDB & 26 & 5,000 \\
+        MedQA & 5,000 & 5,000 \\
+        MNLI & 29 & 5,000 \\
+        MRPC & 40 & 3,668 \\
+        MultiRC & 4,999 & 5,000 \\
+        OpenBookQA & 4,835 & 4,957 \\
+        QASC & 4,832 & 5,000 \\
+        QNLI & 31 & 5,000 \\
+        QQP & 40 & 5,000 \\
+        RACE & 4,482 & 5,000 \\
+        RACE-C & 4,782 & 5,000 \\
+        ReClor & 3,368 & 4,638 \\
+        RTE & 29 & 2,490 \\
+        SciQ & 4,989 & 5,000 \\
+        SNLI & 29 & 5,000 \\
+        SST-2 & 26 & 5,000 \\
+        Winogrande & 20 & 5,000 \\
+        WNLI & 31 & 635 \\
+        \midrule
+        Total & 54,070 & 134,758 \\
+        \bottomrule
+    \end{tabular}
+    \caption{
+        Pretraining data statistics on classification.
+        $^{\clubsuit}$: ANLI contains 3 subsets, so the total number is greater than 5,000.
+    }
+    \label{tab:data-statistics-cls}
+\end{table}
 
-    paths = []
-    self_loops = set()
-    adj_map = defaultdict(set)
-    rev_adj_map = defaultdict(set)
-    # current -> next
-    for c, n in adj_mat.detach().nonzero().tolist():
-        # self-loop
-        if c == n:
-            self_loops.add(c)
-        else:
-            adj_map[c].add(n)
-            # reversed map
-            rev_adj_map[n].add(c)
-    for self_loop_node in self_loops:
-        paths.append((self_loop_node,))
+\begin{table}
+    \centering
+    \begin{tabular}[]{lrr}
+        \toprule
+        Name & \#Instruction & \#Instance \\
+        \midrule
+        AnatEM & 42 & 5,861 \\
+        bc2gm & 42 & 12,500 \\
+        bc4chemd & 42 & 20,000 \\
+        bc5cdr & 42 & 4,560 \\
+        Broad\_Tweet\_Corpus & 42 & 5,334 \\
+        FabNER & 42 & 9,435 \\
+        FindVehicle & 42 & 20,000 \\
+        GENIA & 42 & 15,023 \\
+        HarveyNER & 42 & 3,967 \\
+        MultiNERD & 42 & 20,000 \\
+        NCBIdiease & 42 & 5,432 \\
+        ontoNotes5 & 42 & 20,000 \\
+        TweetNER7 & 42 & 7,103 \\
+        WikiANN\_en & 42 & 20,000 \\
+        WNUT-16 & 42 & 2,394 \\
+        \midrule
+        Total & 42 & 171,609 \\
+        \bottomrule
+    \end{tabular}
+    \caption{
+        Pretraining data statistics on NER.
+    }
+    \label{tab:data-statistics-ner}
+\end{table}
 
-    def track(path: tuple[int], c: int):
-        visited: set[tuple[int]] = set()
-        stack = [(path, c)]
-        while stack:
-            path, c = stack.pop()
-            if c in adj_map:
-                for n in adj_map[c]:
-                    if (c, n) in visited:
-                        continue
-                    visited.add((c, n))
-                    stack.append((path + (c,), n))
-            # else:
-            if path:
-                paths.append(path + (c,))
+\begin{table}
+    \centering
+    \begin{tabular}[]{lrr}
+        \toprule
+        Name & \#Instruction & \#Instance \\
+        \midrule
+        ADE\_corpus &  9 & 3417 \\
+        FewRel &  9 & 20000 \\
+        GIDS &  9 & 8526 \\
+        kbp37 &  9 & 15807 \\
+        New-York-Times-RE &  9 & 20000 \\
+        NYT11HRL &  9 & 20000 \\
+        semeval &  9 & 8000 \\
+        WebNLG &  9 & 5019 \\
+        Wiki-ZSL$^{\clubsuit}$ &  9 & 23107 \\
+        \midrule
+        Total & 9 & 123,876 \\
+        \bottomrule
+    \end{tabular}
+    \caption{
+        Pretraining data statistics on RE.
+    }
+    \label{tab:data-statistics-re}
+\end{table}
 
-    start_nodes = set(adj_map.keys()) - set(rev_adj_map.keys())
-    for c in start_nodes:
-        ns = adj_map[c]
-        for n in ns:
-            track((c,), n)
 
-    return paths
-\end{lstlisting}
-\end{figure*}
+\begin{table}
+    \centering
+    \begin{tabular}[]{lrr}
+        \toprule
+        Name & \#Instruction & \#Instance \\
+        \midrule
+        BiPaR & 11,524 & 11,668 \\
+        ms\_marco\_v2.1 & 20,000 & 20,000 \\
+        newsqa & 19,659 & 20,000 \\
+        squad\_v2 & 19,998 & 20,000 \\
+        SubjQA & 4,060 & 13,990 \\
+        \midrule
+        Total & 75,220 & 85,658 \\
+        \bottomrule
+    \end{tabular}
+    \caption{
+        Pretraining data statistics on MRC.
+    }
+    \label{tab:data-statistics-mrc}
+\end{table}
 
+\begin{table}
+    \centering
+    \begin{tabular}[]{lrr}
+        \toprule
+        Name & \#Instruction & \#Instance \\
+        \midrule
+        PHEE & 40 & 2,898 \\
+        \midrule
+        Total & 40 & 2,898 \\
+        \bottomrule
+    \end{tabular}
+    \caption{
+        Pretraining data statistics on EE.
+    }
+    \label{tab:data-statistics-ee}
+\end{table}
