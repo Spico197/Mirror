@@ -1,6 +1,13 @@
 \section{Mirror}
 
 
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=\textwidth]{figs/Model Framework.pdf}
+    \caption{Model framework (best viewed in color).}
+    \label{fig:model-framework}
+\end{figure*}
+
 \subsection{Unified Data Interface}
 
 To make the model able to handle different IE tasks, we propose a unified data interface for the input.
@@ -18,6 +25,8 @@ The number of instructions for each IE task is listed in Table~\ref{tab:pretrain
         \toprule
         Task & \#Dataset & \#Instruction & \#Instance \\
         \midrule
+        Cls &  & 42 &  \\
+        MRC &  & 42 &  \\
         NER &  & 42 &  \\
         RE &  & 53 &  \\
         EE &  & 40 &  \\
@@ -42,7 +51,7 @@ So we add a special background area with a leading token \verb|[B]| to distingui
 
 With the above three parts, we can formulate classification, extractive MRC, multi-choice MRC, and IE tasks into a unified data interface, and the model can be trained in a unified way even the model is not based on generative language models.
 
-\subsection{Multi-span Cyclic Graph (MCG)}
+\subsection{Multi-slot Tuple and Multi-span Cyclic Graph (MCG)}
 
 We formulate IE tasks as a unified multi-span extraction problem.
 For the flat NER task, the model is expected to extract a tuple like: ``((entity label position,), (span start position, span end position))''.

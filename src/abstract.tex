@@ -4,9 +4,10 @@ The variety of information extraction tasks and data formats make it hard to sha
 This causes wastes to some extent and adds difficulties to build complex pipeline applications in real scenarios.
 Recent studies formulate IE tasks as a triplet extraction problem.
 However, such format does not support multi-span and n-ary extraction tasks, leading to weak versatility.
-To this end, we reorganize IE datasets into a unified format and propose a universal model for various IE tasks, namely Mirror.
+To this end, we reorganize IE datasets into a unified format and propose a universal framework for various IE tasks, namely Mirror.
 We regard IE tasks as a multi-span cyclic graph extraction problem, and devise a non-autoregressive graph decoding algorithm to extract all spans in a single step.
-Experiments on 22 datasets across 6 IE tasks show that our model has good compatibilities and achieves good performances under few-shot and zero-shot settings.
-The code, model weights and data will be publicly available at github.
+This graph structure is flexible, and it supports span-only MRC, label-only classification, and label-span mixed information extraction tasks.
+We manually construct a corpus containing 62 datasets for model pretraining, and experiments on 30 datasets across 8 tasks show that our model has good compatibilities and achieves SOTA performances under few-shot and zero-shot settings.
+The code, model weights and data will be publicly available at GitHub.
 
 \end{abstract}

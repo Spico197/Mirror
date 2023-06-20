@@ -1,18 +1,16 @@
 \section{Introduction}
 
-Information Extraction (IE) is a fundamental task in Natural Language Processing (NLP), which aims to extract structured information from unstructured text, such as Named Entity Recognition (NER), Relation Extraction (RE), Event Extraction (EE), etc.
-Each IE task is usually isolated, and it needs specific datasets and delicate models, which makes it difficult to build complex applications.
-It is a fascinating problem to combine different IE tasks into a whole, and make one model for universal IE tasks.
+Information Extraction (IE) is a fundamental task in Natural Language Processing (NLP), which aims to extract structured information from unstructured text~\cite{grishman_2019}, such as Named Entity Recognition (NER), Relation Extraction (RE), Event Extraction (EE), etc.
+However, each IE task is usually isolated with specific data structures and delicate models, which makes it difficult to share knowledge across tasks~\cite{uie,genie}.
 
-There are two ways to combine different IE tasks.
+In order to unify the data formats and take advantage of common features between different tasks, there are two main routes in recent studies.
 The first is to utilize generative pretrained language models (PLMs) to generate the structured information directly.
-x, x and x structure the IE tasks as a sequence generation problem, and use T5 models to predict the structured information autoregressively.
-However, such methods cannot provide the exact positions of the structured information, which is important for some IE tasks, such as NER.
-Besides, the generation-based methods are usually slow, and it is difficult to train them on large-scale datasets.
+\citet{uie} and \citet{tanl} structure the IE tasks as a sequence-to-sequence problem, and use generative models to predict the structured information autoregressively.
+However, such methods cannot provide the exact positions of the structured information, which is important for NER and fair evaluations~\cite{devil-ee}.
+Besides, the generation-based methods are usually slow, and it consumes huge resources to train on large-scale datasets~\cite{deepstruct}.
 The second is to apply the extractive PLMs, which is way more faster to train and inference.
-UIE unifies the IE tasks into span spotting and associating problems.
-Based on this idea, x, x and x take the IE tasks into a triplet prediction problems, and propose different methods.
-However, such methods are not suitable for multi-span and n-ary IE tasks.
+USM takes the IE tasks into a triplet prediction problems via semantic matching~\cite{usm}.
+However, such method is limited in a small range of triplet-based tasks, and not suitable for multi-span and n-ary IE tasks.
 
 \begin{figure}[t]
     \centering
@@ -27,46 +25,85 @@ However, such methods are not suitable for multi-span and n-ary IE tasks.
 
 \begin{table*}[t]
     \centering
-    \resizebox{\textwidth}{!}{%
-        \begin{tabular}{c|ccccccc|c}
+    % \resizebox{\textwidth}{!}{%
+        \begin{tabular}{c|cccc|c}
         \toprule
-        Model & TANL & UIE & DeepStruct & InstructUIE & USM & UniEX & RexUIE & Mirror \\
+        Model       & TANL    & UIE      & DeepStruct & USM        & Mirror \\
         \midrule
-        PLM & T5-base & T5-large & GLM & FlanT5 & RoBERTa & RoBERTa & DeBERTa-v3 & DeBERTa-v3 \\
-        \#Params & 220M & 770M & 10B & 11B & large 372M & large 372M & large 434M & large 434M \\
+        PLM         & T5-base & T5-large & GLM        & RoBERTa    & DeBERTa-v3 \\
+        \#Params    & 220M    & 770M     & 10B        & large 372M & large 434M \\
         \midrule
-        Single-step & {\color[HTML]{008114}\cmark}    & {\color[HTML]{008114}\cmark}   & {\color[HTML]{008114}\cmark}          & {\color[HTML]{008114}\cmark}           & {\color[HTML]{008114}\cmark}   & {\color[HTML]{008114}\cmark}     & \textcolor{red}{\xmark}      & {\color[HTML]{008114}\cmark}      \\
-        Indexing & \textcolor{red}{\xmark} & \textcolor{red}{\xmark} & \textcolor{red}{\xmark} & \textcolor{red}{\xmark} & {\color[HTML]{008114}\cmark} & {\color[HTML]{008114}\cmark} & {\color[HTML]{008114}\cmark} & {\color[HTML]{008114}\cmark} \\
-        NAR         & \textcolor{red}{\xmark}    & \textcolor{red}{\xmark}   & \textcolor{red}{\xmark}          & \textcolor{red}{\xmark}           & {\color[HTML]{008114}\cmark}   & {\color[HTML]{008114}\cmark}     & {\color[HTML]{008114}\cmark}      & {\color[HTML]{008114}\cmark}      \\
-        Multi-span  & \textcolor{red}{\xmark}    & $\circ$    & $\circ$           & $\circ$            & \textcolor{red}{\xmark}   & \textcolor{red}{\xmark}     & \textcolor{red}{\xmark}      & {\color[HTML]{008114}\cmark}      \\
-        N-ary       & \textcolor{red}{\xmark}    & \textcolor{red}{\xmark}   & \textcolor{red}{\xmark}          & \textcolor{red}{\xmark}           & \textcolor{red}{\xmark}   & \textcolor{red}{\xmark}     & {\color[HTML]{008114}\cmark}      & {\color[HTML]{008114}\cmark} \\
+        % Single-step & {\color[HTML]{008114}\cmark}    & {\color[HTML]{008114}\cmark}   & {\color[HTML]{008114}\cmark} & {\color[HTML]{008114}\cmark} & {\color[HTML]{008114}\cmark} \\
+        % NAR         & \textcolor{red}{\xmark}         & \textcolor{red}{\xmark}        & \textcolor{red}{\xmark}      & {\color[HTML]{008114}\cmark} & {\color[HTML]{008114}\cmark} \\
+        Decoding    & AR                      & AR                      & AR                      & NAR                          & NAR                          \\
+        Indexing    & \textcolor{red}{\xmark} & \textcolor{red}{\xmark} & \textcolor{red}{\xmark} & {\color[HTML]{008114}\cmark} & {\color[HTML]{008114}\cmark} \\
+        \midrule
+        Multi-span  & \textcolor{red}{\xmark} & $\circ$                 & $\circ$                 & $\circ$                 & {\color[HTML]{008114}\cmark} \\
+        N-ary       & \textcolor{red}{\xmark} & \textcolor{red}{\xmark} & \textcolor{red}{\xmark} & \textcolor{red}{\xmark} & {\color[HTML]{008114}\cmark} \\
+        Cls.        & \textcolor{red}{\xmark} & \textcolor{red}{\xmark} & \textcolor{red}{\xmark} & \textcolor{red}{\xmark} & {\color[HTML]{008114}\cmark} \\
+        MRC         & \textcolor{red}{\xmark} & \textcolor{red}{\xmark} & \textcolor{red}{\xmark} & $\circ$                 & {\color[HTML]{008114}\cmark} \\
         \bottomrule
         \end{tabular}
-    }
+    % }
     \caption{
         Comparisons with other systems.
-        Single-step represents that the model predicts results in a single step.
+        % Single-step represents that the model predicts results in a single step.
+        AR denotes the auto-regressive decoding while NAR is the non-autoregressive decoding strategy.
         Indexing means whether the model could provide exact information positions.
-        NAR denotes the non-autoregressive decoding strategy.
+        $\circ$ indicates the model supports the task theoretically, but the implementation is not available.
         Multi-span means the model supports multi-span extraction, e.g. the discontinuous named entity recognition task.
         N-ary denotes the ability of n-ary tuple extraction.
-        $\circ$ means the model supports the task theoretically, but the implementation is not available.
+        Cls. represents the classfication task support.
+        MRC stands for the machine reading comprehension task support.
     }
     \label{tab:method_comparison}
 \end{table*}
 
-To extend the universal IE systems into more tasks, we propose a multi-task framework, namely Mirror, which can be applied on various IE tasks, including multi-span and n-ary extraction problems.
-We formulate IE tasks into a unified schema-guided multi-span graph, and regard labels as spans' leading tokens.
-We design three kind of connections and utilize the biaffine-style method to extract the structured information.
+% \begin{table*}[t]
+%     \centering
+%     \resizebox{\textwidth}{!}{%
+%         \begin{tabular}{c|ccccccc|c}
+%         \toprule
+%         Model & TANL & UIE & DeepStruct & InstructUIE & USM & UniEX & RexUIE & Mirror \\
+%         \midrule
+%         PLM & T5-base & T5-large & GLM & FlanT5 & RoBERTa & RoBERTa & DeBERTa-v3 & DeBERTa-v3 \\
+%         \#Params & 220M & 770M & 10B & 11B & large 372M & large 372M & large 434M & large 434M \\
+%         \midrule
+%         Single-step & {\color[HTML]{008114}\cmark}    & {\color[HTML]{008114}\cmark}   & {\color[HTML]{008114}\cmark}          & {\color[HTML]{008114}\cmark}           & {\color[HTML]{008114}\cmark}   & {\color[HTML]{008114}\cmark}     & \textcolor{red}{\xmark}      & {\color[HTML]{008114}\cmark}      \\
+%         Indexing & \textcolor{red}{\xmark} & \textcolor{red}{\xmark} & \textcolor{red}{\xmark} & \textcolor{red}{\xmark} & {\color[HTML]{008114}\cmark} & {\color[HTML]{008114}\cmark} & {\color[HTML]{008114}\cmark} & {\color[HTML]{008114}\cmark} \\
+%         NAR         & \textcolor{red}{\xmark}    & \textcolor{red}{\xmark}   & \textcolor{red}{\xmark}          & \textcolor{red}{\xmark}           & {\color[HTML]{008114}\cmark}   & {\color[HTML]{008114}\cmark}     & {\color[HTML]{008114}\cmark}      & {\color[HTML]{008114}\cmark}      \\
+%         Multi-span  & \textcolor{red}{\xmark}    & $\circ$    & $\circ$           & $\circ$            & \textcolor{red}{\xmark}   & \textcolor{red}{\xmark}     & \textcolor{red}{\xmark}      & {\color[HTML]{008114}\cmark}      \\
+%         N-ary       & \textcolor{red}{\xmark}    & \textcolor{red}{\xmark}   & \textcolor{red}{\xmark}          & \textcolor{red}{\xmark}           & \textcolor{red}{\xmark}   & \textcolor{red}{\xmark}     & {\color[HTML]{008114}\cmark}      & {\color[HTML]{008114}\cmark} \\
+%         \bottomrule
+%         \end{tabular}
+%     }
+%     \caption{
+%         Comparisons with other systems.
+%         Single-step represents that the model predicts results in a single step.
+%         Indexing means whether the model could provide exact information positions.
+%         NAR denotes the non-autoregressive decoding strategy.
+%         Multi-span means the model supports multi-span extraction, e.g. the discontinuous named entity recognition task.
+%         N-ary denotes the ability of n-ary tuple extraction.
+%         $\circ$ means the model supports the task theoretically, but the implementation is not available.
+%     }
+%     \label{tab:method_comparison}
+% \end{table*}
+
+To extend the universal IE system into more tasks, we propose \textit{Mirror}, a new IE framework that can be applied in multi-span extraction, n-ary extraction, machine reading comprehension (MRC) and even classification tasks.
+As examplified in Figure~\ref{fig:multi-span-cyclic-graph}, we formulate IE tasks into a unified multi-slot tuple extraction problem, and transform those tuples into multi-span cyclic graphs.
+This graph structure is rather flexible and scalable.
+It can be applied to span-only MRC tasks, label-only classification tasks, and label-span mixed IE tasks.
+Mirror takes schemas as part of the model inputs, and this benefits few-shot and zero-shot tasks naturally.
 
 % how well did we do it
-We conduct extensive experiments on 6 IE tasks, including NER, RE, EE, Aspect-based Sentiment Analysis (ABSA), multi-span discontinuous NER and n-ary hyper RE.
-Our Mirror shows good compatibility across different tasks and datasets, and achieves competitive results on few-shot settings.
-Besides, 434M Mirror outperforms FlanT5-11B InstructUIE in zero-shot NER tasks.
+We conduct extensive experiments on 30 datasets from 8 tasks, including NER, RE, EE, Aspect-based Sentiment Analysis (ABSA), multi-span discontinuous NER, n-ary hyper RE, MRC and classfication.
+To enhance the few-shot and zero-shot abilities, we manually collect 62 datasets into a whole corpus for model pretraining.
+Our Mirror shows good compatibility across different tasks and datasets, and achieves competitive results on few-shot and zero-shot settings.
 
 % contribution
 Our contributions are summarized as follows:
 \begin{itemize}
-    \item We propose a multi-task framework, namely Mirror, which can be trained on various IE tasks, including multi-span and n-ary extraction problems.
-    \item We conduct extensive experiments on x IE tasks, and the results show that our model achieves state-of-the-art performance on most of the tasks.
+    \item We propose a unified schema-guided multi-slot extraction paradigm, which is capable of span-only MRC, label-only classification and label-span mixed information extraction tasks.
+    \item We propose Mirror, a universal non-autoregressive framework that transforms multiple tasks into a multi-span cyclic graph.
+    \item We conduct extensive experiments on 30 datasets from 8 tasks, and the results show that our model achieves competitive results on single-tasks, and outperforms previous SOTA systems on few-shot and zero-shot settings.
 \end{itemize}
