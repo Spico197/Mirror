@@ -63,7 +63,12 @@ It connects from the last token of the last slot to the first token of the first
 
 \subsection{Model Structure}
 
-Text text text
+With the unified data interface and the multi-span cyclic graph, we propose a unified model structure for IE tasks.
+Similar to \citet{ner-as-dp}, we use biaffine attention to obtain the adjacency matrix of the multi-span cyclic graph.
+For token representations $\mathbf{H}$, we get the adjacency matrix by Equation~\ref{eqn:biaffine}.
 
 
-If we 
+\begin{equation}
+    \label{eqn:biaffine}
+    \mathcal{\mathop{\odot}\limits_{i=1}^{n}} \mathbf{H} \mathbf{W}_{\text{biaffine}} \mathbf{H}^{\top} + \mathbf{H} \mathbf{W}_{\text{linear}} + \mathbf{W}_{\text{linear}}^{\top} \mathbf{H}^{\top} + \mathbf{W}_{\text{bias}}
+\end{equation}
