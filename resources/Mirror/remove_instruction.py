@@ -21,13 +21,15 @@ def remove_instruction(data_dir):
 
 if __name__ == "__main__":
     data_dirs = [
-        "resources/Mirror/v1.4/ent/en/CrossNER_AI/instructed",
-        "resources/Mirror/v1.4/ent/en/CrossNER_literature/instructed",
-        "resources/Mirror/v1.4/ent/en/CrossNER_music/instructed",
-        "resources/Mirror/v1.4/ent/en/CrossNER_politics/instructed",
-        "resources/Mirror/v1.4/ent/en/CrossNER_science/instructed",
-        "resources/Mirror/v1.4/ent/en/MIT_MOVIE_Review/instructed",
-        "resources/Mirror/v1.4/ent/en/MIT_Restaurant_Review/instructed",
+        # "resources/Mirror/v1.4/ent/en/CrossNER_AI/instructed",
+        # "resources/Mirror/v1.4/ent/en/CrossNER_literature/instructed",
+        # "resources/Mirror/v1.4/ent/en/CrossNER_music/instructed",
+        # "resources/Mirror/v1.4/ent/en/CrossNER_politics/instructed",
+        # "resources/Mirror/v1.4/ent/en/CrossNER_science/instructed",
+        # "resources/Mirror/v1.4/ent/en/MIT_MOVIE_Review/instructed",
+        # "resources/Mirror/v1.4/ent/en/MIT_Restaurant_Review/instructed",
+        "resources/Mirror/new_abilities_v2/cadec/new",
+        "resources/Mirror/new_abilities_v2/HyperRED/new",
     ]
     for data_dir in data_dirs:
         remove_instruction(Path(data_dir))

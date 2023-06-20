@@ -25,8 +25,8 @@ set_seed_and_log_path(log_path="eval.log")
 # task_dir = "mirror_outputs/MirrorLarge_SamplingPretrain_woOverlap"
 # task_dir = "mirror_outputs/MirrorLarge_SamplingPretrain_woLowResource_woOverlap"
 # task_dir = "mirror_outputs/Mirror_Pretrain_DataV1.5_2"
-# task_dir = "mirror_outputs/Mirror_Pretrain_AllExcluded_2"
-task_dir = "mirror_outputs/Mirror_Pretrain_DataV1.5_woInstruction"
+task_dir = "mirror_outputs/Mirror_Pretrain_AllExcluded_2"
+# task_dir = "mirror_outputs/Mirror_Pretrain_DataV1.5_woInstruction"
 task: SchemaGuidedInstructBertTask = SchemaGuidedInstructBertTask.from_taskdir(
     task_dir,
     load_best_model=True,
@@ -78,18 +78,40 @@ data_pairs = [
     # ["ent_politics", "resources/Mirror/v1.4/ent/en/CrossNER_politics/instructed/test.jsonl"],
     # ["ent_science", "resources/Mirror/v1.4/ent/en/CrossNER_science/instructed/test.jsonl"],
 
-    # zero-shot NER w/o instructions
-    ["ent_movie", "resources/Mirror/v1.4/ent/en/MIT_MOVIE_Review/instructed/remove_instruction/test.jsonl"],
-    ["ent_restaurant", "resources/Mirror/v1.4/ent/en/MIT_Restaurant_Review/instructed/remove_instruction/test.jsonl"],
-    ["ent_ai", "resources/Mirror/v1.4/ent/en/CrossNER_AI/instructed/remove_instruction/test.jsonl"],
-    ["ent_literature", "resources/Mirror/v1.4/ent/en/CrossNER_literature/instructed/remove_instruction/test.jsonl"],
-    ["ent_music", "resources/Mirror/v1.4/ent/en/CrossNER_music/instructed/remove_instruction/test.jsonl"],
-    ["ent_politics", "resources/Mirror/v1.4/ent/en/CrossNER_politics/instructed/remove_instruction/test.jsonl"],
-    ["ent_science", "resources/Mirror/v1.4/ent/en/CrossNER_science/instructed/remove_instruction/test.jsonl"],
+    # # zero-shot NER w/o instructions
+    # ["ent_movie", "resources/Mirror/v1.4/ent/en/MIT_MOVIE_Review/instructed/remove_instruction/test.jsonl"],
+    # ["ent_restaurant", "resources/Mirror/v1.4/ent/en/MIT_Restaurant_Review/instructed/remove_instruction/test.jsonl"],
+    # ["ent_ai", "resources/Mirror/v1.4/ent/en/CrossNER_AI/instructed/remove_instruction/test.jsonl"],
+    # ["ent_literature", "resources/Mirror/v1.4/ent/en/CrossNER_literature/instructed/remove_instruction/test.jsonl"],
+    # ["ent_music", "resources/Mirror/v1.4/ent/en/CrossNER_music/instructed/remove_instruction/test.jsonl"],
+    # ["ent_politics", "resources/Mirror/v1.4/ent/en/CrossNER_politics/instructed/remove_instruction/test.jsonl"],
+    # ["ent_science", "resources/Mirror/v1.4/ent/en/CrossNER_science/instructed/remove_instruction/test.jsonl"],
+
     # # discontinuous NER
     # ["discontinuous_ent", "resources/Mirror/new_abilities_v2/cadec/new/test.jsonl"],
     # # hyper-RE
     # ["hyper_rel", "resources/Mirror/new_abilities_v2/HyperRED/new/test.jsonl"],
+
+    # # cls
+    # ["cls_agnews", "resources/Mirror/v1.4/cls/en/ag_news/instructed/test.jsonl"],
+
+    # # NER RandomICL
+    # ["ent_MIT_MOVIE_Review_ICL", "resources/Mirror/ner_icl/MIT_MOVIE_Review.jsonl"],
+    # ["ent_MIT_Restaurant_Review_ICL", "resources/Mirror/ner_icl/MIT_Restaurant_Review.jsonl"],
+    # ["ent_CrossNER_AI_ICL", "resources/Mirror/ner_icl/CrossNER_AI.jsonl"],
+    # ["ent_CrossNER_literature_ICL", "resources/Mirror/ner_icl/CrossNER_literature.jsonl"],
+    # ["ent_CrossNER_music_ICL", "resources/Mirror/ner_icl/CrossNER_music.jsonl"],
+    # ["ent_CrossNER_politics_ICL", "resources/Mirror/ner_icl/CrossNER_politics.jsonl"],
+    # ["ent_CrossNER_science_ICL", "resources/Mirror/ner_icl/CrossNER_science.jsonl"],
+
+    # NER Retrieval
+    # ["ent_MIT_MOVIE_Review_Retrieval", "resources/Mirror/ner_web_enhanced_bg/MIT_MOVIE_Review.jsonl"],
+    # ["ent_MIT_Restaurant_Review_Retrieval", "resources/Mirror/ner_web_enhanced_bg/MIT_Restaurant_Review.jsonl"],
+    ["ent_CrossNER_AI_Retrieval", "resources/Mirror/ner_web_enhanced_bg/CrossNER_AI.jsonl"],
+    ["ent_CrossNER_literature_Retrieval", "resources/Mirror/ner_web_enhanced_bg/CrossNER_literature.jsonl"],
+    ["ent_CrossNER_music_Retrieval", "resources/Mirror/ner_web_enhanced_bg/CrossNER_music.jsonl"],
+    ["ent_CrossNER_politics_Retrieval", "resources/Mirror/ner_web_enhanced_bg/CrossNER_politics.jsonl"],
+    ["ent_CrossNER_science_Retrieval", "resources/Mirror/ner_web_enhanced_bg/CrossNER_science.jsonl"],
     # # glue
     # ["cls_glue_cola", "resources/Mirror/v1.4/cls/en/CoLA/formated/test.jsonl"],
     # ["cls_glue_qqp", "resources/Mirror/v1.4/cls/en/QQP/new/dev.jsonl"],
@@ -880,4 +902,42 @@ mirror_outputs/Mirror_Pretrain_DataV1.
 │ ent  │ ent_politics   │     46.247 │
 │ ent  │ ent_science    │     42.422 │
 └──────┴────────────────┴────────────┘
+
+    mirror_outputs/Mirror_Pretrain_AllExcluded_2
+┏━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃ Task ┃ Dataset                       ┃ Metric (%) ┃
+┡━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ ent  │ ent_mit_movie_review_icl      │     16.328 │
+│ ent  │ ent_mit_restaurant_review_icl │      2.338 │
+│ ent  │ ent_crossner_ai_icl           │     24.422 │
+│ ent  │ ent_crossner_literature_icl   │     27.290 │
+│ ent  │ ent_crossner_music_icl        │     35.316 │
+│ ent  │ ent_crossner_politics_icl     │     40.492 │
+│ ent  │ ent_crossner_science_icl      │     32.551 │
+└──────┴───────────────────────────────┴────────────┘
+
+mirror_outputs/Mirror_Pretrain_AllExc
+               luded_2
+┏━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃ Task ┃ Dataset       ┃ Metric (%) ┃
+┡━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ cls  │ cls_glue_cola │     63.908 │
+│ cls  │ cls_glue_qqp  │     84.815 │
+│ cls  │ cls_glue_mnli │     85.899 │
+│ cls  │ cls_glue_sst2 │     93.585 │
+│ cls  │ cls_glue_qnli │     91.616 │
+│ cls  │ cls_glue_rte  │     85.921 │
+│ cls  │ cls_glue_mrpc │     89.216 │
+└──────┴───────────────┴────────────┘
+
+      mirror_outputs/Mirror_Pretrain_AllExcluded_2
+┏━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃ Task ┃ Dataset                           ┃ Metric (%) ┃
+┡━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ ent  │ ent_crossner_ai_retrieval         │     28.845 │
+│ ent  │ ent_crossner_literature_retrieval │     32.727 │
+│ ent  │ ent_crossner_music_retrieval      │     38.181 │
+│ ent  │ ent_crossner_politics_retrieval   │     47.693 │
+│ ent  │ ent_crossner_science_retrieval    │     47.113 │
+└──────┴───────────────────────────────────┴────────────┘
 """
