@@ -1,0 +1,4 @@
+task_name: Mirror_SingleTask_MRC_SQuADv2
+data_dir: resources/Mirror/v1.3/span/en/squad_v2
+test_filepath: ${data_dir}/dev.jsonl
+best_metric_field: span.f1.f1

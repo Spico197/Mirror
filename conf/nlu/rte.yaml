@@ -1,0 +1,6 @@
+task_name: Mirror_SingleTask_Cls_RTE
+data_dir: resources/Mirror/v1.3/cls/en/RTE/formated
+train_filepath: ${data_dir}/RTE_train.jsonl
+dev_filepath: ${data_dir}/RTE_dev.jsonl
+test_filepath: ${data_dir}/RTE_dev.jsonl
+best_metric_field: cls.acc

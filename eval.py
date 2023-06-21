@@ -25,8 +25,10 @@ set_seed_and_log_path(log_path="eval.log")
 # task_dir = "mirror_outputs/MirrorLarge_SamplingPretrain_woOverlap"
 # task_dir = "mirror_outputs/MirrorLarge_SamplingPretrain_woLowResource_woOverlap"
 # task_dir = "mirror_outputs/Mirror_Pretrain_DataV1.5_2"
-task_dir = "mirror_outputs/Mirror_Pretrain_AllExcluded_2"
+# task_dir = "mirror_outputs/Mirror_Pretrain_AllExcluded_2"
 # task_dir = "mirror_outputs/Mirror_Pretrain_DataV1.5_woInstruction"
+# task_dir = "mirror_outputs/Mirror_SingleTask_wPTAllExcluded_Rel_NYT"
+task_dir = "mirror_outputs/Mirror_SingleTask_wPTAllExcluded_Rel_CoNLL04"
 task: SchemaGuidedInstructBertTask = SchemaGuidedInstructBertTask.from_taskdir(
     task_dir,
     load_best_model=True,
@@ -51,24 +53,20 @@ data_pairs = [
     # ["ent_conll03_test", "resources/Mirror/uie/ent/conll03/test.jsonl"],
 
     # ["rel_ace05_test", "resources/Mirror/uie/rel/ace05-rel/test.jsonl"],
-    # ["rel_conll04_test", "resources/Mirror/uie/rel/conll04/test.jsonl"],
+    ["rel_conll04_test", "resources/Mirror/uie/rel/conll04/test.jsonl"],
     # ["rel_nyt_test", "resources/Mirror/uie/rel/nyt/test.jsonl"],
     # ["rel_scierc_test", "resources/Mirror/uie/rel/scierc/test.jsonl"],
-
     # ["event_ace05_test", "resources/Mirror/uie/event/ace05-evt/test.jsonl"],
     # ["event_casie_test", "resources/Mirror/uie/event/casie/test.jsonl"],
-
     # ["absa_14res_test", "resources/Mirror/uie/absa/14res/test.jsonl"],
     # ["absa_14lap_test", "resources/Mirror/uie/absa/14lap/test.jsonl"],
     # ["absa_15res_test", "resources/Mirror/uie/absa/15res/test.jsonl"],
     # ["absa_16res_test", "resources/Mirror/uie/absa/16res/test.jsonl"],
-
     # # analysis
     # ["ent_conll03_test", "resources/Mirror/uie/ent/conll03/test.jsonl"],
     # ["rel_conll04_test", "resources/Mirror/uie/rel/conll04/test.jsonl"],
     # ["event_ace05_test", "resources/Mirror/uie/event/ace05-evt/test.jsonl"],
     # ["absa_16res_test", "resources/Mirror/uie/absa/16res/test.jsonl"],
-
     # # zero-shot NER
     # ["ent_movie", "resources/Mirror/v1.4/ent/en/MIT_MOVIE_Review/instructed/test.jsonl"],
     # ["ent_restaurant", "resources/Mirror/v1.4/ent/en/MIT_Restaurant_Review/instructed/test.jsonl"],
@@ -77,7 +75,6 @@ data_pairs = [
     # ["ent_music", "resources/Mirror/v1.4/ent/en/CrossNER_music/instructed/test.jsonl"],
     # ["ent_politics", "resources/Mirror/v1.4/ent/en/CrossNER_politics/instructed/test.jsonl"],
     # ["ent_science", "resources/Mirror/v1.4/ent/en/CrossNER_science/instructed/test.jsonl"],
-
     # # zero-shot NER w/o instructions
     # ["ent_movie", "resources/Mirror/v1.4/ent/en/MIT_MOVIE_Review/instructed/remove_instruction/test.jsonl"],
     # ["ent_restaurant", "resources/Mirror/v1.4/ent/en/MIT_Restaurant_Review/instructed/remove_instruction/test.jsonl"],
@@ -86,15 +83,12 @@ data_pairs = [
     # ["ent_music", "resources/Mirror/v1.4/ent/en/CrossNER_music/instructed/remove_instruction/test.jsonl"],
     # ["ent_politics", "resources/Mirror/v1.4/ent/en/CrossNER_politics/instructed/remove_instruction/test.jsonl"],
     # ["ent_science", "resources/Mirror/v1.4/ent/en/CrossNER_science/instructed/remove_instruction/test.jsonl"],
-
     # # discontinuous NER
     # ["discontinuous_ent", "resources/Mirror/new_abilities_v2/cadec/new/test.jsonl"],
     # # hyper-RE
     # ["hyper_rel", "resources/Mirror/new_abilities_v2/HyperRED/new/test.jsonl"],
-
     # # cls
     # ["cls_agnews", "resources/Mirror/v1.4/cls/en/ag_news/instructed/test.jsonl"],
-
     # # NER RandomICL
     # ["ent_MIT_MOVIE_Review_ICL", "resources/Mirror/ner_icl/MIT_MOVIE_Review.jsonl"],
     # ["ent_MIT_Restaurant_Review_ICL", "resources/Mirror/ner_icl/MIT_Restaurant_Review.jsonl"],
@@ -103,15 +97,14 @@ data_pairs = [
     # ["ent_CrossNER_music_ICL", "resources/Mirror/ner_icl/CrossNER_music.jsonl"],
     # ["ent_CrossNER_politics_ICL", "resources/Mirror/ner_icl/CrossNER_politics.jsonl"],
     # ["ent_CrossNER_science_ICL", "resources/Mirror/ner_icl/CrossNER_science.jsonl"],
-
     # NER Retrieval
     # ["ent_MIT_MOVIE_Review_Retrieval", "resources/Mirror/ner_web_enhanced_bg/MIT_MOVIE_Review.jsonl"],
     # ["ent_MIT_Restaurant_Review_Retrieval", "resources/Mirror/ner_web_enhanced_bg/MIT_Restaurant_Review.jsonl"],
-    ["ent_CrossNER_AI_Retrieval", "resources/Mirror/ner_web_enhanced_bg/CrossNER_AI.jsonl"],
-    ["ent_CrossNER_literature_Retrieval", "resources/Mirror/ner_web_enhanced_bg/CrossNER_literature.jsonl"],
-    ["ent_CrossNER_music_Retrieval", "resources/Mirror/ner_web_enhanced_bg/CrossNER_music.jsonl"],
-    ["ent_CrossNER_politics_Retrieval", "resources/Mirror/ner_web_enhanced_bg/CrossNER_politics.jsonl"],
-    ["ent_CrossNER_science_Retrieval", "resources/Mirror/ner_web_enhanced_bg/CrossNER_science.jsonl"],
+    # ["ent_CrossNER_AI_Retrieval", "resources/Mirror/ner_web_enhanced_bg/CrossNER_AI.jsonl"],
+    # ["ent_CrossNER_literature_Retrieval", "resources/Mirror/ner_web_enhanced_bg/CrossNER_literature.jsonl"],
+    # ["ent_CrossNER_music_Retrieval", "resources/Mirror/ner_web_enhanced_bg/CrossNER_music.jsonl"],
+    # ["ent_CrossNER_politics_Retrieval", "resources/Mirror/ner_web_enhanced_bg/CrossNER_politics.jsonl"],
+    # ["ent_CrossNER_science_Retrieval", "resources/Mirror/ner_web_enhanced_bg/CrossNER_science.jsonl"],
     # # glue
     # ["cls_glue_cola", "resources/Mirror/v1.4/cls/en/CoLA/formated/test.jsonl"],
     # ["cls_glue_qqp", "resources/Mirror/v1.4/cls/en/QQP/new/dev.jsonl"],

@@ -290,7 +290,10 @@ def calc_cls(golds, preds):
     for gold, pred in zip(golds, preds):
         y_true.append(" ".join(sorted(gold)))
         y_pred.append(" ".join(sorted(pred)))
-    metrics["acc"] = accuracy_score(y_true, y_pred)
+    if y_true and y_pred:
+        metrics["acc"] = accuracy_score(y_true, y_pred)
+    else:
+        metrics["acc"] = 0.0
     metrics["mcc"] = matthews_corrcoef(y_true, y_pred)
     return metrics
 

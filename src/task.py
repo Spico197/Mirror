@@ -344,12 +344,38 @@ class SchemaGuidedInstructBertTask(MrcTaggingTask):
     def init_metric(self):
         return MultiPartSpanMetric()
 
+    @staticmethod
+    def _convert_span_to_string(span, token_ids, tokenizer):
+        string = ""
+        if len(span) == 0 or len(span) > 2:
+            pass
+        elif len(span) == 1:
+            string = tokenizer.decode(token_ids[span[0]])
+        elif len(span) == 2:
+            string = tokenizer.decode(token_ids[span[0] : span[1]])
+        return (string, span)
+
     def predict_api(self, data: list[dict], **kwargs):
         """
         Args:
-            data: a list of dict with query, context, and background strings
+            data: a list of dict in UDI:
+                {
+                    "id": str,
+                    "instruction": str,
+                    "schema": {
+                        "ent": list,
+                        "rel": list,
+                        "event": dict,
+                        "cls": list,
+                        "discontinuous_ent": list,
+                        "hyper_rel": dict
+                    },
+                    "text": str,
+                    "bg": str,
+                    "ans": {},  # empty dict
+                }
         """
-        raw_dataset = self.transform.predict_transform(data)
+        raw_dataset = [self.transform.transform(d) for d in data]
         loader = self.data_manager.prepare_loader(raw_dataset)
         results = []
         for batch in loader:
@@ -357,14 +383,108 @@ class SchemaGuidedInstructBertTask(MrcTaggingTask):
             batch["pred"] = batch_out["pred"]
             instances = decompose_batch_into_instances(batch)
             for ins in instances:
-                preds = ins["pred"]
-                ins_results = []
-                for index_list in preds:
-                    ins_result = []
-                    for i in index_list:
-                        ins_result.append(ins["raw_tokens"][i])
-                    ins_results.append(("".join(ins_result), tuple(index_list)))
-                results.append(ins_results)
+                pred_clses = []
+                pred_ents = []
+                pred_rels = []
+                pred_trigger_to_event = defaultdict(
+                    lambda: {"event_type": "", "arguments": []}
+                )
+                pred_events = []
+                pred_spans = []
+                pred_discon_ents = []
+                pred_hyper_rels = []
+                raw_schema = ins["raw"]["schema"]
+                for multi_part_span in ins["pred"]:
+                    span = tuple(multi_part_span)
+                    span_to_label = ins["span_to_label"]
+                    if span[0] in span_to_label:
+                        label = span_to_label[span[0]]
+                        if label["task"] == "cls" and len(span) == 1:
+                            pred_clses.append(label["string"])
+                        elif label["task"] == "ent" and len(span) == 2:
+                            string = self._convert_span_to_string(
+                                span[1], ins["input_ids"], self.transform.tokenizer
+                            )
+                            pred_ents.append((label["string"], string))
+                        elif label["task"] == "rel" and len(span) == 3:
+                            head = self._convert_span_to_string(
+                                span[1], ins["input_ids"], self.transform.tokenizer
+                            )
+                            tail = self._convert_span_to_string(
+                                span[2], ins["input_ids"], self.transform.tokenizer
+                            )
+                            pred_rels.append((label["string"], head, tail))
+                        elif label["task"] == "event":
+                            if label["type"] == "lm" and len(span) == 2:
+                                pred_trigger_to_event[span[1]]["event_type"] = label["string"]  # fmt: skip
+                            elif label["type"] == "lr" and len(span) == 3:
+                                arg = self._convert_span_to_string(
+                                    span[2], ins["input_ids"], self.transform.tokenizer
+                                )
+                                pred_trigger_to_event[span[1]]["arguments"].append(
+                                    {"argument": arg, "role": label["string"]}
+                                )
+                        elif label["task"] == "discontinuous_ent" and len(span) > 1:
+                            parts = [
+                                self._convert_span_to_string(
+                                    part, ins["input_ids"], self.transform.tokenizer
+                                )
+                                for part in span[1:]
+                            ]
+                            string = " ".join([part[0] for part in parts])
+                            position = []
+                            for part in parts:
+                                position.append(part[1])
+                            pred_discon_ents.append((label["string"], string, position))
+                        elif label["task"] == "hyper_rel" and len(span) == 5 and span[3] in span_to_label:  # fmt: skip
+                            q_label = span_to_label[span[3]]
+                            span_1 = self._convert_span_to_string(
+                                span[1], ins["input_ids"], self.transform.tokenizer
+                            )
+                            span_2 = self._convert_span_to_string(
+                                span[2], ins["input_ids"], self.transform.tokenizer
+                            )
+                            span_4 = self._convert_span_to_string(
+                                span[4], ins["input_ids"], self.transform.tokenizer
+                            )
+                            pred_hyper_rels.append((label["string"], span_1, span_2, q_label["string"], span_4))  # fmt: skip
+                    else:
+                        # span task has no labels
+                        pred_spans.append(tuple(span))
+                for trigger, item in pred_trigger_to_event.items():
+                    trigger = self._convert_span_to_string(
+                        trigger, ins["input_ids"], self.transform.tokenizer
+                    )
+                    if item["event_type"] not in raw_schema["event"]:
+                        continue
+                    legal_roles = raw_schema["event"][item["event_type"]]
+                    pred_events.append(
+                        {
+                            "trigger": trigger,
+                            "event_type": item["event_type"],
+                            "arguments": [
+                                arg
+                                for arg in filter(
+                                    lambda arg: arg["role"] in legal_roles,
+                                    item["arguments"],
+                                )
+                            ],
+                        }
+                    )
+                results.append(
+                    {
+                        "id": ins["raw"]["id"],
+                        "results": {
+                            "cls": pred_clses,
+                            "ent": pred_ents,
+                            "rel": pred_rels,
+                            "event": pred_events,
+                            "span": pred_spans,
+                            "discon_ent": pred_discon_ents,
+                            "hyper_rel": pred_hyper_rels,
+                        },
+                    }
+                )
 
         return results
 

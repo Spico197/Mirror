@@ -1,0 +1,3 @@
+task_name: Mirror_SingleTask_Cls_MRPC
+data_dir: resources/Mirror/v1.3/cls/en/MRPC/formated
+best_metric_field: cls.acc
