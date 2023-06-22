@@ -1,8 +1,10 @@
+import traceback
 from typing import Any, Dict, List
 
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from rex.utils.initialization import set_seed_and_log_path
 
@@ -39,11 +41,40 @@ task = SchemaGuidedInstructBertTask.from_taskdir(
 def process_data(data: RequestData):
     input_data = data.data
 
-    results = task.predict(input_data)
+    ok = True
+    msg = ""
+    results = {}
+    try:
+        results = task.predict(input_data)
+        msg = "success"
+    except KeyboardInterrupt:
+        raise KeyboardInterrupt
+    except Exception:
+        ok = False
+        msg = traceback.format_exc()
 
     # Return the processed data
-    return {"results": results}
+    return {"ok": ok, "msg": msg, "results": results}
+
+
+@app.get("/")
+async def api():
+    return FileResponse("./index.html", media_type="text/html")
 
 
 if __name__ == "__main__":
-    uvicorn.run("src.app.api_backend:app", host="0.0.0.0", port=23333, reload=True)
+    log_config = uvicorn.config.LOGGING_CONFIG
+    log_config["formatters"]["access"]["fmt"] = (
+        "%(asctime)s | " + log_config["formatters"]["access"]["fmt"]
+    )
+    log_config["formatters"]["default"]["fmt"] = (
+        "%(asctime)s | " + log_config["formatters"]["default"]["fmt"]
+    )
+    uvicorn.run(
+        "src.app.api_backend:app",
+        host="0.0.0.0",
+        port=7860,
+        log_level="debug",
+        log_config=log_config,
+        reload=True,
+    )

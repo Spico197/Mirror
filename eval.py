@@ -25,10 +25,11 @@ set_seed_and_log_path(log_path="eval.log")
 # task_dir = "mirror_outputs/MirrorLarge_SamplingPretrain_woOverlap"
 # task_dir = "mirror_outputs/MirrorLarge_SamplingPretrain_woLowResource_woOverlap"
 # task_dir = "mirror_outputs/Mirror_Pretrain_DataV1.5_2"
-# task_dir = "mirror_outputs/Mirror_Pretrain_AllExcluded_2"
+task_dir = "mirror_outputs/Mirror_Pretrain_AllExcluded_2"
 # task_dir = "mirror_outputs/Mirror_Pretrain_DataV1.5_woInstruction"
 # task_dir = "mirror_outputs/Mirror_SingleTask_wPTAllExcluded_Rel_NYT"
-task_dir = "mirror_outputs/Mirror_SingleTask_wPTAllExcluded_Rel_CoNLL04"
+# task_dir = "mirror_outputs/Mirror_SingleTask_wPTAllExcluded_Rel_CoNLL04"
+# task_dir = "mirror_outputs/Mirror_SingleTask_wPTAllExcluded_woInst_Rel_NYT"
 task: SchemaGuidedInstructBertTask = SchemaGuidedInstructBertTask.from_taskdir(
     task_dir,
     load_best_model=True,
@@ -40,6 +41,7 @@ task: SchemaGuidedInstructBertTask = SchemaGuidedInstructBertTask.from_taskdir(
         "select_best_on_data": "dev",
         "select_best_by_key": "metric",
         "best_metric_field": "general_spans.micro.f1",
+        "eval_batch_size": 32,
     },
 )
 table = Table(title=task_dir)
@@ -48,33 +50,36 @@ data_pairs = [
     # fmt: off
 
     # # UIE eval data
-    # ["ent_ace04_test", "resources/Mirror/uie/ent/ace04/test.jsonl"],
-    # ["ent_ace05_test", "resources/Mirror/uie/ent/ace05/test.jsonl"],
-    # ["ent_conll03_test", "resources/Mirror/uie/ent/conll03/test.jsonl"],
-
-    # ["rel_ace05_test", "resources/Mirror/uie/rel/ace05-rel/test.jsonl"],
+    ["ent_ace04_test", "resources/Mirror/uie/ent/ace04/test.jsonl"],
+    ["ent_ace05_test", "resources/Mirror/uie/ent/ace05/test.jsonl"],
+    ["ent_conll03_test", "resources/Mirror/uie/ent/conll03/test.jsonl"],
+    ["rel_ace05_test", "resources/Mirror/uie/rel/ace05-rel/test.jsonl"],
     ["rel_conll04_test", "resources/Mirror/uie/rel/conll04/test.jsonl"],
-    # ["rel_nyt_test", "resources/Mirror/uie/rel/nyt/test.jsonl"],
-    # ["rel_scierc_test", "resources/Mirror/uie/rel/scierc/test.jsonl"],
-    # ["event_ace05_test", "resources/Mirror/uie/event/ace05-evt/test.jsonl"],
-    # ["event_casie_test", "resources/Mirror/uie/event/casie/test.jsonl"],
-    # ["absa_14res_test", "resources/Mirror/uie/absa/14res/test.jsonl"],
-    # ["absa_14lap_test", "resources/Mirror/uie/absa/14lap/test.jsonl"],
-    # ["absa_15res_test", "resources/Mirror/uie/absa/15res/test.jsonl"],
-    # ["absa_16res_test", "resources/Mirror/uie/absa/16res/test.jsonl"],
+    ["rel_nyt_test", "resources/Mirror/uie/rel/nyt/test.jsonl"],
+    ["rel_scierc_test", "resources/Mirror/uie/rel/scierc/test.jsonl"],
+    ["event_ace05_test", "resources/Mirror/uie/event/ace05-evt/test.jsonl"],
+    ["event_casie_test", "resources/Mirror/uie/event/casie/test.jsonl"],
+    ["absa_14res_test", "resources/Mirror/uie/absa/14res/test.jsonl"],
+    ["absa_14lap_test", "resources/Mirror/uie/absa/14lap/test.jsonl"],
+    ["absa_15res_test", "resources/Mirror/uie/absa/15res/test.jsonl"],
+    ["absa_16res_test", "resources/Mirror/uie/absa/16res/test.jsonl"],
+    # # discontinuous NER
+    ["discontinuous_ent", "resources/Mirror/new_abilities_v2/cadec/new/test.jsonl"],
+    # # hyper-RE
+    ["hyper_rel", "resources/Mirror/new_abilities_v2/HyperRED/new/test.jsonl"],
     # # analysis
     # ["ent_conll03_test", "resources/Mirror/uie/ent/conll03/test.jsonl"],
     # ["rel_conll04_test", "resources/Mirror/uie/rel/conll04/test.jsonl"],
     # ["event_ace05_test", "resources/Mirror/uie/event/ace05-evt/test.jsonl"],
     # ["absa_16res_test", "resources/Mirror/uie/absa/16res/test.jsonl"],
     # # zero-shot NER
-    # ["ent_movie", "resources/Mirror/v1.4/ent/en/MIT_MOVIE_Review/instructed/test.jsonl"],
-    # ["ent_restaurant", "resources/Mirror/v1.4/ent/en/MIT_Restaurant_Review/instructed/test.jsonl"],
-    # ["ent_ai", "resources/Mirror/v1.4/ent/en/CrossNER_AI/instructed/test.jsonl"],
-    # ["ent_literature", "resources/Mirror/v1.4/ent/en/CrossNER_literature/instructed/test.jsonl"],
-    # ["ent_music", "resources/Mirror/v1.4/ent/en/CrossNER_music/instructed/test.jsonl"],
-    # ["ent_politics", "resources/Mirror/v1.4/ent/en/CrossNER_politics/instructed/test.jsonl"],
-    # ["ent_science", "resources/Mirror/v1.4/ent/en/CrossNER_science/instructed/test.jsonl"],
+    ["ent_movie", "resources/Mirror/v1.3/ent/en/MIT_MOVIE_Review/instructed/test.jsonl"],
+    ["ent_restaurant", "resources/Mirror/v1.3/ent/en/MIT_Restaurant_Review/instructed/test.jsonl"],
+    ["ent_ai", "resources/Mirror/v1.3/ent/en/CrossNER_AI/instructed/test.jsonl"],
+    ["ent_literature", "resources/Mirror/v1.3/ent/en/CrossNER_literature/instructed/test.jsonl"],
+    ["ent_music", "resources/Mirror/v1.3/ent/en/CrossNER_music/instructed/test.jsonl"],
+    ["ent_politics", "resources/Mirror/v1.3/ent/en/CrossNER_politics/instructed/test.jsonl"],
+    ["ent_science", "resources/Mirror/v1.3/ent/en/CrossNER_science/instructed/test.jsonl"],
     # # zero-shot NER w/o instructions
     # ["ent_movie", "resources/Mirror/v1.4/ent/en/MIT_MOVIE_Review/instructed/remove_instruction/test.jsonl"],
     # ["ent_restaurant", "resources/Mirror/v1.4/ent/en/MIT_Restaurant_Review/instructed/remove_instruction/test.jsonl"],
@@ -83,10 +88,6 @@ data_pairs = [
     # ["ent_music", "resources/Mirror/v1.4/ent/en/CrossNER_music/instructed/remove_instruction/test.jsonl"],
     # ["ent_politics", "resources/Mirror/v1.4/ent/en/CrossNER_politics/instructed/remove_instruction/test.jsonl"],
     # ["ent_science", "resources/Mirror/v1.4/ent/en/CrossNER_science/instructed/remove_instruction/test.jsonl"],
-    # # discontinuous NER
-    # ["discontinuous_ent", "resources/Mirror/new_abilities_v2/cadec/new/test.jsonl"],
-    # # hyper-RE
-    # ["hyper_rel", "resources/Mirror/new_abilities_v2/HyperRED/new/test.jsonl"],
     # # cls
     # ["cls_agnews", "resources/Mirror/v1.4/cls/en/ag_news/instructed/test.jsonl"],
     # # NER RandomICL
@@ -105,16 +106,16 @@ data_pairs = [
     # ["ent_CrossNER_music_Retrieval", "resources/Mirror/ner_web_enhanced_bg/CrossNER_music.jsonl"],
     # ["ent_CrossNER_politics_Retrieval", "resources/Mirror/ner_web_enhanced_bg/CrossNER_politics.jsonl"],
     # ["ent_CrossNER_science_Retrieval", "resources/Mirror/ner_web_enhanced_bg/CrossNER_science.jsonl"],
+    # mrc
+    ["span_squad2", "resources/Mirror/v1.3/span/en/squad_v2/dev.jsonl"],
     # # glue
-    # ["cls_glue_cola", "resources/Mirror/v1.4/cls/en/CoLA/formated/test.jsonl"],
-    # ["cls_glue_qqp", "resources/Mirror/v1.4/cls/en/QQP/new/dev.jsonl"],
-    # ["cls_glue_mnli", "resources/Mirror/v1.4/cls/en/MNLI/formated/MNLI_dev.jsonl"],
-    # ["cls_glue_sst2", "resources/Mirror/v1.4/cls/en/SST-2/instructed/SST-2_dev.jsonl"],
-    # ["cls_glue_qnli", "resources/Mirror/v1.4/cls/en/QNLI/processed/QNLI_dev.jsonl"],
-    # ["cls_glue_rte", "resources/Mirror/v1.4/cls/en/RTE/formated/RTE_dev.jsonl"],
-    # ["cls_glue_mrpc", "resources/Mirror/v1.4/cls/en/MRPC/formated/dev.jsonl"],
-    # # mrc
-    # ["span_squad2", "resources/Mirror/v1.4/span/en/squad_v2/dev.jsonl"],
+    ["cls_glue_cola", "resources/Mirror/v1.3/cls/en/CoLA/formated/dev.jsonl"],
+    ["cls_glue_qqp", "resources/Mirror/v1.3/cls/en/QQP/new/dev.jsonl"],
+    ["cls_glue_mnli", "resources/Mirror/v1.3/cls/en/MNLI/formated/MNLI_dev.jsonl"],
+    ["cls_glue_sst2", "resources/Mirror/v1.3/cls/en/SST-2/instructed/SST-2_dev.jsonl"],
+    ["cls_glue_qnli", "resources/Mirror/v1.3/cls/en/QNLI/processed/QNLI_dev.jsonl"],
+    ["cls_glue_rte", "resources/Mirror/v1.3/cls/en/RTE/formated/RTE_dev.jsonl"],
+    ["cls_glue_mrpc", "resources/Mirror/v1.3/cls/en/MRPC/formated/dev.jsonl"],
     # Mirror v1.4 all train
     # ["cls_ag_news_train", "resources/Mirror/v1.4/cls/en/ag_news/instructed/train.jsonl"],
     # ["cls_ANLI_R1_train", "resources/Mirror/v1.4/cls/en/ANLI/R1_processed/train.jsonl"],
@@ -933,4 +934,43 @@ mirror_outputs/Mirror_Pretrain_AllExc
 │ ent  │ ent_crossner_politics_retrieval   │     47.693 │
 │ ent  │ ent_crossner_science_retrieval    │     47.113 │
 └──────┴───────────────────────────────────┴────────────┘
+
+      mirror_outputs/Mirror_Pretrain_AllExcluded_2
+┏━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃ Task              ┃ Dataset              ┃ Metric (%) ┃
+┡━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ ent               │ ent_ace04_test       │     21.489 │
+│ ent               │ ent_ace05_test       │     18.701 │
+│ ent               │ ent_conll03_test     │     66.906 │
+│ rel               │ rel_ace05_test       │      0.510 │
+│ rel               │ rel_conll04_test     │      1.399 │
+│ rel               │ rel_nyt_test         │     69.666 │
+│ rel               │ rel_scierc_test      │      0.000 │
+│ event             │ event_ace05_test_tgg │      3.991 │
+│ event             │ event_ace05_test_arg │      0.000 │
+│ event             │ event_casie_test_tgg │      2.128 │
+│ event             │ event_casie_test_arg │      0.000 │
+│ absa              │ absa_14res_test      │      0.000 │
+│ absa              │ absa_14lap_test      │      0.000 │
+│ absa              │ absa_15res_test      │      0.000 │
+│ absa              │ absa_16res_test      │      0.000 │
+│ discontinuous_ent │ discontinuous_ent    │     52.339 │
+│ hyper_rel         │ hyper_rel            │      0.000 │
+│ ent               │ ent_movie            │     39.237 │
+│ ent               │ ent_restaurant       │     16.168 │
+│ ent               │ ent_ai               │     45.912 │
+│ ent               │ ent_literature       │     46.766 │
+│ ent               │ ent_music            │     59.121 │
+│ ent               │ ent_politics         │     67.274 │
+│ ent               │ ent_science          │     54.418 │
+│ span_em           │ span_squad2          │     40.351 │
+│ span_f1           │ span_squad2          │     67.385 │
+│ cls               │ cls_glue_cola        │     63.908 │
+│ cls               │ cls_glue_qqp         │     84.845 │
+│ cls               │ cls_glue_mnli        │     85.899 │
+│ cls               │ cls_glue_sst2        │     93.585 │
+│ cls               │ cls_glue_qnli        │     91.616 │
+│ cls               │ cls_glue_rte         │     85.921 │
+│ cls               │ cls_glue_mrpc        │     89.216 │
+└───────────────────┴──────────────────────┴────────────┘
 """

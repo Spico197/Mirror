@@ -1,0 +1,6 @@
+task_name: Mirror_SingleTask_Cls_SST2
+data_dir: resources/Mirror/v1.3/cls/en/SST-2/instructed
+train_filepath: ${data_dir}/SST-2_train.jsonl
+dev_filepath: ${data_dir}/SST-2_dev.jsonl
+test_filepath: ${data_dir}/SST-2_dev.jsonl
+best_metric_field: cls.acc

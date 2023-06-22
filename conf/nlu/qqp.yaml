@@ -1,0 +1,6 @@
+task_name: Mirror_SingleTask_Cls_QQP
+data_dir: resources/Mirror/v1.3/cls/en/QQP/new
+train_filepath: ${data_dir}/train.jsonl
+dev_filepath: ${data_dir}/dev.jsonl
+test_filepath: ${data_dir}/dev.jsonl
+best_metric_field: cls.acc

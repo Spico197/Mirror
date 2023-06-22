@@ -352,7 +352,7 @@ class SchemaGuidedInstructBertTask(MrcTaggingTask):
         elif len(span) == 1:
             string = tokenizer.decode(token_ids[span[0]])
         elif len(span) == 2:
-            string = tokenizer.decode(token_ids[span[0] : span[1]])
+            string = tokenizer.decode(token_ids[span[0] : span[1] + 1])
         return (string, span)
 
     def predict_api(self, data: list[dict], **kwargs):

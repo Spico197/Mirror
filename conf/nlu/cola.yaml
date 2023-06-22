@@ -1,0 +1,6 @@
+task_name: Mirror_SingleTask_Cls_CoLA
+data_dir: resources/Mirror/v1.3/cls/en/CoLA/formated
+train_filepath: ${data_dir}/train.jsonl
+dev_filepath: ${data_dir}/dev.jsonl
+test_filepath: ${data_dir}/dev.jsonl
+best_metric_field: cls.mcc

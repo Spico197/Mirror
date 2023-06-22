@@ -1,0 +1,3 @@
+eval "$(/home/tzhu/miniconda3/bin/conda shell.posix hook)"
+conda activate  /home/tzhu/miniconda3/envs/torch
+python /home/tzhu/.vscode-server/extensions/ms-python.python-2023.10.1/pythonFiles/get_output_via_markers.py /home/tzhu/.vscode-server/extensions/ms-python.python-2023.10.1/pythonFiles/testing_tools/run_adapter.py discover pytest -- --rootdir /data/tzhu/Mirror -s --cache-clear tests

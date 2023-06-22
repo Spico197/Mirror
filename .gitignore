@@ -184,3 +184,4 @@ mirror_outputs/
 sampled_stats.xlsx
 mirror_fewshot_outputs/
 watchmen_server.pid
+conll03-100.jsonl

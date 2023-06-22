@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🪞Mirror</title>
+  <link rel="stylesheet" href="https://unpkg.com/boltcss/bolt.min.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js"
+      }
+    }
+  </script>
+  <style>
+    body {
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: row;
+      justify-content: flex-start;
+      align-items: center;
+    }
+
+    label {
+      margin-right: 1rem;
+    }
+
+    button {
+      margin: 0.2rem 0.2rem;
+    }
+
+    button:hover {
+      background-color: #dbdbdb;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 2rem;
+    }
+
+    input {
+      width: 100%;
+    }
+
+    .button-group {
+      margin-top: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .submit-button {
+      background-color: #ffc83d;
+      color: #d67d00;
+      font-weight: bold;
+    }
+
+    .lc-button {
+      background-color: #c4e5be;
+    }
+
+    .lm-button {
+      background-color: #dae7fb;
+    }
+
+    .lr-button {
+      background-color: #fff3ce;
+    }
+
+    .submit-button:hover {
+      background-color: #ffc83dc0;
+    }
+
+    .download-button {
+      background-color: #98ca56;
+      color: white;
+      font-weight: bold;
+    }
+
+    .download-button:hover {
+      background-color: #98ca56d1;
+    }
+
+    .output-title {
+      margin-top: 2rem;
+      margin-bottom: 0;
+      display: block;
+      background-color: #98ca56;
+      color: white;
+      font-weight: bold;
+      font-size: large;
+      padding: 6px 15px;
+      border-top-left-radius: 6px;
+      border-top-right-radius: 6px;
+    }
+
+    .output-box {
+      margin-top: 0;
+      padding: 6px 15px;
+      background-color: white;
+      border: 2px solid #98ca56;
+      border-bottom-left-radius: 6px;
+      border-bottom-right-radius: 6px;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>🪞Mirror</h1>
+    <p>
+      🪞Mirror can help you deal with a wide range of Natural Language Understanding and Information Extraction tasks.
+    </p>
+  </header>
+
+  <main>
+    <div id="app">
+      <div>
+        <label for="instruction"><strong>Instruction</strong></label>
+        <input id="instruction" type="text" v-model="instruction" placeholder="Mirror mirror tell me ..." size="200">
+      </div>
+      <div>
+        <label for="schema"><strong>Schema Labels</strong></label>
+        <p>Split with <code>#</code> for multiple inputs</p>
+        <p>For entities, relations or classification, input <code>{"ent|rel|cls": ["cls1", "type2"]}</code> .</p>
+        <p>For events and hyper relations, input <code>{"type": ["role1", "role2"]}</code> .</p>
+        <input id="schema" type="text" v-model="schema" size="200">
+        <!-- <div>
+          <button @click.prevent="addCls">Class</button>
+          <button @click.prevent="addEnt">Entity</button>
+          <button @click.prevent="addDisconEnt">Discontinuous Entity</button>
+          <button @click.prevent="addRel">Relation</button>
+          <button @click.prevent="addEvent">Event Type</button>
+          <button @click.prevent="addHyperRel">Hyper Relation</button>
+        </div> -->
+      </div>
+      <div>
+        <label for="text"><strong>Text</strong></label>
+        <input id="text" type="text" v-model="text" size="200">
+      </div>
+      <div>
+        <label for="background"><strong>Background</strong></label>
+        <input id="background" type="text" v-model="background" size="200">
+      </div>
+
+      <div class="button-group">
+        <button @click.prevent="reset">Reset</button>
+        <button @click.prevent="clearOutput">Clear Output</button>
+        <button class="submit-button" @click.prevent="getResults">Ask Mirror</button>
+      </div>
+
+      <div v-if="timerHandler">
+        <p>⏱️ {{ searchMilliSeconds }}</p>
+      </div>
+
+      <div>
+        <div v-if="isNotEmptyObj(results)">
+          <label for="output"><strong>Output</strong></label>
+          <table>
+            <thead>
+              <th>Item</th>
+              <th>Predicted</th>
+            </thead>
+            <tbody>
+              <tr v-for="(value, key, index) in results" :key="index">
+                <template v-if="value.length">
+                  <td>{{ key }}</td>
+                  <td>{{ value }}</td>
+                </template>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer>
+    <hr>
+    Made by <a href="https://spico197.github.io" target="_blank">Tong Zhu</a> w/ 💖
+  </footer>
+
+  <script type="module">
+    import { createApp, ref, computed, toRaw, watch } from 'vue'
+
+    createApp(
+      {
+        setup() {
+          const instruction = ref("")
+          const text = ref("")
+          const background = ref("")
+          const schema = ref("{}")
+          const results = ref({})
+          const timerHandler = ref(0)
+          const searchSeconds = ref(0.0)
+          const searchMilliSeconds = computed(() => {
+            return `${searchSeconds.value.toFixed(1)}s`
+          })
+
+          function isNotEmptyObj(obj) {
+            return Object.keys(obj).length > 0
+          }
+
+          function clearOutput() {
+            timerHandler.value = 0
+            results.value = {}
+          }
+
+          function reset() {
+            schema.value = "{}"
+            clearOutput()
+          }
+
+          function startTimer() {
+            searchSeconds.value = 0.0
+            timerHandler.value = setInterval(() => {
+              searchSeconds.value += 0.1
+            }, 100)
+          }
+
+          function endTimer() {
+            if (timerHandler.value > 0) {
+              clearInterval(timerHandler.value)
+            }
+          }
+
+          function getResults() {
+            clearOutput()
+            startTimer()
+            const data = {
+              "id": Date.now().toString(),
+              "instruction": instruction.value,
+              "schema": JSON.parse(schema.value),
+              "text": text.value,
+              "background": background.value,
+              "ans": {},
+            }
+            const postData = JSON.stringify({
+              "data": [data],
+            })
+            fetch(
+              "/process",
+              {
+                method: "POST",
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: postData,
+              }
+            )
+              .then((response) => response.json())
+              .then((json) => {
+                if (json["ok"] === false) {
+                  alert(json["msg"])
+                } else {
+                  results.value = json["results"][0]["results"]
+                }
+              })
+              .catch((err) => { alert(err) })
+              .finally(() => endTimer())
+          }
+
+          return {
+            instruction,
+            text,
+            background,
+            schema,
+            results,
+            reset,
+            clearOutput,
+            getResults,
+            searchMilliSeconds,
+            timerHandler,
+            isNotEmptyObj,
+          }
+        }
+      }
+    ).mount("#app")
+  </script>
+</body>
+
+</html>
