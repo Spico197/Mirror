@@ -10,24 +10,15 @@ debug_mode: false
 mode: w2
 
 # filepaths
-# plm_dir: /data/tzhu/PLM/hfl--rbt3
 base_model_path: outputs/RobertaBase_data20230314v2/ckpt/MrcGlobalPointerModel.best.pth
-# plm_dir: /data/tzhu/PLM/bert-base-chinese
-# plm_dir: /data/tzhu/PLM/hfl--chinese-roberta-wwm-ext
 plm_dir: hfl/chinese-roberta-wwm-ext
-# plm_dir: /data/tzhu/PLM/hfl--chinese-roberta-wwm-ext-large
 data_dir: resources/NER/MSRA_v2/formatted
-# data_dir: resources/NER/msra/formatted
 output_dir: outputs
 task_dir: ${output_dir}/${task_name}
 train_filepath: ${data_dir}/train.char.bmes.jsonl
 dev_filepath: ${data_dir}/dev.char.bmes.jsonl
 test_filepath: ${data_dir}/test.char.bmes.jsonl
 ent_type2query_filepath: ${data_dir}/query.json
-# train_filepath: ${data_dir}/train.jsonl
-# dev_filepath: ${data_dir}/test.jsonl
-# test_filepath: ${data_dir}/test.jsonl
-# ent_type2query_filepath: resources/query.json
 dump_cache_dir: ${task_dir}/cache
 regenerate_cache: true
 

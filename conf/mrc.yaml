@@ -9,15 +9,11 @@ debug_mode: false
 mode: cons
 
 # filepaths
-# plm_dir: /data/tzhu/PLM/hfl--rbt3
-plm_dir: /data/tzhu/PLM/hfl--chinese-roberta-wwm-ext
-# data_dir: resources/MRC/cmrc2018/formatted
+plm_dir: hfl/chinese-roberta-wwm-ext
 data_dir: resources/NER/msra/mrc
-# data_dir: resources/Merged/20230314-v2
 output_dir: outputs
 task_dir: ${output_dir}/${task_name}
 train_filepath: ${data_dir}/train.jsonl
-# dev_filepath: ${data_dir}/validation.jsonl
 dev_filepath: ${data_dir}/test.jsonl
 test_filepath: ${data_dir}/test.jsonl
 dump_cache_dir: ${task_dir}/cache
