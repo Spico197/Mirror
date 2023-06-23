@@ -84,7 +84,8 @@ CUDA_VISIBLE_DEVICES=5 bash scripts/single_task_wPTAllExcluded_wInstruction/glue
 
 ### Evaluation
 
-
+1. Change `task_dir` and `data_pairs` you want to evaluate. The default setting is to get results of Mirror<sub>direct</sub> on all downstream tasks.
+2. `CUDA_VISIBLE_DEVICES=0 python -m src.eval`
 
 ### Demo
 
@@ -94,6 +95,8 @@ CUDA_VISIBLE_DEVICES=5 bash scripts/single_task_wPTAllExcluded_wInstruction/glue
 ```bash
 CUDA_VISIBLE_DEVICES=0 python -m src.app.api_backend
 ```
+
+![Demo](figs/mirror-demo.gif)
 
 ## 💌 Others
 
