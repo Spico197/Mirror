@@ -12,9 +12,8 @@ license: apache-2.0
 
 <div align="center">
   <h1>🪞 Mirror: A Universal Framework for Various Information Extraction Tasks</h1>
+  <img src="figs/mirror-framework.png" alt="Mirror Framework">
 </div>
-
-![Framework](figs/mirror-framework.png)
 
 <hr>
 
