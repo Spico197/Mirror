@@ -364,6 +364,7 @@ class CachedLabelPointerTransform(CachedTransformOneBase):
         plm_dir: str,
         mode: str = "w2",
         label_span: str = "tag",
+        include_instructions: bool = True,
         **kwargs,
     ) -> None:
         super().__init__()
@@ -371,6 +372,7 @@ class CachedLabelPointerTransform(CachedTransformOneBase):
         self.max_seq_len: int = max_seq_len
         self.mode = mode
         self.label_span = label_span
+        self.include_instructions = include_instructions
 
         self.tokenizer: DebertaV2TokenizerFast = DebertaV2TokenizerFast.from_pretrained(
             plm_dir
@@ -461,7 +463,14 @@ class CachedLabelPointerTransform(CachedTransformOneBase):
                 }
             return label_map[label_type][label]
 
-        instruction = instance.get("instruction")
+        if self.include_instructions:
+            instruction = instance.get("instruction")
+            if not instruction:
+                logger.warning(
+                    "include_instructions=True, while the instruction is empty!"
+                )
+        else:
+            instruction = ""
         if instruction:
             tokens.append(self.i_token)
             mask.append(2)

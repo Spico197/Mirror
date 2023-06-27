@@ -271,6 +271,7 @@ class SchemaGuidedInstructBertTask(MrcTaggingTask):
             self.config.plm_dir,
             mode=self.config.mode,
             label_span=self.config.label_span,
+            include_instructions=self.config.get("include_instructions", True),
         )
 
     def init_data_manager(self):
