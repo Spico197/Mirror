@@ -155,7 +155,7 @@
       </div>
 
       <div v-if="timerHandler">
-        <p>⏱️ {{ searchMilliSeconds }}</p>
+        <p>⏱️ {{ searchSecondsString }}</p>
       </div>
 
       <div>
@@ -183,7 +183,7 @@
 
   <footer>
     <hr>
-    Made by <a href="https://spico197.github.io" target="_blank">Tong Zhu</a> w/ 💖
+    Made by Mirror Team w/ 💖
   </footer>
 
   <script type="module">
@@ -199,7 +199,7 @@
           const results = ref({})
           const timerHandler = ref(0)
           const searchSeconds = ref(0.0)
-          const searchMilliSeconds = computed(() => {
+          const searchSecondsString = computed(() => {
             return `${searchSeconds.value.toFixed(1)}s`
           })
 
@@ -275,7 +275,7 @@
             reset,
             clearOutput,
             getResults,
-            searchMilliSeconds,
+            searchSecondsString,
             timerHandler,
             isNotEmptyObj,
           }

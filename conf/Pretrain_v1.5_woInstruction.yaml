@@ -11,7 +11,7 @@ mode: span  # w2 (1,2,3) or span (1,3)
 stream_mode: false
 
 # filepaths
-plm_dir: /data/tzhu/PLM/microsoft--deberta-v3-large
+plm_dir: microsoft/deberta-v3-large
 data_dir: resources/Mirror/v1.5/merged/t-rex-200k-woInstruction/remove_instruction
 output_dir: mirror_outputs
 task_dir: ${output_dir}/${task_name}

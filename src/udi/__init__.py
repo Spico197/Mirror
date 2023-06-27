@@ -14,13 +14,13 @@
     "ans": {
         "cls": ["class1"],
         "ent": [
-            {"type": "person", "text": "Tong", "span": [0, 4]}
+            {"type": "person", "text": "1234", "span": [0, 4]}
         ],  # span: [start, end + 1]
         "rel": [
             {
                 "relation": "study in",
-                "head": {"text": "Tong", "span": [0, 4]},
-                "tail": {"text": "SUDA", "span": [5, 9]},
+                "head": {"text": "1234", "span": [0, 4]},
+                "tail": {"text": "1234", "span": [5, 9]},
             }
         ],
         "event": [
