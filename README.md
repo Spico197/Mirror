@@ -13,6 +13,7 @@ license: apache-2.0
 <div align="center">
   <h1>🪞 Mirror: A Universal Framework for Various Information Extraction Tasks</h1>
   <img src="figs/mirror-framework.png" alt="Mirror Framework">
+  📃 Our paper has been accepted to EMNLP23 main conference, <a href="./paper.pdf">check it out</a>!
 </div>
 
 <hr>
@@ -42,7 +43,7 @@ pip install -r requirements.txt
 
 ### Pretrained Model Weights & Datasets
 
-Download the pretrained model weights & datasets from [[Anonymized OSF]](https://osf.io/kwsm4/?view_only=91a610f7a81a430eb953378f26a8054c) .
+Download the pretrained model weights & datasets from [[OSF]](https://osf.io/kwsm4/?view_only=5b66734d88cf456b93f17b6bac8a44fb) .
 
 No worries, it's an anonymous link just for double blind peer reviewing.
 
