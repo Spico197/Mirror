@@ -4,6 +4,7 @@ from collections import defaultdict
 from datetime import datetime
 from typing import List
 
+import torch
 import torch.optim as optim
 from rex import accelerator
 from rex.data.data_manager import DataManager
@@ -266,6 +267,7 @@ class SchemaGuidedInstructBertTask(MrcTaggingTask):
     #     )
 
     def init_transform(self):
+        self.transform: CachedLabelPointerTransform
         return CachedLabelPointerTransform(
             self.config.max_seq_len,
             self.config.plm_dir,
@@ -345,8 +347,7 @@ class SchemaGuidedInstructBertTask(MrcTaggingTask):
     def init_metric(self):
         return MultiPartSpanMetric()
 
-    @staticmethod
-    def _convert_span_to_string(span, token_ids, tokenizer):
+    def _convert_span_to_string(self, span, token_ids, tokenizer):
         string = ""
         if len(span) == 0 or len(span) > 2:
             pass
@@ -354,7 +355,23 @@ class SchemaGuidedInstructBertTask(MrcTaggingTask):
             string = tokenizer.decode(token_ids[span[0]])
         elif len(span) == 2:
             string = tokenizer.decode(token_ids[span[0] : span[1] + 1])
-        return (string, span)
+        return (string, self.reset_position(token_ids, span))
+
+    def reset_position(self, token_ids: list[int], span: list[int]) -> list[int]:
+        if isinstance(token_ids, torch.Tensor):
+            input_ids = token_ids.cpu().tolist()
+        if len(span) < 1:
+            return span
+
+        tp_token_id, tl_token_id = self.transform.tokenizer.convert_tokens_to_ids(
+            [self.transform.tp_token, self.transform.tl_token]
+        )
+        offset = 0
+        if tp_token_id in input_ids:
+            offset = input_ids.index(tp_token_id) + 1
+        elif tl_token_id in input_ids:
+            offset = input_ids.index(tl_token_id) + 1
+        return [i - offset for i in span]
 
     def predict_api(self, data: list[dict], **kwargs):
         """
@@ -436,7 +453,9 @@ class SchemaGuidedInstructBertTask(MrcTaggingTask):
                             position = []
                             for part in parts:
                                 position.append(part[1])
-                            pred_discon_ents.append((label["string"], string, position))
+                            pred_discon_ents.append(
+                                (label["string"], string, self.reset_position(position))
+                            )
                         elif label["task"] == "hyper_rel" and len(span) == 5 and span[3] in span_to_label:  # fmt: skip
                             q_label = span_to_label[span[3]]
                             span_1 = self._convert_span_to_string(
@@ -451,7 +470,26 @@ class SchemaGuidedInstructBertTask(MrcTaggingTask):
                             pred_hyper_rels.append((label["string"], span_1, span_2, q_label["string"], span_4))  # fmt: skip
                     else:
                         # span task has no labels
-                        pred_spans.append(tuple(span))
+                        pred_token_ids = []
+                        for part in span:
+                            _pred_token_ids = [ins["input_ids"][i] for i in part]
+                            pred_token_ids.extend(_pred_token_ids)
+                        span_string = self.transform.tokenizer.decode(pred_token_ids)
+                        pred_spans.append(
+                            (
+                                span_string,
+                                tuple(
+                                    [
+                                        tuple(
+                                            self.reset_position(
+                                                ins["input_ids"].cpu().tolist(), part
+                                            )
+                                        )
+                                        for part in span
+                                    ]
+                                ),
+                            )
+                        )
                 for trigger, item in pred_trigger_to_event.items():
                     trigger = self._convert_span_to_string(
                         trigger, ins["input_ids"], self.transform.tokenizer
