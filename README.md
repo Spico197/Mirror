@@ -12,11 +12,17 @@ license: apache-2.0
 
 <div align="center">
   <h1>🪞 Mirror: A Universal Framework for Various Information Extraction Tasks</h1>
-  <img src="figs/mirror-framework.png" alt="Mirror Framework">
-  📃 Our paper has been accepted to EMNLP23 main conference, <a href="./paper.pdf">check it out</a>!
+  <img src="figs/mirror-frontpage.png" width="300" alt="Magic mirror"><br>
+  <!-- <img src="figs/mirror-framework.png" alt="Mirror Framework"> -->
+  📃 Our paper has been accepted to EMNLP23 main conference, <a href="http://arxiv.org/abs/2311.05419" target="_blank">check it out</a>!
 </div>
 
 <hr>
+
+😎: This is the official implementation of [🪞Mirror](https://arxiv.org/abs/2311.05419) which supports *almost* all the Information Extraction tasks.
+
+The name, Mirror, comes from the classical story *Snow White and the Seven Dwarfs*, where a magic mirror knows everything in the world.
+We aim to build such a powerful tool for the IE community.
 
 ## 🔥 Supported Tasks
 
@@ -99,7 +105,32 @@ CUDA_VISIBLE_DEVICES=0 python -m src.app.api_backend
 
 ![Demo](figs/mirror-demo.gif)
 
-## 💌 Others
+## 📋 Citation
+
+```bibtex
+@misc{zhu_mirror_2023,
+  shorttitle = {Mirror},
+  title = {Mirror: A Universal Framework for Various Information Extraction Tasks},
+  author = {Zhu, Tong and Ren, Junfei and Yu, Zijian and Wu, Mengsong and Zhang, Guoliang and Qu, Xiaoye and Chen, Wenliang and Wang, Zhefeng and Huai, Baoxing and Zhang, Min},
+  url = {http://arxiv.org/abs/2311.05419},
+  doi = {10.48550/arXiv.2311.05419},
+  urldate = {2023-11-10},
+  publisher = {arXiv},
+  month = nov,
+  year = {2023},
+  note = {arXiv:2311.05419 [cs]},
+  keywords = {Computer Science - Artificial Intelligence, Computer Science - Computation and Language},
+}
+```
+
+## 🛣️ Roadmap
+
+- [ ] Convert current model into Huggingface version, supporting loading from `transformers` like other newly released LLMs.
+- [ ] Remove `Background` area, merge `TL`, `TP` into a single `T` token
+- [ ] Add more task data: keyword extraction, coreference resolution, FrameNet, WikiNER, T-Rex relation extraction dataset, etc.
+- [ ] Pre-train on all the data (including benchmarks) to build a nice out-of-the-box toolkit for universal IE.
+
+## 💌 Yours sincerely
 
 This project is licensed under Apache-2.0.
 We hope you enjoy it ~
