@@ -6,4 +6,5 @@ gpu-watchmen
 tqdm
 datasets
 transformers
+gradio
 git+https://github.com/Spico197/REx
