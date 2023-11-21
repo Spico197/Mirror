@@ -6,5 +6,6 @@ gpu-watchmen
 tqdm
 datasets
 transformers
+tensorboard
 gradio
 git+https://github.com/Spico197/REx
