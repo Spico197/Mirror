@@ -3,9 +3,7 @@ title: Mirror
 emoji: 🪞
 colorFrom: blue
 colorTo: yellow
-sdk: gradio
-sdk_version: 4.1.2
-app_file: src/app/gradio_app.py
+sdk: docker
 pinned: true
 license: apache-2.0
 ---
