@@ -13,8 +13,10 @@ license: apache-2.0
 <div align="center">
   <h1>🪞 Mirror: A Universal Framework for Various Information Extraction Tasks</h1>
   <img src="figs/mirror-frontpage.png" width="300" alt="Magic mirror"><br>
+  Made by DALLE-3<br>
   <!-- <img src="figs/mirror-framework.png" alt="Mirror Framework"> -->
-  📃 Our paper has been accepted to EMNLP23 main conference, <a href="http://arxiv.org/abs/2311.05419" target="_blank">check it out</a>!
+  📃 Our paper has been accepted to EMNLP23 main conference, <a href="http://arxiv.org/abs/2311.05419" target="_blank">check it out</a>!<br>
+  🔥 We have an online demo, <a href="https://huggingface.co/spaces/Spico/Mirror" target="_blank">check it out</a>!<br>
 </div>
 
 <hr>
