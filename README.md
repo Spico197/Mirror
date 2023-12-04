@@ -37,6 +37,9 @@ We aim to build such a powerful tool for the IE community.
 7. Extractive Machine Reading Comprehension (MRC) and Question Answering
 8. Classification & Multi-choice MRC
 
+The pre-trained Mirror model currently supports English IE tasks.
+If you are looking for a model supporting Chinese IE tasks, please refer to [Spico/mirror-chinese-mrcqa-alpha](https://huggingface.co/Spico/mirror-chinese-mrcqa-alpha), which is a very early attempt before Mirror comes out.
+
 ![System Comparison](figs/sys-comparison.png)
 
 ## 🌴 Dependencies
