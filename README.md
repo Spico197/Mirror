@@ -130,7 +130,7 @@ CUDA_VISIBLE_DEVICES=0 python -m src.app.api_backend
 
 ## 🛣️ Roadmap
 
-- [ ] Convert current model into Huggingface version, supporting loading from `transformers` like other newly released LLMs.
+- [ ] Convert current model into Hugging Face version, supporting loading from `transformers` like other newly released LLMs.
 - [ ] Remove `Background` area, merge `TL`, `TP` into a single `T` token
 - [ ] Add more task data: keyword extraction, coreference resolution, FrameNet, WikiNER, T-Rex relation extraction dataset, etc.
 - [ ] Pre-train on all the data (including benchmarks) to build a nice out-of-the-box toolkit for universal IE.
