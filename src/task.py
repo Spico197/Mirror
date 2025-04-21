@@ -2,29 +2,24 @@ import math
 import re
 from collections import defaultdict
 from datetime import datetime
+from functools import partial
 from typing import List
 
 import torch
 import torch.optim as optim
-from rex import accelerator
 from rex.data.data_manager import DataManager
 from rex.data.dataset import CachedDataset, StreamReadDataset
 from rex.tasks.simple_metric_task import SimpleMetricTask
 from rex.utils.batch import decompose_batch_into_instances
-from rex.utils.config import ConfigParser
 from rex.utils.dict import flatten_dict
 from rex.utils.io import load_jsonlines
 from rex.utils.registry import register
 from torch.utils.tensorboard import SummaryWriter
-from transformers.optimization import (
-    get_cosine_schedule_with_warmup,
-    get_linear_schedule_with_warmup,
-)
+from transformers.optimization import get_cosine_schedule_with_warmup
 
 from .metric import MrcNERMetric, MrcSpanMetric, MultiPartSpanMetric
 from .model import (
     MrcGlobalPointerModel,
-    MrcPointerMatrixModel,
     SchemaGuidedInstructBertModel,
 )
 from .transform import (
@@ -96,6 +91,7 @@ class MrcTaggingTask(SimpleMetricTask):
 
     def init_data_manager(self):
         return DataManager(
+            self.accelerator,
             self.config.train_filepath,
             self.config.dev_filepath,
             self.config.test_filepath,
@@ -153,7 +149,7 @@ class MrcTaggingTask(SimpleMetricTask):
         num_training_steps = int(
             len(self.data_manager.train_loader)
             * self.config.num_epochs
-            * accelerator.num_processes
+            * self.accelerator.num_processes
         )
         num_warmup_steps = math.floor(
             num_training_steps * self.config.warmup_proportion
@@ -170,7 +166,7 @@ class MrcTaggingTask(SimpleMetricTask):
         text_ids = sorted(list({ins["id"] for ins in raw_dataset}))
         loader = self.data_manager.prepare_loader(raw_dataset)
         # to prepare input device
-        loader = accelerator.prepare_data_loader(loader)
+        loader = self.accelerator.prepare_data_loader(loader)
         id2ents = defaultdict(set)
         for batch in loader:
             batch_out = self.model(**batch, is_eval=True)
@@ -233,6 +229,14 @@ class StreamReadDatasetWithLen(StreamReadDataset):
         return 631346
 
 
+def load_jsonlines_with_num(filepath, num_lines: int = None, **kwargs):
+    data = load_jsonlines(filepath, **kwargs)
+    if num_lines is not None and isinstance(num_lines, int):
+        return data[:num_lines]
+    else:
+        return data
+
+
 @register("task")
 class SchemaGuidedInstructBertTask(MrcTaggingTask):
     # def __init__(self, config, **kwargs) -> None:
@@ -284,12 +288,16 @@ class SchemaGuidedInstructBertTask(MrcTaggingTask):
             DatasetClass = CachedDataset
             transform = self.transform
         return DataManager(
+            self.accelerator,
             self.config.train_filepath,
             self.config.dev_filepath,
             self.config.test_filepath,
             DatasetClass,
             transform,
-            load_jsonlines,
+            partial(
+                load_jsonlines_with_num,
+                num_lines=self.config.get("train_data_num", None),
+            ),
             self.config.train_batch_size,
             self.config.eval_batch_size,
             self.transform.collate_fn,
